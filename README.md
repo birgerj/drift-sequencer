@@ -23,8 +23,9 @@ can keep your hands on the synths.
 open it in Chrome or Edge (double-click). The whole app — code, styles and
 icon — is inside that one file. Projects are saved in the browser.
 
-**Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* →
-`main` / `/docs`. (Pages needs a public repository or a paid plan.)
+**Publishing:** every push to `main` runs the tests, builds the app and
+publishes it to GitHub Pages (`.github/workflows/publish.yml`). One-time
+setup: Settings → Pages → Source: *GitHub Actions*.
 
 ## Develop
 
