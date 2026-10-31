@@ -31,6 +31,8 @@ export class WebMidiService implements MidiPortResolver {
   /** Port wrappers by name; rebuilt only when devices change (lookups happen every step). */
   private byNameCache = new Map<string, MidiOutputPort>();
   private names = '';
+  private inputNames: string[] = [];
+  private messageListeners = new Set<(port: string, data: Uint8Array, timeStamp: number) => void>();
 
   async connect(): Promise<void> {
     if (!WebMidiService.isSupported()) throw new Error('Web MIDI is not supported in this browser.');
@@ -51,7 +53,23 @@ export class WebMidiService implements MidiPortResolver {
   /** Returns true if the list of connected outputs changed. */
   private rebuild(): boolean {
     const outs = this.access ? [...this.access.outputs.values()].filter((p) => p.state === 'connected') : [];
+    const ins = this.access ? [...this.access.inputs.values()].filter((p) => p.state === 'connected') : [];
+    // Listen to every input; Drift decides per device what to do with it.
+    for (const input of ins) {
+      const name = input.name ?? input.id;
+      input.onmidimessage = (e: MIDIMessageEvent) => {
+        if (!e.data || e.data.length === 0) return;
+        const status = e.data[0]!;
+        // Clock, active sensing and other real-time bytes are ignored for now.
+        if (status >= 0xf8) return;
+        this.messageListeners.forEach((l) => l(name, e.data!, e.timeStamp));
+      };
+    }
+    const inNames = ins.map((p) => p.name ?? p.id);
+    const inputsChanged = inNames.join('|') !== this.inputNames.join('|');
+    this.inputNames = inNames;
     const names = outs.map((p) => `${p.id}:${p.name}`).join('|');
+    if (names === this.names && !inputsChanged) return false;
     if (names === this.names) return false;
     this.names = names;
     this.byNameCache = new Map(outs.map((p) => [p.name ?? p.id, new WebMidiOutput(p)]));
@@ -64,6 +82,17 @@ export class WebMidiService implements MidiPortResolver {
 
   byName(name: string): MidiOutputPort | undefined {
     return this.byNameCache.get(name);
+  }
+
+  /** Names of connected MIDI inputs. */
+  inputs(): string[] {
+    return [...this.inputNames];
+  }
+
+  /** Incoming MIDI from any input (no real-time messages). */
+  onMessage(listener: (port: string, data: Uint8Array, timeStamp: number) => void): () => void {
+    this.messageListeners.add(listener);
+    return () => this.messageListeners.delete(listener);
   }
 
   /** Fires when devices are plugged in or removed. */

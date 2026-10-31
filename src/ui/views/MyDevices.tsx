@@ -1,3 +1,4 @@
+import { inputForDevice } from '../../state/rack';
 import { useState } from 'preact/hooks';
 import { DEVICE_ROLES, newDevice, suggestInstrument } from '../../state/rack';
 import { ChannelFinder } from '../components/ChannelFinder';
@@ -81,6 +82,19 @@ export function MyDevices() {
                   <span class="field-label">Channel</span>
                   <Stepper label={`${d.name} channel`} value={d.channel} min={1} max={16} onChange={(channel) => s.updateDevice(d.id, { channel })} />
                 </div>
+                <Select
+                  label="Knobs in (MIDI input)"
+                  value={d.inputName ?? ''}
+                  options={[
+                    { value: '', label: `Auto${inputForDevice({ ...d, inputName: undefined }, s.inputs) ? ` · ${inputForDevice({ ...d, inputName: undefined }, s.inputs)}` : ' · none found'}` },
+                    ...[...new Set([...(d.inputName && d.inputName !== 'off' ? [d.inputName] : []), ...s.inputs])].map((i) => ({
+                      value: i,
+                      label: s.inputs.includes(i) ? i : `${i} (not connected)`,
+                    })),
+                    { value: 'off', label: 'Off' },
+                  ]}
+                  onChange={(inputName) => s.updateDevice(d.id, { inputName: inputName || undefined })}
+                />
                 <Select
                   label="Instrument (CC map)"
                   value={d.instrumentId ?? ''}

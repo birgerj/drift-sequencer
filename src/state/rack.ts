@@ -28,6 +28,20 @@ export interface RackDevice {
   roles: DeviceRole[];
   /** Receives MIDI clock and start/stop. */
   clock: boolean;
+  /** MIDI input this device sends its knobs on; empty = guess from the port name, "off" = ignore. */
+  inputName?: string;
+}
+
+/** The MIDI input that belongs to a device: chosen, or the one whose name matches its output. */
+export function inputForDevice(device: RackDevice, inputs: string[]): string | undefined {
+  if (device.inputName === 'off') return undefined;
+  if (device.inputName) return inputs.includes(device.inputName) ? device.inputName : undefined;
+  const exact = inputs.find((i) => i === device.portName);
+  if (exact) return exact;
+  const first = (n: string) => n.toLowerCase().split(/[\s:_-]+/).find(Boolean) ?? '';
+  const key = first(device.portName);
+  const matches = key.length >= 3 ? inputs.filter((i) => first(i) === key) : [];
+  return matches.length === 1 ? matches[0] : undefined;
 }
 
 export interface Rack {

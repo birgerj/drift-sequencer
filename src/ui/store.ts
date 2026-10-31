@@ -16,12 +16,13 @@ import { Scale } from '../core/theory/scale';
 import { WebMidiService } from '../io/midi/webMidiService';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
-import type { MidiTarget, ProjectState, TrackState } from '../state/project';
+import { newId, type CcMotion, type MidiTarget, type ProjectState, type TrackState } from '../state/project';
 import {
   assignDevices,
   deviceForRole,
   effectiveInstrumentId,
   effectiveOutput,
+  inputForDevice,
   loadRack,
   resolveProject,
   roleForType,
@@ -111,6 +112,16 @@ export class AppStore {
   rack: Rack = loadRack();
   view: View = { name: 'performance' };
   ports: string[] = [];
+  /** Connected MIDI inputs. */
+  inputs: string[] = [];
+  /** Recording knob movements into a motion, if armed or running. */
+  recording:
+    | { trackId: string; bars: number; startStep?: number; values: Map<number, (number | undefined)[]>; current: Map<number, number> }
+    | undefined;
+  /** Last time each track received a knob from its synth (performance.now). */
+  readonly lastInput = new Map<string, number>();
+  private inQueue = new Map<string, { trackId: string; cc: number; value: number }>();
+  private inFrame = 0;
   instruments: InstalledInstrument[] = [];
   projects: ProjectSummary[] = [];
   log: LogEntry[] = [];
@@ -158,6 +169,7 @@ export class AppStore {
       await this.repo.save(this.project).catch(() => undefined);
     }
     this.midi.onChange(() => this.refreshPorts());
+    this.midi.onMessage((port, data) => this.onMidiIn(port, data));
     document.addEventListener('visibilitychange', () => {
       this.sequencer.setBackground(document.hidden);
       if (document.hidden && this.saveTimer) this.flushSave();
@@ -268,7 +280,132 @@ export class AppStore {
 
   private refreshPorts(): void {
     this.ports = this.midi.all().map((p) => p.name);
+    this.inputs = this.midi.inputs();
     this.notify();
+  }
+
+  /** The MIDI input a track's synth sends its knobs on, if any. */
+  trackInput(t: TrackState): string | undefined {
+    const out = this.trackOutput(t);
+    const d = this.device(t.deviceId);
+    return inputForDevice(d ?? { id: '', name: '', portName: out.portName, channel: out.channel, roles: [], clock: false }, this.inputs);
+  }
+
+  /** A knob turned on a synth: show it, pause automation on it, record it. */
+  private onMidiIn(port: string, data: Uint8Array): void {
+    const status = data[0]!;
+    if ((status & 0xf0) !== 0xb0 || data.length < 3) return;
+    const channel = (status & 0x0f) + 1;
+    const cc = data[1]!;
+    const value = data[2]!;
+    const now = performance.now();
+    for (const t of this.project.tracks) {
+      if (this.trackOutput(t).channel !== channel || this.trackInput(t) !== port) continue;
+      // Don't fight the hand: LFOs and motions on this CC wait until it rests.
+      this.sequencer.holdCc(t.id, cc, now + 1500);
+      this.lastInput.set(t.id, now);
+      this.inQueue.set(`${t.id}:${cc}`, { trackId: t.id, cc, value });
+      this.visuals?.send({ t: 'cc', track: t.id, cc, value });
+      this.recordCc(t.id, cc, value);
+    }
+    if (this.inQueue.size && !this.inFrame) {
+      this.inFrame = requestAnimationFrame(() => {
+        this.inFrame = 0;
+        const batch = [...this.inQueue.values()];
+        this.inQueue.clear();
+        this.change((p) => ({
+          ...p,
+          tracks: p.tracks.map((t) => {
+            const mine = batch.filter((b) => b.trackId === t.id);
+            if (!mine.length) return t;
+            const values = { ...(t.panel?.values ?? {}) };
+            for (const b of mine) values[b.cc] = b.value;
+            return { ...t, panel: { ...(t.panel ?? {}), values } };
+          }),
+        }));
+      });
+    }
+  }
+
+  // ---------- motion recording ----------
+
+  startMotionRecording(trackId: string, bars: number): void {
+    if (!this.sequencer.playing) {
+      this.showToast('Press Play first: recording starts on the next bar.');
+      return;
+    }
+    this.recording = { trackId, bars, values: new Map(), current: new Map() };
+    this.notify();
+  }
+
+  cancelMotionRecording(): void {
+    this.recording = undefined;
+    this.notify();
+  }
+
+  private recordCc(trackId: string, cc: number, value: number): void {
+    const rec = this.recording;
+    if (!rec || rec.trackId !== trackId) return;
+    rec.current.set(cc, value);
+    if (!rec.values.has(cc)) rec.values.set(cc, []);
+  }
+
+  /** Called as each step is heard: samples the knobs being recorded. */
+  private onLiveStep(step: number): void {
+    const rec = this.recording;
+    if (!rec) return;
+    const spb = this.project.stepsPerBar;
+    if (rec.startStep === undefined) {
+      if (step % spb !== 0) return;
+      rec.startStep = step;
+      this.notify();
+    }
+    const idx = step - rec.startStep;
+    const total = rec.bars * spb;
+    if (idx >= total || idx < 0) {
+      this.commitMotion();
+      return;
+    }
+    for (const [cc, arr] of rec.values) {
+      const v = rec.current.get(cc);
+      if (v !== undefined) arr[idx] = v;
+    }
+  }
+
+  private commitMotion(): void {
+    const rec = this.recording;
+    this.recording = undefined;
+    const t = rec && this.project.tracks.find((x) => x.id === rec.trackId);
+    if (!rec || !t) return this.notify();
+    const total = rec.bars * this.project.stepsPerBar;
+    const params = this.trackInstrument(t)?.params ?? [];
+    const made: CcMotion[] = [];
+    for (const [cc, raw] of rec.values) {
+      const values: number[] = [];
+      let last = raw.find((v) => v !== undefined);
+      if (last === undefined) continue;
+      for (let i = 0; i < total; i++) {
+        if (raw[i] !== undefined) last = raw[i]!;
+        values.push(last);
+      }
+      if (values.every((v) => v === values[0])) continue;
+      const name = params.find((p) => p.msg.type === 'cc' && p.msg.cc === cc)?.name ?? `CC ${cc}`;
+      made.push({ id: newId(), cc, label: name, enabled: true, values });
+    }
+    if (!made.length) {
+      this.showToast('Nothing recorded: no knob moved during the recording.');
+      return this.notify();
+    }
+    const keep = (t.motions ?? []).filter((m) => !made.some((n) => n.cc === m.cc));
+    this.updateTrack(t.id, { motions: [...keep, ...made] });
+    this.showToast(`Recorded ${made.map((m) => m.label).join(', ')} · ${rec.bars} bar${rec.bars === 1 ? '' : 's'}, looping.`);
+  }
+
+  updateMotion(trackId: string, id: string, patch: Partial<CcMotion> | null): void {
+    const t = this.project.tracks.find((x) => x.id === trackId);
+    if (!t) return;
+    const motions = (t.motions ?? []).flatMap((m) => (m.id !== id ? [m] : patch === null ? [] : [{ ...m, ...patch }]));
+    this.updateTrack(trackId, { motions });
   }
 
   portAvailable(name: string): boolean {
@@ -473,6 +610,8 @@ export class AppStore {
     if (panel.values[cc] === v) return;
     this.updateTrack(id, { panel: { ...panel, values: { ...panel.values, [cc]: v } } });
     this.queueCc(t, cc, v);
+    this.sequencer.holdCc(id, cc, performance.now() + 1500);
+    this.recordCc(id, cc, v);
     this.visuals?.send({ t: 'cc', track: id, cc, value: v });
   }
 
@@ -732,6 +871,7 @@ export class AppStore {
             if (p.kind === 'step') {
               this.live.step = p.step;
               this.live.bar = p.bar;
+              this.onLiveStep(p.step);
             } else if (p.kind === 'chord') this.live.chord = p.chord;
             else this.live.now[p.trackId] = { notes: p.notes, until: p.until };
           }

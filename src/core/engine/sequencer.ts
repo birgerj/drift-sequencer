@@ -288,12 +288,24 @@ export class Sequencer {
     return rt.resolveEvents(events, step, moment);
   }
 
+  /** CCs a person is turning right now: LFOs and motions leave them alone until then. */
+  private held = new Map<string, number>();
+
+  holdCc(trackId: string, cc: number, untilMs: number): void {
+    this.held.set(`${trackId}:${cc}`, untilMs);
+  }
+
+  private isHeld(trackId: string, cc: number, timeMs: number): boolean {
+    const until = this.held.get(`${trackId}:${cc}`);
+    return until !== undefined && timeMs < until;
+  }
+
   private sendModulations(t: TrackState, step: number, timeMs: number): void {
-    if (t.modulations.length === 0) return;
+    if (t.modulations.length === 0 && !t.motions?.length) return;
     const port = this.ports.byName(t.output.portName);
     const stepsPerBar = this.project.stepsPerBar;
     t.modulations.forEach((m, index) => {
-      if (!m.enabled) return;
+      if (!m.enabled || this.isHeld(t.id, m.cc, timeMs)) return;
       const period = Math.max(1, m.periodBars * stepsPerBar);
       const phase = (step % period) / period;
       const cycle = Math.floor(step / period);
@@ -301,6 +313,15 @@ export class Sequencer {
       port?.send(Midi.cc(t.output.channel, m.cc, value), timeMs);
       this.events.emit('lfo', { trackId: t.id, index, cc: m.cc, value, timeMs });
     });
+    for (const m of t.motions ?? []) {
+      if (!m.enabled || m.values.length === 0 || this.isHeld(t.id, m.cc, timeMs)) continue;
+      const value = m.values[step % m.values.length]!;
+      const prev = m.values[(step - 1 + m.values.length) % m.values.length];
+      // Only changes go out; a held value costs no MIDI traffic.
+      if (value === prev && step % stepsPerBar !== 0) continue;
+      port?.send(Midi.cc(t.output.channel, m.cc, value), timeMs);
+      this.events.emit('lfo', { trackId: t.id, index: -1, cc: m.cc, value, timeMs });
+    }
   }
 
   private forEachClockPort(fn: (send: (data: readonly number[], ts?: number) => void) => void): void {

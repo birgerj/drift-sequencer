@@ -1,7 +1,7 @@
 import { useRef, useState } from 'preact/hooks';
 import type { InstrumentDefinition, InstrumentParam } from '../../core/instruments/instrument';
 import type { TrackState } from '../../state/project';
-import { useStore } from '../store';
+import { store, useLive, useStore } from '../store';
 import { Card } from './controls';
 
 const KNOBS_PER_PAGE = 8;
@@ -111,6 +111,8 @@ export function KnobPanel({ track, instrument }: { track: TrackState; instrument
           ))}
         </div>
 
+        <MotionRecorder track={track} />
+
         <div class="panel-bar">
           <span class="eyebrow">Snapshots</span>
           {['A', 'B', 'C', 'D'].map((slot) => (
@@ -146,6 +148,8 @@ function Encoder({ track, param }: { track: TrackState; param: InstrumentParam }
   const range = Math.max(1, max - min);
   const v = (value - min) / range;
   const lfo = track.modulations.find((m) => m.enabled && m.cc === cc);
+  const motion = track.motions?.find((m) => m.enabled && m.cc === cc);
+  const motionRange = motion ? [Math.min(...motion.values) / 127, Math.max(...motion.values) / 127] : undefined;
   const lfoIndex = lfo ? track.modulations.indexOf(lfo) + 1 : 0;
   const drag = useRef<{ y: number; start: number; moved: boolean } | undefined>(undefined);
   const lastTap = useRef(0);
@@ -158,7 +162,18 @@ function Encoder({ track, param }: { track: TrackState; param: InstrumentParam }
     const pos = i / (LEDS - 1);
     const lit = param.bipolar ? (v >= 0.5 ? pos >= 0.5 && pos <= v : pos <= 0.5 && pos >= v) : pos <= v && v > 0;
     const inLfo = lfo && pos >= lfo.min / 127 && pos <= lfo.max / 127;
-    return <rect x="61" y="6" width="6" height="11" rx="2" class={lit ? 'led on' : inLfo ? 'led lfo' : 'led'} transform={`rotate(${angle.toFixed(1)} 64 62)`} />;
+    const inMotion = motionRange && pos >= motionRange[0]! && pos <= motionRange[1]!;
+    return (
+      <rect
+        x="61"
+        y="6"
+        width="6"
+        height="11"
+        rx="2"
+        class={lit ? 'led on' : inLfo ? 'led lfo' : inMotion ? 'led motion' : 'led'}
+        transform={`rotate(${angle.toFixed(1)} 64 62)`}
+      />
+    );
   });
   const a = ((-135 + v * 270 - 90) * Math.PI) / 180;
 
@@ -218,10 +233,65 @@ function Encoder({ track, param }: { track: TrackState; param: InstrumentParam }
           <line x1="64" y1="62" x2={(64 + Math.cos(a) * 21).toFixed(1)} y2={(62 + Math.sin(a) * 21).toFixed(1)} class="knob-pointer" />
         </svg>
       </div>
-      <span class={`encoder-meta mono ${lfo ? 'lfo' : ''}`}>
+      <span class={`encoder-meta mono ${lfo ? 'lfo' : motion ? 'motion' : ''}`}>
         CC {cc}
-        {lfo ? ` · LFO ${lfoIndex}` : ''}
+        {lfo ? ` · LFO ${lfoIndex}` : motion ? ' · Motion' : ''}
       </span>
+    </div>
+  );
+}
+
+const REC_BARS = [1, 2, 4, 8];
+
+/** Input status and recording knob movements into a looping motion. */
+function MotionRecorder({ track }: { track: TrackState }) {
+  const s = useStore();
+  const [bars, setBars] = useState(4);
+  const input = s.trackInput(track);
+  const rec = s.recording?.trackId === track.id ? s.recording : undefined;
+  const progress = useLive((l) => {
+    const r = store.recording;
+    if (!r || r.trackId !== track.id || r.startStep === undefined) return -1;
+    return Math.min(1, (l.step - r.startStep + 1) / (r.bars * store.project.stepsPerBar));
+  });
+  const receiving = useLive(() => performance.now() - (store.lastInput.get(track.id) ?? -1e9) < 600);
+  return (
+    <div class="panel-bar recorder">
+      <span class={`in-dot ${receiving ? 'on' : ''}`} aria-hidden="true" />
+      <span class="small">
+        {input ? (
+          <>
+            From synth: <b>{input}</b>
+          </>
+        ) : (
+          <span class="muted">Not receiving knobs: pick this synth’s MIDI input under Devices</span>
+        )}
+      </span>
+      <div class="spacer" />
+      {rec ? (
+        <>
+          <span class="rec-state">
+            <span class="rec-dot" />
+            {rec.startStep === undefined ? 'Armed · starts on the next bar' : `Recording · ${Math.round(Math.max(0, progress) * 100)}%`}
+          </span>
+          <button type="button" onClick={() => s.cancelMotionRecording()}>
+            Cancel
+          </button>
+        </>
+      ) : (
+        <>
+          <div class="segmented" role="radiogroup" aria-label="Motion length in bars">
+            {REC_BARS.map((b) => (
+              <button type="button" role="radio" aria-checked={b === bars} onClick={() => setBars(b)}>
+                {b} bar{b === 1 ? '' : 's'}
+              </button>
+            ))}
+          </div>
+          <button type="button" class="rec-button" onClick={() => s.startMotionRecording(track.id, bars)}>
+            <span class="rec-dot" /> Record motion
+          </button>
+        </>
+      )}
     </div>
   );
 }

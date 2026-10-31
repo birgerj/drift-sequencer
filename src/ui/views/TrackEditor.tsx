@@ -195,6 +195,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
         {tab === 'modulation' && (
         <div class="detail-section span-all tab-columns">
           <Modulations track={track} instrument={instrument} />
+          <Motions track={track} />
           <CallResponse track={track} />
         </div>
 
@@ -294,6 +295,46 @@ function TrackOverview({ track }: { track: TrackState }) {
         </button>
       </div>
     </>
+  );
+}
+
+/** Knob movements recorded on the Panel tab or from the synth. */
+function Motions({ track }: { track: TrackState }) {
+  const s = useStore();
+  const motions = track.motions ?? [];
+  return (
+    <Card title="Recorded motions">
+      {motions.length === 0 && (
+        <p class="hint">Turn knobs on the synth or the Panel tab while “Record motion” runs; the movement loops here like an LFO.</p>
+      )}
+      {motions.map((m) => (
+        <div class="modulation" key={m.id}>
+          <div class="row gap-s wrap">
+            <b class="mod-title">{m.label}</b>
+            <span class="muted small">
+              CC {m.cc} · {m.values.length / s.project.stepsPerBar} bar{m.values.length === s.project.stepsPerBar ? '' : 's'}
+            </span>
+            <div class="spacer" />
+            <Toggle label="On" checked={m.enabled} onChange={(enabled) => s.updateMotion(track.id, m.id, { enabled })} />
+            <button type="button" class="danger" aria-label={`Remove motion ${m.label}`} onClick={() => s.updateMotion(track.id, m.id, null)}>
+              <Icon name="trash" /> Remove
+            </button>
+          </div>
+          <MotionPreview values={m.values} color={track.color} />
+        </div>
+      ))}
+    </Card>
+  );
+}
+
+function MotionPreview({ values, color }: { values: number[]; color: string }) {
+  const w = 300;
+  const h = 48;
+  const d = values.map((v, i) => `${i ? 'L' : 'M'}${((i / Math.max(1, values.length - 1)) * w).toFixed(1)} ${(h - (v / 127) * h).toFixed(1)}`).join(' ');
+  return (
+    <svg class="motion-preview" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+      <path d={d} fill="none" stroke={color} stroke-width="2" vector-effect="non-scaling-stroke" />
+    </svg>
   );
 }
 

@@ -545,3 +545,13 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .vis-hud button { min-height: 40px; padding: 0 14px; font-size: 13px; background: transparent; border-color: var(--line-2); }
 .vis-hud button[aria-pressed='true'] { background: var(--text); color: var(--bg); }
 .vis-sep { width: 1px; height: 24px; background: var(--line-2); margin: 0 4px; }
+.led.motion { fill: #2dd4bf; opacity: 0.7; }
+.encoder-meta.motion { color: #2dd4bf; }
+.recorder { gap: 10px; }
+.in-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--line-2); flex: 0 0 auto; transition: background 0.15s; }
+.in-dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); display: inline-block; }
+.rec-state { display: inline-flex; align-items: center; gap: 8px; color: var(--danger); font-weight: 600; font-size: 13px; }
+.rec-state .rec-dot { animation: rec-blink 1s steps(2) infinite; }
+@keyframes rec-blink { 50% { opacity: 0.2; } }
+.motion-preview { width: 100%; height: 48px; background: #0b0c0f; border-radius: 8px; display: block; }

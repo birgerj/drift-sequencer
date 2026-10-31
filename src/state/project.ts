@@ -80,8 +80,19 @@ export interface TrackState {
   kickMode?: KickMode;
   /** Every few mutations the track returns to its theme or an earlier variation. */
   memory?: MemorySettings;
+  /** Knob movements recorded from the synth or the panel, played back in a loop. */
+  motions?: CcMotion[];
   /** Knob panel: last value sent per CC, and stored snapshots. */
   panel?: PanelState;
+}
+
+export interface CcMotion {
+  id: string;
+  cc: number;
+  label: string;
+  enabled: boolean;
+  /** One value (0..127) per step; loops. */
+  values: number[];
 }
 
 export interface HumanizeSettings {
