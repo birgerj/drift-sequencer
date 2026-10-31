@@ -4,6 +4,7 @@ import { NOTE_NAMES, noteName, pitchClassOf } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { Icon, Slider } from '../components/controls';
 import { OctaveControl } from '../components/OctaveControl';
+import { RATE_LABELS } from '../components/TrackTiming';
 import { PatternView } from '../components/PatternView';
 import { PARAM_SCHEMA, typeLabel } from '../paramSchema';
 import { useLive, useStore, store } from '../store';
@@ -115,6 +116,11 @@ function Lane({ track }: { track: TrackState }) {
         <span class={`small ${portOk ? 'muted' : 'warn'}`} title={portOk ? '' : 'Port not connected'}>
           {device ? `${device.name} · ch ${out.channel}` : `${out.portName} · ch ${out.channel}`}
         </span>
+        {rt && (rt.pattern.lengthSteps !== 16 || (track.rate ?? 1) !== 1) && (
+          <span class="phrase-badge small">
+            {rt.pattern.lengthSteps} steps · {RATE_LABELS[track.rate ?? 1]}
+          </span>
+        )}
         {track.phrase && (
           <span class="phrase-badge small">
             {track.phrase.role === 'call' ? 'Call' : answering ? `Answers ${answering.name}` : 'Response'} · {track.phrase.bars} bar

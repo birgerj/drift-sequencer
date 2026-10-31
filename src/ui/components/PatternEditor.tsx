@@ -15,7 +15,6 @@ import {
   noteStartAt,
   motifNoteAt,
   motifNoteCovering,
-  resizePattern,
   toggleMotifNote,
 } from '../../core/pattern/edit';
 import { conditionLabel, type Pattern, type PatternEvent } from '../../core/pattern/pattern';
@@ -25,34 +24,26 @@ import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { useLive, useStore } from '../store';
 import { Icon, Segmented } from './controls';
+import { LENGTH_OPTIONS } from './TrackTiming';
 
 /** Tap-to-edit grid: drum steps for drum tracks, notes for motif tracks. */
 export function PatternEditor({ track }: { track: TrackState }) {
   const s = useStore();
   const rt = s.sequencer.track(track.id);
   const playStep = useLive((l) => {
-    const len = s.sequencer.track(track.id)?.pattern.lengthSteps ?? 16;
-    return s.sequencer.playing && l.step >= 0 ? l.step % len : -1;
+    const rt = s.sequencer.track(track.id);
+    return s.sequencer.playing && l.step >= 0 && rt ? rt.patternStepAt(l.step) : -1;
   });
   if (!rt) return null;
   const pattern = rt.pattern;
-  const stepsPerBar = s.project.stepsPerBar;
 
   const [mode, setMode] = useState<EditMode>('notes');
-  const setLength = (lengthSteps: number) => {
-    s.editPattern(track.id, (p) => resizePattern(p, lengthSteps));
-    s.setTrackParam(track.id, 'lengthSteps', lengthSteps);
-  };
+  const setLength = (lengthSteps: number) => s.setTrackLength(track.id, lengthSteps);
 
   return (
     <div class="pattern-editor" style={{ '--accent': track.color }}>
       <div class="row gap-s wrap">
-        <Segmented
-          label="Length"
-          value={pattern.lengthSteps}
-          options={[16, 32, 64].map((n) => ({ value: n, label: `${n / stepsPerBar} bar${n > stepsPerBar ? 's' : ''}` }))}
-          onChange={setLength}
-        />
+        <Segmented label="Length (steps)" value={pattern.lengthSteps} options={LENGTH_OPTIONS} onChange={setLength} />
         <div class="spacer" />
         <button type="button" onClick={() => s.editPattern(track.id, clearPattern)}>
           <Icon name="trash" /> Clear

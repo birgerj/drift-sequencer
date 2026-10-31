@@ -66,6 +66,11 @@ export interface TrackState {
   userPattern?: Pattern;
   /** Octave shift for the whole track (−3…+3), on top of its register. */
   octave?: number;
+  /**
+   * Playback speed of the pattern relative to the song: 2 = double speed,
+   * 0.5 = half speed (each step lasts two 16ths). Defaults to 1.
+   */
+  rate?: number;
   /** Call-and-response role; the track only plays in its own phrases. */
   phrase?: PhraseSettings;
   modulations: CcModulation[];

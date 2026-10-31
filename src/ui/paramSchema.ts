@@ -9,16 +9,6 @@ const pct = (v: number) => `${Math.round(v * 100)}%`;
 const int = (v: number) => String(Math.round(v));
 const steps = (v: number) => `${v} steps`;
 
-const length: Control = {
-  kind: 'choice',
-  key: 'lengthSteps',
-  label: 'Length',
-  options: [
-    { value: 16, label: '1 bar' },
-    { value: 32, label: '2 bars' },
-    { value: 64, label: '4 bars' },
-  ],
-};
 const mutation: Control = { kind: 'range', key: 'mutation', label: 'Mutation', min: 0, max: 1, step: 0.01, format: pct };
 const velocity: Control = { kind: 'range', key: 'velocity', label: 'Velocity', min: 1, max: 127, step: 1, format: int };
 const velVar: Control = { kind: 'range', key: 'velocityVariation', label: 'Velocity variation', min: 0, max: 1, step: 0.01, format: pct };
@@ -32,7 +22,6 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     { kind: 'range', key: 'maxLeap', label: 'Max leap', min: 1, max: 7, step: 1, format: steps },
     { kind: 'range', key: 'chordToneBias', label: 'Chord-tone pull', min: 0, max: 1, step: 0.01, format: pct },
     { kind: 'toggle', key: 'rhythmLock', label: 'Rhythm lock', description: 'Keep the rhythm, mutate pitches only' },
-    length,
     velocity,
     velVar,
   ],
@@ -42,7 +31,6 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     { kind: 'range', key: 'octaveJumpChance', label: 'Octave jumps', min: 0, max: 1, step: 0.01, format: pct },
     { kind: 'range', key: 'fifthChance', label: 'Fifths', min: 0, max: 1, step: 0.01, format: pct },
     { kind: 'toggle', key: 'offbeat', label: 'Offbeat', description: 'House-style offbeat eighths' },
-    length,
     velocity,
     velVar,
   ],
@@ -55,7 +43,6 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     { kind: 'range', key: 'noteVariety', label: 'Note variety', min: 2, max: 7, step: 1, format: (v) => `${v} notes` },
     { kind: 'range', key: 'gate', label: 'Gate', min: 0.2, max: 1, step: 0.01, format: pct },
     mutation,
-    length,
     velocity,
   ],
   arp: [
@@ -84,7 +71,6 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     },
     { kind: 'range', key: 'gate', label: 'Gate', min: 0.1, max: 1, step: 0.01, format: pct },
     mutation,
-    length,
     velocity,
     velVar,
   ],
@@ -115,7 +101,6 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
       ],
     },
     velocity,
-    length,
   ],
   drums: [
     mutation,

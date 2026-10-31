@@ -22,6 +22,20 @@ export interface ScheduledNote {
    * two overlap (a 303 slides when notes overlap).
    */
   holdSteps?: number;
+  /** Start offset within the global step (0..1), for tracks faster than ×1. */
+  offset: number;
+  /** Global steps per pattern step (ratchets spread over this). */
+  stepScale: number;
+}
+
+export const TRACK_RATES = [2, 1, 0.5, 0.25] as const;
+
+export function normalizeRate(rate: number | undefined): number {
+  return TRACK_RATES.includes(rate as (typeof TRACK_RATES)[number]) ? (rate as number) : 1;
+}
+
+function scaleHold(hold: number | undefined, scale: number): number | undefined {
+  return hold === undefined ? undefined : hold * scale;
 }
 
 /**
@@ -84,9 +98,32 @@ export class TrackRuntime {
     return this.pattern.events.filter((e) => e.step === local);
   }
 
-  /** Notes to play at a global step, resolved against the harmonic moment. */
+  /**
+   * Notes to play during one global step (a 16th of the song), resolved
+   * against the harmonic moment. With a track speed other than 1, a global
+   * step can hold several pattern steps (×2) or none (½, ¼).
+   */
   notesAt(globalStep: number, moment: HarmonicMoment): ScheduledNote[] {
-    return this.resolveEvents(this.eventsAt(globalStep), globalStep, moment, this.pattern);
+    const rate = normalizeRate(this.config.rate);
+    if (rate === 1) return this.resolveEvents(this.eventsAt(globalStep), globalStep, moment, this.pattern);
+    const out: ScheduledNote[] = [];
+    if (rate > 1) {
+      for (let k = 0; k < rate; k++) {
+        const ps = globalStep * rate + k;
+        out.push(...this.resolveEvents(this.eventsAt(ps), ps, moment, this.pattern, 1 / rate, k / rate));
+      }
+    } else {
+      const div = Math.round(1 / rate);
+      if (globalStep % div !== 0) return out;
+      const ps = globalStep / div;
+      out.push(...this.resolveEvents(this.eventsAt(ps), ps, moment, this.pattern, div, 0));
+    }
+    return out;
+  }
+
+  /** The pattern step playing at a global step (for playheads). */
+  patternStepAt(globalStep: number): number {
+    return Math.floor(globalStep * normalizeRate(this.config.rate)) % this.pattern.lengthSteps;
   }
 
   /**
@@ -96,11 +133,15 @@ export class TrackRuntime {
    */
   resolveEvents(
     events: readonly PatternEvent[],
-    globalStep: number,
+    patternStep: number,
     moment: HarmonicMoment,
     source?: Pattern,
+    /** Global steps per pattern step (2 at half speed). */
+    scale = 1,
+    /** Start offset within the global step, as a fraction of it. */
+    offset = 0,
   ): ScheduledNote[] {
-    const pass = Math.floor(globalStep / this.pattern.lengthSteps);
+    const pass = Math.floor(patternStep / this.pattern.lengthSteps);
     const register = shiftRegister(this.config.register, this.config.octave ?? 0);
     const out: ScheduledNote[] = [];
     for (const ev of events) {
@@ -110,11 +151,13 @@ export class TrackRuntime {
         trackId: this.config.id,
         notes: resolvePitch(ev.pitch, moment, register, this.resolveState),
         velocity: ev.velocity,
-        length: ev.length,
+        length: ev.length * scale,
         ratchet: Math.max(1, Math.min(4, Math.round(ev.ratchet ?? 1))),
         accent: !!ev.accent,
         slide: !!ev.slide,
-        holdSteps: source ? slideHold(source, ev) : undefined,
+        holdSteps: source ? scaleHold(slideHold(source, ev), scale) : undefined,
+        offset,
+        stepScale: scale,
       });
     }
     return out;

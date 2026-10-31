@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import type { Pattern } from '../../core/pattern/pattern';
 import { answerPattern, type AnswerTransform } from '../../core/engine/phrasing';
-import { shiftRegister } from '../../core/engine/trackRuntime';
+import { normalizeRate, shiftRegister } from '../../core/engine/trackRuntime';
 import { resolvePitch } from '../../core/pattern/resolve';
 import type { Harmony } from '../../core/theory/harmony';
 import type { DrumParams } from '../../core/generators/drumGenerator';
@@ -107,7 +107,10 @@ function draw(
   const labelW = labels ? 40 : 0;
   const w = width - labelW;
   const sx = (s: number) => labelW + (s / len) * w;
-  const local = step >= 0 ? step % len : -1;
+  // The pattern step at this global step (tracks can run at ×2, ½, ¼).
+  const rate = normalizeRate(track.rate);
+  const ps = step >= 0 ? Math.floor(step * rate) : -1;
+  const local = ps >= 0 ? ps % len : -1;
   const color = track.color;
 
   // Grid
@@ -152,11 +155,11 @@ function draw(
       ctx.globalAlpha = 1;
     });
   } else {
-    const blockStartBar = step >= 0 ? Math.floor(step / len) * (len / stepsPerBar) : 0;
+    const blockStart = ps >= 0 ? Math.floor(ps / len) * len : 0;
     const state = {};
     const reg = shiftRegister(track.register, track.octave ?? 0);
     const resolved = pattern.events.map((e) => {
-      const bar = blockStartBar + Math.floor(e.step / stepsPerBar);
+      const bar = Math.floor((blockStart + e.step) / rate / stepsPerBar);
       return { e, notes: resolvePitch(e.pitch, store.sequencer.harmonyAt(bar), reg, state) };
     });
     const all = resolved.flatMap((r) => r.notes);

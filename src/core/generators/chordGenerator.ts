@@ -28,22 +28,24 @@ export class ChordGenerator implements PatternGenerator<ChordParams> {
   generate(params: ChordParams, ctx: GeneratorContext): Pattern {
     const { stepsPerBar, rng } = ctx;
     const events: PatternEvent[] = [];
-    const bars = Math.max(1, Math.round(params.lengthSteps / stepsPerBar));
+    // One segment per bar (or the whole pattern when it is shorter than a bar).
+    const seg = Math.min(stepsPerBar, params.lengthSteps);
+    const bars = Math.max(1, Math.round(params.lengthSteps / seg));
     for (let bar = 0; bar < bars; bar++) {
-      const offset = bar * stepsPerBar;
+      const offset = bar * seg;
       if (params.style === 'sustain') {
         events.push({
           step: offset,
-          length: stepsPerBar * params.gate,
+          length: seg * params.gate,
           velocity: humanizeVelocity(params.velocity, params.velocityVariation, rng),
           pitch: { kind: 'chord' },
         });
         continue;
       }
-      const hits = euclid(params.pulses, stepsPerBar, rng.int(0, 2));
+      const hits = euclid(Math.round((params.pulses * seg) / stepsPerBar) || 1, seg, rng.int(0, 2));
       const starts = hits.flatMap((h, i) => (h ? [i] : []));
       starts.forEach((s, i) => {
-        const gap = (starts[i + 1] ?? stepsPerBar) - s;
+        const gap = (starts[i + 1] ?? seg) - s;
         events.push({
           step: offset + s,
           length: Math.max(0.5, gap * params.gate),
@@ -52,7 +54,7 @@ export class ChordGenerator implements PatternGenerator<ChordParams> {
         });
       });
     }
-    return { lengthSteps: bars * stepsPerBar, events };
+    return { lengthSteps: bars * seg, events };
   }
 
   mutate(pattern: Pattern, params: ChordParams, ctx: GeneratorContext): Pattern {

@@ -8,6 +8,7 @@ import type { TrackType } from '../core/generators/types';
 import type { InstrumentDefinition } from '../core/instruments/instrument';
 import type { MidiNote } from '../core/theory/note';
 import type { Pattern } from '../core/pattern/pattern';
+import { resizePattern } from '../core/pattern/edit';
 import { Rng } from '../core/random/rng';
 import { Chord } from '../core/theory/chord';
 import { generateProgression, varyProgression, type ProgressionStyle } from '../core/theory/progressionGenerator';
@@ -304,6 +305,15 @@ export class AppStore {
     if (!t) return;
     const generator = { ...t.generator, params: { ...t.generator.params, [key]: value } } as GeneratorConfig;
     this.updateTrack(id, { generator });
+  }
+
+  /** Change a track's pattern length; the current pattern repeats or is trimmed. */
+  setTrackLength(id: string, lengthSteps: number): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (!t) return;
+    const generator = { ...t.generator, params: { ...t.generator.params, lengthSteps } } as GeneratorConfig;
+    if (t.userPattern) this.updateTrack(id, { generator, userPattern: resizePattern(t.userPattern, lengthSteps) });
+    else this.updateTrack(id, { generator });
   }
 
   setTrackType(id: string, type: TrackType): void {

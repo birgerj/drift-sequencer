@@ -6,6 +6,7 @@ import { newId, type CcModulation, type LfoShape, type TrackState } from '../../
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
+import { TrackTiming } from '../components/TrackTiming';
 import { PatternEditor } from '../components/PatternEditor';
 import { PatternView } from '../components/PatternView';
 import { PARAM_SCHEMA, TRACK_TYPES, typeLabel, type Control } from '../paramSchema';
@@ -66,6 +67,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           <OutputCard track={track} />
 
           <Card title="Generator">
+            <TrackTiming track={track} />
             {track.generator.type !== 'drums' && (
               <div class="field">
                 <span class="field-label">Octave</span>
@@ -303,8 +305,8 @@ function DrumVoices({ track, instrument }: { track: TrackState; instrument: Inst
               </button>
             </div>
             <div class="voice-sliders">
-              <Slider compact label="Hits" value={v.pulses} min={0} max={params.lengthSteps} step={1} color={track.color} onInput={(pulses) => update(i, { pulses })} />
-              <Slider compact label="Rotate" value={v.rotate} min={0} max={params.lengthSteps - 1} step={1} color={track.color} onInput={(rotate) => update(i, { rotate })} />
+              <Slider compact label="Hits per bar" value={v.pulses} min={0} max={16} step={1} color={track.color} onInput={(pulses) => update(i, { pulses })} />
+              <Slider compact label="Rotate" value={v.rotate} min={0} max={15} step={1} color={track.color} onInput={(rotate) => update(i, { rotate })} />
               <Slider
                 compact
                 label="Chance"

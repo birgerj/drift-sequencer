@@ -2,6 +2,7 @@ import { Emitter } from '../events';
 import type { GeneratorConfig } from '../generators/registry';
 import { Harmony, type HarmonicMoment } from '../theory/harmony';
 import { answerEvents, phraseActive } from './phrasing';
+import { resizePattern } from '../pattern/edit';
 import { Scale } from '../theory/scale';
 import type { Chord } from '../theory/chord';
 import type { MidiNote } from '../theory/note';
@@ -116,6 +117,14 @@ export class Sequencer {
         rt.config = t;
         if (t.userPattern && t.userPattern !== prev.userPattern) rt.setPattern(t.userPattern);
         else if (prev.generator !== t.generator && needsRegenerate(prev.generator, t.generator, !!t.userPattern)) rt.regenerate(t.seed);
+        else if (
+          !t.userPattern &&
+          prev.generator.type === t.generator.type &&
+          t.generator.params.lengthSteps !== rt.pattern.lengthSteps
+        ) {
+          // A new length keeps the music: the pattern is repeated or trimmed.
+          rt.setPattern(resizePattern(rt.pattern, t.generator.params.lengthSteps));
+        }
       }
     }
   }
@@ -186,17 +195,19 @@ export class Sequencer {
       if (!audible) continue;
       const port = this.ports.byName(t.output.portName);
       for (const n of scheduled) {
+        // Tracks faster than ×1 place some notes inside the step.
+        const noteTime = timeMs + n.offset * stepMs;
         // A note followed by a slide is held into the next note (overlap → glide).
         const durationMs = n.holdSteps ? n.holdSteps * stepMs + 15 : Math.max(5, n.length * stepMs - 2);
         if (n.accent) n.velocity = 127;
         if (t.slideCc !== undefined && n.ratchet <= 1) {
-          port?.send(Midi.cc(t.output.channel, t.slideCc, n.slide ? 127 : 0), Math.max(0, timeMs - 1));
+          port?.send(Midi.cc(t.output.channel, t.slideCc, n.slide ? 127 : 0), Math.max(0, noteTime - 1));
         }
         if (n.ratchet > 1) {
-          // Ratchet: n quick repeats spread over one step.
-          const slot = stepMs / n.ratchet;
+          // Ratchet: n quick repeats spread over one pattern step.
+          const slot = (stepMs * n.stepScale) / n.ratchet;
           for (let r = 0; r < n.ratchet; r++) {
-            const at = timeMs + r * slot;
+            const at = noteTime + r * slot;
             const vel = Math.max(1, n.velocity - r * 6);
             for (const note of n.notes) {
               port?.send(Midi.noteOn(t.output.channel, note, vel), at);
@@ -205,11 +216,11 @@ export class Sequencer {
           }
         } else {
           for (const note of n.notes) {
-            port?.send(Midi.noteOn(t.output.channel, note, n.velocity), timeMs);
-            port?.send(Midi.noteOff(t.output.channel, note), timeMs + durationMs);
+            port?.send(Midi.noteOn(t.output.channel, note, n.velocity), noteTime);
+            port?.send(Midi.noteOff(t.output.channel, note), noteTime + durationMs);
           }
         }
-        this.events.emit('note', { trackId: t.id, notes: n.notes, velocity: n.velocity, timeMs, durationMs });
+        this.events.emit('note', { trackId: t.id, notes: n.notes, velocity: n.velocity, timeMs: noteTime, durationMs });
       }
     }
   }
@@ -257,7 +268,6 @@ function needsRegenerate(prev: GeneratorConfig, next: GeneratorConfig, hasUserPa
   if (prev.type !== next.type) return true;
   // A drawn pattern is never thrown away by moving a knob.
   if (hasUserPattern) return false;
-  if (prev.params.lengthSteps !== next.params.lengthSteps) return true;
   return next.type !== 'motif' && next.type !== 'bass' && next.type !== 'acid';
 }
 

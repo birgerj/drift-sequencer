@@ -77,8 +77,13 @@ export class DrumGenerator implements PatternGenerator<DrumParams> {
   }
 
   private voiceEvents(voice: DrumVoice, rotate: number, params: DrumParams, ctx: GeneratorContext): PatternEvent[] {
-    const hits = euclid(voice.pulses, params.lengthSteps, rotate);
-    const busy = voice.pulses >= params.lengthSteps / 2;
+    // Voices are defined per 16-step bar; longer patterns repeat it, an
+    // 8-step pattern uses half of the hits.
+    const cycle = Math.min(params.lengthSteps, 16);
+    const pulses = Math.round((voice.pulses * cycle) / 16);
+    const bar = euclid(pulses, cycle, rotate);
+    const hits = Array.from({ length: params.lengthSteps }, (_, i) => bar[i % cycle]!);
+    const busy = pulses >= cycle / 2;
     return hits.flatMap((hit, step): PatternEvent[] => {
       if (!hit) return [];
       const ev: PatternEvent = {
