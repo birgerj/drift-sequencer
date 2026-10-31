@@ -2,7 +2,7 @@
 // The build replaces __BUILD__ with a content hash, so each release gets a
 // fresh cache and old ones are removed on activation.
 
-const VERSION = 'e8f41fe35eb7';
+const VERSION = 'd50ec4bf6c27';
 const APP_CACHE = `drift-app-${VERSION}`;
 const FONT_CACHE = 'drift-fonts';
 const APP_SHELL = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/maskable-512.png', './icons/apple-touch-icon.png'];

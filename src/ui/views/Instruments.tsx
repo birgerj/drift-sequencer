@@ -1,3 +1,4 @@
+import { MidiMonitor } from '../components/MidiMonitor';
 import { useMemo, useState } from 'preact/hooks';
 import { convertMidiGuide, isTriggerCsv, parseCsv } from '../../core/instruments/midiGuide';
 import type { MidiGuideDevice } from '../../io/midiGuideClient';
@@ -70,6 +71,8 @@ export function Instruments() {
       </div>
 
       <MyDevices />
+
+      <MidiMonitor />
 
       <div class="editor-grid">
         <div class="col wide">

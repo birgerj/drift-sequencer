@@ -65,6 +65,15 @@ function normalizeDrums(project: ProjectState): ProjectState {
   };
 }
 
+export interface MonitorEntry {
+  id: number;
+  port: string;
+  channel: number;
+  text: string;
+  /** Tracks this message reaches (same input and channel). */
+  tracks: string[];
+}
+
 export type View =
   | { name: 'performance' }
   | { name: 'track'; trackId: string }
@@ -291,8 +300,58 @@ export class AppStore {
     return inputForDevice(d ?? { id: '', name: '', portName: out.portName, channel: out.channel, roles: [], clock: false }, this.inputs);
   }
 
+  /** Last incoming MIDI messages, newest first, for the monitor. */
+  monitor: MonitorEntry[] = [];
+  monitorOpen = false;
+  private monitorFrame = 0;
+  private nrpn = new Map<string, { msb?: number; lsb?: number }>();
+
+  private logIncoming(port: string, data: Uint8Array): void {
+    if (!this.monitorOpen) return;
+    const status = data[0]!;
+    const ch = (status & 0x0f) + 1;
+    const type = status & 0xf0;
+    let text: string;
+    if (type === 0xb0) {
+      const cc = data[1]!;
+      const v = data[2]!;
+      const key = `${port}:${ch}`;
+      const n = this.nrpn.get(key) ?? {};
+      if (cc === 99) n.msb = v;
+      if (cc === 98) n.lsb = v;
+      this.nrpn.set(key, n);
+      text =
+        cc === 6 && n.msb !== undefined && n.lsb !== undefined
+          ? `NRPN ${n.msb}:${n.lsb} = ${v}`
+          : cc === 99 || cc === 98 || cc === 38
+            ? `NRPN part (CC ${cc} = ${v})`
+            : `CC ${cc} = ${v}`;
+    } else if (type === 0x90 && data[2]! > 0) text = `Note on ${data[1]} vel ${data[2]}`;
+    else if (type === 0x80 || type === 0x90) text = `Note off ${data[1]}`;
+    else if (type === 0xc0) text = `Program ${data[1]}`;
+    else if (type === 0xe0) text = `Pitch bend ${(data[2]! << 7) | data[1]!}`;
+    else if (type === 0xd0) text = `Aftertouch ${data[1]}`;
+    else text = [...data].map((b) => b.toString(16).padStart(2, '0')).join(' ');
+    const tracks = this.project.tracks
+      .filter((t) => this.trackOutput(t).channel === ch && this.trackInput(t) === port)
+      .map((t) => t.name);
+    this.monitor = [{ id: ++this.logId, port, channel: ch, text, tracks }, ...this.monitor].slice(0, 40);
+    if (!this.monitorFrame) {
+      this.monitorFrame = requestAnimationFrame(() => {
+        this.monitorFrame = 0;
+        this.notify();
+      });
+    }
+  }
+
+  setMonitorOpen(open: boolean): void {
+    this.monitorOpen = open;
+    if (!open) this.monitor = [];
+  }
+
   /** A knob turned on a synth: show it, pause automation on it, record it. */
   private onMidiIn(port: string, data: Uint8Array): void {
+    this.logIncoming(port, data);
     const status = data[0]!;
     if ((status & 0xf0) !== 0xb0 || data.length < 3) return;
     const channel = (status & 0x0f) + 1;
