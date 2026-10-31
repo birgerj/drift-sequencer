@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { Sequencer } from '../core/engine/sequencer';
 import { createWorkerTimerHost } from '../core/engine/workerClock';
 import { keepAwake } from './keepAwake';
+import { Midi } from '../io/midi/messages';
 import { defaultConfig, type GeneratorConfig } from '../core/generators/registry';
 import type { TrackType } from '../core/generators/types';
 import type { InstrumentDefinition } from '../core/instruments/instrument';
@@ -433,6 +434,27 @@ export class AppStore {
 
   updateDevice(id: string, patch: Partial<RackDevice>): void {
     this.setRack({ devices: this.rack.devices.map((d) => (d.id === id ? { ...d, ...patch } : d)) });
+  }
+
+  /** Play a short C-E-G figure on a device, to check that it receives. */
+  async testDevice(id: string, channel?: number): Promise<boolean> {
+    const d = this.device(id);
+    if (!d) return false;
+    if (!this.midi.connected) await this.connectMidi();
+    const port = this.midi.byName(d.portName);
+    if (!port) {
+      this.showToast(`${d.name}: port “${d.portName}” is not connected.`);
+      return false;
+    }
+    const ch = channel ?? d.channel;
+    const base = d.roles.includes('drums') ? 36 : d.roles.includes('bass') ? 36 : 60;
+    const now = performance.now() + 20;
+    const notes = d.roles.includes('drums') ? [36, 38, 42] : [base, base + 4, base + 7];
+    notes.forEach((n, i) => {
+      port.send(Midi.noteOn(ch, n, 100), now + i * 180);
+      port.send(Midi.noteOff(ch, n), now + i * 180 + 150);
+    });
+    return true;
   }
 
   removeDevice(id: string): void {

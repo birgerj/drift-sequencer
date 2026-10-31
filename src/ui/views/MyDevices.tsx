@@ -1,10 +1,13 @@
+import { useState } from 'preact/hooks';
 import { DEVICE_ROLES, newDevice, suggestInstrument } from '../../state/rack';
+import { ChannelFinder } from '../components/ChannelFinder';
 import { Card, Icon, Select, Stepper, Toggle } from '../components/controls';
 import { useStore } from '../store';
 
 /** Manage the global device setup ("rack") shared by all projects. */
 export function MyDevices() {
   const s = useStore();
+  const [finding, setFinding] = useState<string | undefined>();
   const instruments = s.instruments.map((i) => i.definition);
   const instrumentOptions = [{ value: '', label: 'None' }, ...instruments.map((d) => ({ value: d.id, label: `${d.manufacturer} ${d.device}` }))];
 
@@ -104,6 +107,18 @@ export function MyDevices() {
               </div>
               <Toggle label="Send clock" description="MIDI clock + start/stop" checked={d.clock} onChange={(clock) => s.updateDevice(d.id, { clock })} />
               {usedBy.length > 0 && <p class="hint">In this project: {usedBy.join(', ')}</p>}
+              {finding === d.id ? (
+                <ChannelFinder device={d} onClose={() => setFinding(undefined)} />
+              ) : (
+                <div class="row gap-s wrap">
+                  <button type="button" onClick={() => void s.testDevice(d.id)}>
+                    <Icon name="play" size={16} /> Test note
+                  </button>
+                  <button type="button" onClick={() => setFinding(d.id)}>
+                    Find channel…
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
