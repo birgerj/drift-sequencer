@@ -91,6 +91,8 @@ export class AppStore {
   projects: ProjectSummary[] = [];
   log: LogEntry[] = [];
   toast: string | undefined;
+  /** Keyboard shortcut overlay. */
+  shortcutsOpen = false;
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
 
   private listeners = new Set<() => void>();
@@ -162,6 +164,17 @@ export class AppStore {
   go(view: View): void {
     this.view = view;
     this.notify();
+  }
+
+  setShortcutsOpen(open: boolean): void {
+    this.shortcutsOpen = open;
+    this.notify();
+  }
+
+  /** The track shown in the detail pane, if any. */
+  get currentTrack(): TrackState | undefined {
+    const v = this.view;
+    return v.name === 'track' ? this.project.tracks.find((t) => t.id === v.trackId) : undefined;
   }
 
   showToast(text: string): void {

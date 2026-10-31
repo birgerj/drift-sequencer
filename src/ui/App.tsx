@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'preact/hooks';
-import { NOTE_NAMES } from '../core/theory/note';
 import { pwa } from './pwa';
-import { Icon, Stepper } from './components/controls';
-import { useLive, useStore } from './store';
+import { Icon } from './components/controls';
+import { Rail } from './components/Rail';
+import { SHORTCUT_HELP, useShortcuts } from './shortcuts';
+import { useStore } from './store';
 import { HarmonyEditor } from './views/HarmonyEditor';
 import { Instruments } from './views/Instruments';
 import { Library } from './views/Library';
@@ -16,37 +17,23 @@ function usePwa() {
   return { canInstall: pwa.canInstall, updateReady: pwa.updateReady };
 }
 
-/** Space toggles play/stop, except while typing in a field or on a focused control. */
-function useSpaceToPlay() {
-  const s = useStore();
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.code !== 'Space' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
-      const el = e.target as HTMLElement | null;
-      if (el?.closest('input, textarea, select, [contenteditable="true"]')) return;
-      e.preventDefault();
-      (el as HTMLElement | null)?.blur?.();
-      void s.togglePlay();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [s]);
-}
-
 export function App() {
   const s = useStore();
   const v = s.view;
   const pwaState = usePwa();
-  useSpaceToPlay();
+  useShortcuts();
   return (
-    <>
-      <Header />
-      {v.name === 'performance' && <Performance />}
-      {v.name === 'track' && <TrackEditor trackId={v.trackId} />}
-      {v.name === 'templates' && <Library />}
-      {v.name === 'instruments' && <Instruments />}
-      {v.name === 'harmony' && <HarmonyEditor />}
-      {v.name === 'setup' && <Setup />}
+    <div class="shell">
+      <Rail canInstall={pwaState.canInstall} />
+      <main class="detail" key={v.name === 'track' ? v.trackId : v.name}>
+        {v.name === 'performance' && <Performance />}
+        {v.name === 'track' && <TrackEditor trackId={v.trackId} />}
+        {v.name === 'templates' && <Library />}
+        {v.name === 'instruments' && <Instruments />}
+        {v.name === 'harmony' && <HarmonyEditor />}
+        {v.name === 'setup' && <Setup />}
+      </main>
+      {s.shortcutsOpen && <ShortcutHelp />}
       {pwaState.updateReady && (
         <div class="toast update" role="status">
           A new version of Drift is ready.
@@ -60,132 +47,32 @@ export function App() {
           {s.toast}
         </div>
       )}
-    </>
+    </div>
   );
 }
 
-function Header() {
+function ShortcutHelp() {
   const s = useStore();
-  const p = s.project;
-  const playing = s.sequencer.playing;
-  const position = useLive((l) => (playing && l.step >= 0 ? `${String(l.bar + 1).padStart(3, '0')}.${Math.floor((l.step % p.stepsPerBar) / 4) + 1}` : '001.1'));
-  const chord = useLive((l) => (playing ? l.chord : ''));
-  const clockTarget = p.clock.sendTo[0] ?? '';
-  const pwaState = usePwa();
-
   return (
-    <header class="topbar">
-      <div class="brand">
-        <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true">
-          <path d="M2 17 C6 5, 10 5, 13 13 S20 21, 24 9" fill="none" stroke="#F5A524" stroke-width="2.5" stroke-linecap="round" />
-        </svg>
-        <button type="button" class="project-name" onClick={() => s.go({ name: 'templates' })} aria-label="Projects and templates">
-          {p.name}
-        </button>
-      </div>
-
-      <button type="button" class={`play ${playing ? 'on' : ''}`} aria-label={playing ? 'Stop' : 'Play'} title="Space" onClick={() => void s.togglePlay()}>
-        <Icon name={playing ? 'stop' : 'play'} size={22} />
-      </button>
-
-      <div class="readout">
-        <span class="eyebrow">Tempo</span>
-        <Stepper label="Tempo" value={p.bpm} min={20} max={300} onChange={(bpm) => s.change((x) => ({ ...x, bpm }))} />
-      </div>
-      <div class="readout">
-        <span class="eyebrow">Position</span>
-        <span class="mono big">{position}</span>
-      </div>
-      <button type="button" class="readout tappable" onClick={() => s.go({ name: 'harmony' })} aria-label="Edit key and progression">
-        <span class="eyebrow">Key</span>
-        <span class="big">
-          {NOTE_NAMES[p.key.root]} <span class="muted">{p.key.mode}</span>
-          {chord && <span class="chord-now"> · {chord}</span>}
-        </span>
-      </button>
-      <div class="readout">
-        <label class="eyebrow" for="clock-target">
-          Clock out
-        </label>
-        {s.rack.devices.length > 0 ? (
-          <select
-            id="clock-target"
-            value={s.rack.devices.find((d) => d.clock)?.id ?? ''}
-            onChange={(e) => {
-              const id = (e.target as HTMLSelectElement).value;
-              s.setRack({ devices: s.rack.devices.map((d) => ({ ...d, clock: d.id === id })) });
-            }}
-          >
-            <option value="">Off</option>
-            {s.rack.devices.map((d) => (
-              <option value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        ) : (
-          <select
-            id="clock-target"
-            value={clockTarget}
-            onChange={(e) => {
-              const v = (e.target as HTMLSelectElement).value;
-              s.change((x) => ({ ...x, clock: { sendTo: v ? [v] : [] } }));
-            }}
-          >
-            <option value="">Off</option>
-            {[...new Set([clockTarget, ...s.ports].filter(Boolean))].map((n) => (
-              <option value={n}>{n}</option>
-            ))}
-          </select>
-        )}
-      </div>
-
-      <div class="spacer" />
-
-      {pwaState.canInstall && (
-        <button type="button" onClick={() => void pwa.install()}>
-          <Icon name="download" /> Install app
-        </button>
-      )}
-
-      <div class="devices">
-        {!s.midi.connected ? (
-          <button type="button" onClick={() => void s.connectMidi()}>
-            Connect MIDI
+    <div class="overlay" role="dialog" aria-modal="true" aria-label="Keyboard shortcuts" onClick={() => s.setShortcutsOpen(false)}>
+      <div class="card shortcut-card" onClick={(e) => e.stopPropagation()}>
+        <div class="card-head">
+          <h2 class="eyebrow">Keyboard shortcuts</h2>
+          <button type="button" class="square" aria-label="Close" onClick={() => s.setShortcutsOpen(false)}>
+            <Icon name="close" />
           </button>
-        ) : s.rack.devices.length > 0 ? (
-          s.rack.devices.slice(0, 5).map((d) => (
-            <button type="button" class="device-chip" onClick={() => s.go({ name: 'instruments' })} title={`${d.portName} · ch ${d.channel}`}>
-              <span class={`dot ${s.ports.includes(d.portName) ? 'ok' : ''}`} /> {d.name}
-            </button>
-          ))
-        ) : s.ports.length === 0 ? (
-          <span class="device-chip warn">No MIDI outputs</span>
-        ) : (
-          s.ports.slice(0, 4).map((n) => (
-            <span class="device-chip">
-              <span class="dot ok" /> {n}
-            </span>
-          ))
-        )}
+        </div>
+        <dl class="shortcut-list">
+          {SHORTCUT_HELP.map((x) => (
+            <>
+              <dt>
+                <kbd>{x.keys}</kbd>
+              </dt>
+              <dd>{x.action}</dd>
+            </>
+          ))}
+        </dl>
       </div>
-
-      <nav class="nav" aria-label="Main">
-        <button type="button" aria-current={s.view.name === 'performance'} onClick={() => s.go({ name: 'performance' })}>
-          <Icon name="grid" /> <span>Perform</span>
-        </button>
-        <button type="button" aria-current={s.view.name === 'harmony'} onClick={() => s.go({ name: 'harmony' })}>
-          <Icon name="music" /> <span>Harmony</span>
-        </button>
-        <button type="button" aria-current={s.view.name === 'templates'} onClick={() => s.go({ name: 'templates' })}>
-          <Icon name="download" /> <span>Projects</span>
-        </button>
-        <button
-          type="button"
-          aria-current={s.view.name === 'instruments' || s.view.name === 'setup'}
-          onClick={() => s.go({ name: 'instruments' })}
-        >
-          <Icon name="sliders" /> <span>Devices</span>
-        </button>
-      </nav>
-    </header>
+    </div>
   );
 }

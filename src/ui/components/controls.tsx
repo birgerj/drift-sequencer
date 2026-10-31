@@ -178,6 +178,34 @@ const PATHS: Record<string, string> = {
   music: 'M9 18V6l10-2v12M9 18a3 3 0 1 1-3-3 3 3 0 0 1 3 3zM19 16a3 3 0 1 1-3-3 3 3 0 0 1 3 3z',
   check: 'M5 12l5 5 9-10',
   close: 'M6 6l12 12M18 6L6 18',
+  // Track types
+  motif: 'M9 18V5l9-2v13M9 18a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0zM18 16a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z',
+  acid: 'M2 16c2.7 0 2.7-9 5.3-9s2.7 9 5.4 9 2.6-9 5.3-9S20.7 11.5 22 11.5',
+  chords: 'M4 5h16M4 12h16M4 19h16M8 5v14M16 5v14',
+  drone: 'M2 12h20M5 8v8M19 8v8M12 5v14',
+  arp: 'M3 19l4-4 4 3 4-7 4 3 2-8',
+  bass: 'M4 15c0-3 3-5 6-5h1V5l6 3v8a4 4 0 1 1-4-4h-3c-2 0-3 1-3 3z',
+  drums: 'M3 9c0-2.2 4-4 9-4s9 1.8 9 4-4 4-9 4-9-1.8-9-4zM3 9v6c0 2.2 4 4 9 4s9-1.8 9-4V9',
+  // Sections and views
+  wave: 'M2 12c2.5-8 5-8 7.5 0s5 8 7.5 0 3.5-5 5-2.5',
+  output: 'M4 12h12M12 7l5 5-5 5M20 4v16',
+  list: 'M4 6h16M4 12h16M4 18h16',
+  devices: 'M3 6h18v10H3zM7 16v3M17 16v3M7 10h1.5M11 10h1.5M15 10h2',
+  folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
+  speaker: 'M4 9h4l5-4v14l-5-4H4zM17 8.5a5 5 0 0 1 0 7',
+  mute: 'M4 9h4l5-4v14l-5-4H4zM17 9l5 6M22 9l-5 6',
+  keyboard: 'M3 6h18v12H3zM7 10h.01M11 10h.01M15 10h.01M7 14h10',
+};
+
+/** Icon name per generator type. */
+export const TYPE_ICONS: Record<string, string> = {
+  motif: 'motif',
+  acid: 'acid',
+  chords: 'chords',
+  drone: 'drone',
+  arp: 'arp',
+  bass: 'bass',
+  drums: 'drums',
 };
 
 export function Icon(props: { name: keyof typeof PATHS | string; size?: number }) {

@@ -3,18 +3,22 @@ import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
-import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle } from '../components/controls';
+import { useEffect, useState } from 'preact/hooks';
+import { Chord } from '../../core/theory/chord';
+import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
 import { TrackTiming } from '../components/TrackTiming';
 import { PatternEditor } from '../components/PatternEditor';
 import { PatternView } from '../components/PatternView';
 import { PARAM_SCHEMA, TRACK_TYPES, typeLabel, type Control } from '../paramSchema';
-import { useStore } from '../store';
+import { jumpToSection, lastJump, SECTIONS, type SectionId } from '../shortcuts';
+import { useLive, useStore } from '../store';
 
 export function TrackEditor({ trackId }: { trackId: string }) {
   const s = useStore();
   const track = s.project.tracks.find((t) => t.id === trackId);
+  const active = useActiveSection();
   if (!track) {
     return (
       <div class="page">
@@ -25,55 +29,129 @@ export function TrackEditor({ trackId }: { trackId: string }) {
   }
   const rt = s.sequencer.track(track.id);
   const instrument = s.trackInstrument(track);
+  const out = s.trackOutput(track);
+  const device = s.device(track.deviceId);
+  const editable = track.generator.type === 'drums' || track.generator.type === 'motif' || track.generator.type === 'acid';
+  const harmony = s.sequencer.currentHarmony;
 
   return (
-    <div class="page track-editor" style={{ '--accent': track.color }}>
-      <div class="page-head">
-        <button type="button" class="ghost" onClick={() => s.go({ name: 'performance' })}>
-          <Icon name="back" /> Performance
-        </button>
-        <span class="swatch large" />
+    <div class="track-detail" style={{ '--accent': track.color }}>
+      <div class="detail-head">
+        <span class="detail-icon">
+          <Icon name={TYPE_ICONS[track.generator.type] ?? 'motif'} size={20} />
+        </span>
         <input
           class="title-input"
           aria-label="Track name"
           value={track.name}
           onChange={(e) => s.updateTrack(track.id, { name: (e.target as HTMLInputElement).value || track.name })}
         />
+        <span class="muted small detail-meta">
+          {typeLabel(track.generator.type)} · {device?.name ?? out.portName} · ch {out.channel}
+        </span>
         <div class="spacer" />
-        <button type="button" aria-pressed={track.frozen} onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })}>
-          <Icon name="snow" /> {track.frozen ? 'Frozen' : 'Freeze'}
-        </button>
-        <button type="button" class="primary" onClick={() => s.regenerate(track.id)}>
-          <Icon name="dice" /> New pattern
-        </button>
+        <div class="detail-chords" aria-label="Progression">
+          {s.project.progression.map((step, i) => (
+            <ChordChip key={i} index={i} label={Chord.fromDegree(harmony.scale, step.degree, step.size ?? 3).symbol()} />
+          ))}
+        </div>
       </div>
 
-      <section class="type-grid" aria-label="Track type">
-        {TRACK_TYPES.map((t) => (
-          <button
-            type="button"
-            class="type-card"
-            aria-pressed={track.generator.type === t.type}
-            onClick={() => s.setTrackType(track.id, t.type)}
-          >
-            <b>{t.label}</b>
-            <span class="hint">{t.description}</span>
+      <nav class="jump-bar" aria-label="Jump to section">
+        {SECTIONS.map((x) => (
+          <button type="button" class="jump" aria-current={active === x.id} onClick={() => jumpToSection(x.id)}>
+            <Icon name={x.icon} size={16} />
+            {x.label}
+            <kbd>{x.key}</kbd>
           </button>
         ))}
-      </section>
+        <div class="spacer" />
+        <button type="button" class="jump" onClick={() => s.regenerate(track.id)} title="N">
+          <Icon name="dice" size={16} /> New pattern
+        </button>
+        <button type="button" class="jump" aria-pressed={track.frozen} onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })} title="F">
+          <Icon name="snow" size={16} /> {track.frozen ? 'Frozen' : 'Freeze'}
+        </button>
+        <button
+          type="button"
+          class="jump square-jump"
+          aria-pressed={track.muted}
+          aria-label={`Mute ${track.name} (M)`}
+          onClick={() => s.updateTrack(track.id, { muted: !track.muted })}
+        >
+          <Icon name={track.muted ? 'mute' : 'speaker'} size={16} />
+        </button>
+        <button
+          type="button"
+          class="jump square-jump"
+          aria-pressed={track.solo}
+          aria-label={`Solo ${track.name} (S)`}
+          onClick={() => s.updateTrack(track.id, { solo: !track.solo })}
+        >
+          S
+        </button>
+      </nav>
 
-      <div class="editor-grid">
-        <div class="col">
-          <OutputCard track={track} />
-
-          <Card title="Generator">
-            <TrackTiming track={track} />
-            {track.generator.type !== 'drums' && (
-              <div class="field">
-                <span class="field-label">Octave</span>
-                <OctaveControl track={track} />
-              </div>
+      <div class="detail-body">
+        <div id="sec-pattern" class="detail-section span-all">
+          <Card
+            title={`Pattern · ${rt ? rt.pattern.lengthSteps / s.project.stepsPerBar : 0} bar(s)`}
+            actions={
+              track.userPattern ? (
+                <button type="button" onClick={() => s.regenerate(track.id)}>
+                  <Icon name="dice" /> Back to generated
+                </button>
+              ) : undefined
+            }
+          >
+            <div class="timing-row">
+              <TrackTiming track={track} />
+              {track.generator.type !== 'drums' && (
+                <div class="field">
+                  <span class="field-label">Octave</span>
+                  <OctaveControl track={track} compact />
+                </div>
+              )}
+            </div>
+            {editable ? (
+              <PatternEditor track={track} />
+            ) : (
+              rt && <PatternView track={track} pattern={rt.pattern} harmony={harmony} height={180} showLabels />
             )}
+            <div class="variations">
+              <span class="eyebrow">Variations</span>
+              <div class="chips">
+                {(rt?.history ?? []).slice(-10).map((pattern, i, list) => {
+                  const index = (rt?.history.length ?? 0) - list.length + i;
+                  const current = rt?.pattern === pattern;
+                  return (
+                    <button type="button" class="chip" aria-pressed={current} onClick={() => s.restoreVariation(track.id, index)}>
+                      {variationName(index)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        <div id="sec-generator" class="detail-section">
+          <Card title="Generator">
+            <div class="type-chips" role="radiogroup" aria-label="Track type">
+              {TRACK_TYPES.map((t) => (
+                <button
+                  type="button"
+                  role="radio"
+                  class="type-chip"
+                  aria-checked={track.generator.type === t.type}
+                  title={t.description}
+                  onClick={() => s.setTrackType(track.id, t.type)}
+                >
+                  <Icon name={TYPE_ICONS[t.type] ?? 'motif'} size={16} />
+                  {t.label}
+                </button>
+              ))}
+            </div>
             {PARAM_SCHEMA[track.generator.type].map((c) => (
               <ParamControl control={c} track={track} />
             ))}
@@ -84,78 +162,79 @@ export function TrackEditor({ trackId }: { trackId: string }) {
               onChange={(mutationIntervalBars) => s.updateTrack(track.id, { mutationIntervalBars })}
             />
           </Card>
+          {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
         </div>
 
-        <div class="col wide">
-          <Card title={`Pattern · ${rt ? rt.pattern.lengthSteps / s.project.stepsPerBar : 0} bar(s)`}>
-            {rt && <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={260} showLabels />}
-          </Card>
-
-          <Card
-            title="Edit pattern"
-            actions={
-              track.userPattern ? (
-                <button type="button" onClick={() => s.regenerate(track.id)}>
-                  <Icon name="dice" /> Back to generated
-                </button>
-              ) : undefined
-            }
-          >
-            {track.generator.type === 'drums' || track.generator.type === 'motif' || track.generator.type === 'acid' ? (
-              <PatternEditor track={track} />
-            ) : (
-              <p class="hint">
-                {typeLabel(track.generator.type)} tracks are built from the chords, so they can't be drawn note by note.
-                Switch the type to Motif to draw a melody, or to Drums for a step grid.
-              </p>
-            )}
-          </Card>
-
-          {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
-
-          <Card title="Variations">
-            <div class="chips">
-              {(rt?.history ?? []).slice(-10).map((pattern, i, list) => {
-                const index = (rt?.history.length ?? 0) - list.length + i;
-                const current = rt?.pattern === pattern;
-                return (
-                  <button type="button" class="chip" aria-pressed={current} onClick={() => s.restoreVariation(track.id, index)}>
-                    {variationName(index)}
-                  </button>
-                );
-              })}
-            </div>
-            <p class="hint">Every mutation stores a variation. Tap one to jump back to it.</p>
-          </Card>
-
-          <CallResponse track={track} />
-
+        <div id="sec-modulation" class="detail-section">
           <Modulations track={track} instrument={instrument} />
+          <CallResponse track={track} />
+        </div>
 
+        <div id="sec-output" class="detail-section">
+          <OutputCard track={track} />
           <Card title="Track">
-            <div class="row gap-s wrap">
-              <button type="button" aria-pressed={track.muted} onClick={() => s.updateTrack(track.id, { muted: !track.muted })}>
-                Mute
-              </button>
-              <button type="button" aria-pressed={track.solo} onClick={() => s.updateTrack(track.id, { solo: !track.solo })}>
-                Solo
-              </button>
-              <div class="spacer" />
-              <button
-                type="button"
-                class="danger"
-                onClick={() => {
-                  if (confirm(`Delete track “${track.name}”?`)) s.removeTrack(track.id);
-                }}
-              >
-                <Icon name="trash" /> Delete track
-              </button>
-            </div>
+            <button
+              type="button"
+              class="danger"
+              onClick={() => {
+                if (confirm(`Delete track “${track.name}”?`)) s.removeTrack(track.id);
+              }}
+            >
+              <Icon name="trash" /> Delete track
+            </button>
           </Card>
         </div>
       </div>
     </div>
   );
+}
+
+function ChordChip({ index, label }: { index: number; label: string }) {
+  const s = useStore();
+  const current = useLive((l) => (s.sequencer.playing ? s.sequencer.harmonyAt(l.bar).stepIndex : -1));
+  return (
+    <button type="button" class="detail-chord" aria-current={current === index} onClick={() => s.go({ name: 'harmony' })}>
+      {label}
+    </button>
+  );
+}
+
+/** The section nearest the top of the scroll area, for the jump bar highlight. */
+function useActiveSection(): SectionId {
+  const [active, setActive] = useState<SectionId>('pattern');
+  useEffect(() => {
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      if (performance.now() - lastJump.at < 900) return;
+      const bar = document.querySelector('.jump-bar')?.getBoundingClientRect().bottom ?? 0;
+      // The lowest section top that has reached the bar; sections side by
+      // side in one row tie, and then the first of them wins.
+      let current: SectionId = 'pattern';
+      let best = -Infinity;
+      for (const x of SECTIONS) {
+        const top = document.getElementById(`sec-${x.id}`)?.getBoundingClientRect().top;
+        if (top !== undefined && top <= bar + 40 && top > best + 1) {
+          best = top;
+          current = x.id;
+        }
+      }
+      setActive(current);
+    };
+    const onJump = (e: Event) => setActive((e as CustomEvent<SectionId>).detail);
+    window.addEventListener('drift:section', onJump);
+    const onScroll = () => {
+      if (!frame) frame = requestAnimationFrame(update);
+    };
+    document.addEventListener('scroll', onScroll, true);
+    update();
+    return () => {
+      document.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('drift:section', onJump);
+      if (frame) cancelAnimationFrame(frame);
+    };
+  }, []);
+  return active;
 }
 
 /** Pick a device from "My devices"; without devices, set a port directly. */

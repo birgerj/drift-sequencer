@@ -24,7 +24,6 @@ import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { useLive, useStore } from '../store';
 import { Icon, Segmented } from './controls';
-import { LENGTH_OPTIONS } from './TrackTiming';
 
 /** Tap-to-edit grid: drum steps for drum tracks, notes for motif tracks. */
 export function PatternEditor({ track }: { track: TrackState }) {
@@ -38,27 +37,27 @@ export function PatternEditor({ track }: { track: TrackState }) {
   const pattern = rt.pattern;
 
   const [mode, setMode] = useState<EditMode>('notes');
-  const setLength = (lengthSteps: number) => s.setTrackLength(track.id, lengthSteps);
 
   return (
     <div class="pattern-editor" style={{ '--accent': track.color }}>
-      <div class="row gap-s wrap">
-        <Segmented label="Length (steps)" value={pattern.lengthSteps} options={LENGTH_OPTIONS} onChange={setLength} />
+      <div class="editor-tools">
+        {track.generator.type !== 'acid' && (
+          <Segmented
+            label="Tap edits"
+            value={mode}
+            options={[
+              { value: 'notes', label: track.generator.type === 'drums' ? 'Steps' : 'Notes' },
+              { value: 'condition', label: 'Condition' },
+              { value: 'ratchet', label: 'Ratchet' },
+            ]}
+            onChange={setMode}
+          />
+        )}
         <div class="spacer" />
         <button type="button" onClick={() => s.editPattern(track.id, clearPattern)}>
           <Icon name="trash" /> Clear
         </button>
       </div>
-      {track.generator.type !== 'acid' && <Segmented
-        label="Tap edits"
-        value={mode}
-        options={[
-          { value: 'notes', label: track.generator.type === 'drums' ? 'Steps' : 'Notes' },
-          { value: 'condition', label: 'Condition' },
-          { value: 'ratchet', label: 'Ratchet' },
-        ]}
-        onChange={setMode}
-      />}
       {track.generator.type === 'acid' ? (
         <AcidGrid track={track} pattern={pattern} playStep={playStep} />
       ) : track.generator.type === 'drums' ? (
@@ -66,11 +65,11 @@ export function PatternEditor({ track }: { track: TrackState }) {
       ) : (
         <MotifGrid track={track} pattern={pattern} playStep={playStep} mode={mode} />
       )}
-      <p class="hint">
+      {mode !== 'notes' && <p class="hint">
         {mode === 'condition' &&
           'Tap a hit to cycle its condition: 1:2 plays on the 1st of every 2 passes, 3:4 on the 3rd of every 4, and so on.'}
         {mode === 'ratchet' && 'Tap a hit to repeat it 2, 3 or 4 times within its step.'}
-      </p>
+      </p>}
     </div>
   );
 }
