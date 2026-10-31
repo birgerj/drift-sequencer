@@ -7,6 +7,7 @@ import { HarmonyEditor } from './views/HarmonyEditor';
 import { Instruments } from './views/Instruments';
 import { Library } from './views/Library';
 import { Performance } from './views/Performance';
+import { Setup } from './views/Setup';
 import { TrackEditor } from './views/TrackEditor';
 
 function usePwa() {
@@ -27,6 +28,7 @@ export function App() {
       {v.name === 'templates' && <Library />}
       {v.name === 'instruments' && <Instruments />}
       {v.name === 'harmony' && <HarmonyEditor />}
+      {v.name === 'setup' && <Setup />}
       {pwaState.updateReady && (
         <div class="toast update" role="status">
           A new version of Drift is ready.
@@ -87,19 +89,35 @@ function Header() {
         <label class="eyebrow" for="clock-target">
           Clock out
         </label>
-        <select
-          id="clock-target"
-          value={clockTarget}
-          onChange={(e) => {
-            const v = (e.target as HTMLSelectElement).value;
-            s.change((x) => ({ ...x, clock: { sendTo: v ? [v] : [] } }));
-          }}
-        >
-          <option value="">Off</option>
-          {[...new Set([clockTarget, ...s.ports].filter(Boolean))].map((n) => (
-            <option value={n}>{n}</option>
-          ))}
-        </select>
+        {s.rack.devices.length > 0 ? (
+          <select
+            id="clock-target"
+            value={s.rack.devices.find((d) => d.clock)?.id ?? ''}
+            onChange={(e) => {
+              const id = (e.target as HTMLSelectElement).value;
+              s.setRack({ devices: s.rack.devices.map((d) => ({ ...d, clock: d.id === id })) });
+            }}
+          >
+            <option value="">Off</option>
+            {s.rack.devices.map((d) => (
+              <option value={d.id}>{d.name}</option>
+            ))}
+          </select>
+        ) : (
+          <select
+            id="clock-target"
+            value={clockTarget}
+            onChange={(e) => {
+              const v = (e.target as HTMLSelectElement).value;
+              s.change((x) => ({ ...x, clock: { sendTo: v ? [v] : [] } }));
+            }}
+          >
+            <option value="">Off</option>
+            {[...new Set([clockTarget, ...s.ports].filter(Boolean))].map((n) => (
+              <option value={n}>{n}</option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div class="spacer" />
@@ -115,6 +133,12 @@ function Header() {
           <button type="button" onClick={() => void s.connectMidi()}>
             Connect MIDI
           </button>
+        ) : s.rack.devices.length > 0 ? (
+          s.rack.devices.slice(0, 5).map((d) => (
+            <button type="button" class="device-chip" onClick={() => s.go({ name: 'instruments' })} title={`${d.portName} · ch ${d.channel}`}>
+              <span class={`dot ${s.ports.includes(d.portName) ? 'ok' : ''}`} /> {d.name}
+            </button>
+          ))
         ) : s.ports.length === 0 ? (
           <span class="device-chip warn">No MIDI outputs</span>
         ) : (
@@ -136,8 +160,12 @@ function Header() {
         <button type="button" aria-current={s.view.name === 'templates'} onClick={() => s.go({ name: 'templates' })}>
           <Icon name="download" /> <span>Projects</span>
         </button>
-        <button type="button" aria-current={s.view.name === 'instruments'} onClick={() => s.go({ name: 'instruments' })}>
-          <Icon name="sliders" /> <span>Instruments</span>
+        <button
+          type="button"
+          aria-current={s.view.name === 'instruments' || s.view.name === 'setup'}
+          onClick={() => s.go({ name: 'instruments' })}
+        >
+          <Icon name="sliders" /> <span>Devices</span>
         </button>
       </nav>
     </header>

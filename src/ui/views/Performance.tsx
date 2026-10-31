@@ -12,6 +12,17 @@ export function Performance() {
   const p = s.project;
   return (
     <div class="performance">
+      {s.rack.devices.length === 0 && (
+        <section class="card setup-banner">
+          <div>
+            <b>Connect your gear once</b>
+            <p class="hint">Map your synths and drum machine; every project and template will use them.</p>
+          </div>
+          <button type="button" class="primary" onClick={() => s.go({ name: 'setup' })}>
+            Set up devices
+          </button>
+        </section>
+      )}
       <HarmonyStrip />
       <div class="perf-body">
         <main class="lanes">
@@ -85,7 +96,9 @@ function Lane({ track }: { track: TrackState }) {
   const rt = s.sequencer.track(track.id);
   const quick = PARAM_SCHEMA[track.generator.type].filter((c) => c.kind === 'range').slice(0, 3);
   const params = track.generator.params as unknown as Record<string, number>;
-  const portOk = s.portAvailable(track.output.portName);
+  const out = s.trackOutput(track);
+  const device = s.device(track.deviceId);
+  const portOk = s.portAvailable(out.portName);
   const resting = useLive((l) => !!track.phrase && s.sequencer.playing && l.step >= 0 && !phraseActive(track.phrase, l.bar));
   const answering = track.phrase?.answer ? s.project.tracks.find((t) => t.id === track.phrase!.answer!.from) : undefined;
   return (
@@ -99,7 +112,7 @@ function Lane({ track }: { track: TrackState }) {
           <span class="type-pill">{typeLabel(track.generator.type)}</span>
         </div>
         <span class={`small ${portOk ? 'muted' : 'warn'}`} title={portOk ? '' : 'Port not connected'}>
-          {track.output.portName} · ch {track.output.channel}
+          {device ? `${device.name} · ch ${out.channel}` : `${out.portName} · ch ${out.channel}`}
         </span>
         {track.phrase && (
           <span class="phrase-badge small">

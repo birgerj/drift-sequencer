@@ -117,8 +117,12 @@ column on phones and tablets.
   can answer with the caller's phrase echoed, inverted, a third up, a fourth
   down or reversed. Try the *Conversation* template.
 - **Projects** — templates, saved projects, JSON import/export.
-- **Instruments** — browse and import midi.guide definitions straight from
-  GitHub, or import CSV files.
+- **Devices** — your hardware setup, shared by all projects: name, port,
+  channel, instrument definition, roles (lead, bass, pad, drums) and clock.
+  A setup wizard recognises your ports; tracks just pick a device and
+  templates pick one by role, so switching templates keeps your setup.
+  Browse and import midi.guide definitions straight from GitHub, or import
+  CSV files.
 
 **Timing in the background.** Browsers throttle timers in hidden tabs, so
 the scheduler's clock runs in a Web Worker and the lookahead grows while the

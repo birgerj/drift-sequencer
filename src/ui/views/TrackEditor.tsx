@@ -22,7 +22,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
     );
   }
   const rt = s.sequencer.track(track.id);
-  const instrument = s.instrument(track.instrumentId);
+  const instrument = s.trackInstrument(track);
 
   return (
     <div class="page track-editor" style={{ '--accent': track.color }}>
@@ -62,39 +62,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
 
       <div class="editor-grid">
         <div class="col">
-          <Card title="Output">
-            <Select
-              label="MIDI port"
-              value={track.output.portName}
-              options={[...new Set([track.output.portName, ...s.ports])].map((n) => ({
-                value: n,
-                label: s.portAvailable(n) ? n : `${n} (not connected)`,
-              }))}
-              onChange={(portName) => s.updateTrack(track.id, { output: { ...track.output, portName } })}
-            />
-            <div class="field">
-              <span class="field-label">Channel</span>
-              <Stepper
-                label="MIDI channel"
-                value={track.output.channel}
-                min={1}
-                max={16}
-                onChange={(channel) => s.updateTrack(track.id, { output: { ...track.output, channel } })}
-              />
-            </div>
-            <Select
-              label="Instrument"
-              value={track.instrumentId ?? ''}
-              options={[
-                { value: '', label: 'None' },
-                ...s.instruments.map((i) => ({ value: i.definition.id, label: `${i.definition.manufacturer} ${i.definition.device}` })),
-              ]}
-              onChange={(id) => s.updateTrack(track.id, { instrumentId: id || undefined })}
-            />
-            <button type="button" class="link" onClick={() => s.go({ name: 'instruments' })}>
-              Import instrument definitions…
-            </button>
-          </Card>
+          <OutputCard track={track} />
 
           <Card title="Generator">
             {PARAM_SCHEMA[track.generator.type].map((c) => (
@@ -178,6 +146,75 @@ export function TrackEditor({ trackId }: { trackId: string }) {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Pick a device from "My devices"; without devices, set a port directly. */
+function OutputCard({ track }: { track: TrackState }) {
+  const s = useStore();
+  const device = s.device(track.deviceId);
+  const out = s.trackOutput(track);
+  const instrument = s.trackInstrument(track);
+
+  if (s.rack.devices.length === 0) {
+    return (
+      <Card title="Output">
+        <div class="empty">
+          <p>Set up your synths once under Devices; then every track just picks one, in every project.</p>
+          <button type="button" class="primary" onClick={() => s.go({ name: 'setup' })}>
+            Set up your gear
+          </button>
+        </div>
+        <Select
+          label="MIDI port"
+          value={track.output.portName}
+          options={[...new Set([track.output.portName, ...s.ports])].map((n) => ({
+            value: n,
+            label: s.portAvailable(n) ? n : `${n} (not connected)`,
+          }))}
+          onChange={(portName) => s.updateTrack(track.id, { output: { ...track.output, portName } })}
+        />
+        <div class="field">
+          <span class="field-label">Channel</span>
+          <Stepper
+            label="MIDI channel"
+            value={track.output.channel}
+            min={1}
+            max={16}
+            onChange={(channel) => s.updateTrack(track.id, { output: { ...track.output, channel } })}
+          />
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card title="Device">
+      <div class="chips device-pick" role="radiogroup" aria-label="Device">
+        {s.rack.devices.map((d) => (
+          <button
+            type="button"
+            role="radio"
+            class="chip device-option"
+            aria-checked={d.id === track.deviceId}
+            aria-pressed={d.id === track.deviceId}
+            onClick={() => s.updateTrack(track.id, { deviceId: d.id })}
+          >
+            <span class={`dot ${s.ports.includes(d.portName) ? 'ok' : ''}`} />
+            {d.name}
+          </button>
+        ))}
+      </div>
+      <p class={`hint ${s.portAvailable(out.portName) ? '' : 'warn'}`}>
+        {out.portName} · channel {out.channel}
+        {instrument ? ` · ${instrument.manufacturer} ${instrument.device}` : ''}
+        {s.portAvailable(out.portName) ? '' : ' · not connected'}
+      </p>
+      {!device && <p class="warn small">No device chosen — this track uses its own port setting.</p>}
+      <button type="button" class="link" onClick={() => s.go({ name: 'instruments' })}>
+        Edit my devices…
+      </button>
+    </Card>
   );
 }
 

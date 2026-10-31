@@ -6,6 +6,7 @@ import type { ProgressionStep } from '../core/theory/harmony';
 import { parsePitchClass } from '../core/theory/note';
 import type { ModeName } from '../core/theory/scale';
 import { newId, SCHEMA_VERSION, type MidiTarget, type ProjectState, type TrackState } from './project';
+import { roleForType, type DeviceRole } from './rack';
 
 export const TRACK_COLORS = {
   lead: '#F5A524',
@@ -28,6 +29,8 @@ export interface TrackSpec {
   color: string;
   type: TrackType;
   output: MidiTarget;
+  /** Which rack device to use; defaults from the track type. */
+  role?: DeviceRole;
   /** Shallow overrides for the generator's default params. */
   params?: Record<string, unknown>;
   mutationIntervalBars?: number;
@@ -45,6 +48,7 @@ export function createTrack(spec: TrackSpec): TrackState {
     generator,
     register: { ...REGISTERS[spec.type] },
     output: { ...spec.output },
+    role: spec.role ?? roleForType(spec.type),
     muted: false,
     solo: false,
     frozen: false,

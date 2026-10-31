@@ -1,4 +1,5 @@
 import type { PhraseSettings } from '../core/engine/phrasing';
+import type { DeviceRole } from './rack';
 import type { GeneratorConfig } from '../core/generators/registry';
 import type { Pattern, Register } from '../core/pattern/pattern';
 import type { ProgressionStep } from '../core/theory/harmony';
@@ -37,8 +38,13 @@ export interface TrackState {
   color: string;
   generator: GeneratorConfig;
   register: Register;
+  /** Fallback MIDI target, used when no rack device is assigned. */
   output: MidiTarget;
-  /** Instrument definition id (CC map / drum notes) for this track's device. */
+  /** The rack device (from "My devices") this track plays on. */
+  deviceId?: string;
+  /** Role used to pick a device automatically ('lead', 'bass', 'pad', 'drums'). */
+  role?: DeviceRole;
+  /** Instrument definition id; normally taken from the rack device. */
   instrumentId?: string;
   muted: boolean;
   solo: boolean;

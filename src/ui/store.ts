@@ -13,7 +13,20 @@ import { Scale } from '../core/theory/scale';
 import { WebMidiService } from '../io/midi/webMidiService';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
-import type { ProjectState, TrackState } from '../state/project';
+import type { MidiTarget, ProjectState, TrackState } from '../state/project';
+import {
+  assignDevices,
+  deviceForRole,
+  effectiveInstrumentId,
+  effectiveOutput,
+  loadRack,
+  resolveProject,
+  roleForType,
+  roleOf,
+  saveRack,
+  type Rack,
+  type RackDevice,
+} from '../state/rack';
 import {
   deserializeProject,
   IndexedDbProjectRepository,
@@ -29,6 +42,7 @@ export type View =
   | { name: 'track'; trackId: string }
   | { name: 'templates' }
   | { name: 'instruments' }
+  | { name: 'setup' }
   | { name: 'harmony' };
 
 export interface LogEntry {
@@ -66,6 +80,8 @@ export class AppStore {
 
   project: ProjectState;
   sequencer: Sequencer;
+  /** The user's hardware setup, shared by all projects on this device. */
+  rack: Rack = loadRack();
   view: View = { name: 'performance' };
   ports: string[] = [];
   instruments: InstalledInstrument[] = [];
@@ -82,8 +98,13 @@ export class AppStore {
   private unsubscribers: (() => void)[] = [];
 
   constructor() {
-    this.project = createProject('deep-house');
+    this.project = assignDevices(createProject('deep-house'), this.rack);
     this.sequencer = this.createSequencer(this.project);
+  }
+
+  /** The project with outputs, instruments and clock taken from the rack. */
+  private engineView(project: ProjectState = this.project): ProjectState {
+    return resolveProject(project, this.rack);
   }
 
   async init(): Promise<void> {
@@ -180,7 +201,7 @@ export class AppStore {
 
   private createSequencer(project: ProjectState): Sequencer {
     this.unsubscribers.forEach((u) => u());
-    const seq = new Sequencer(project, this.midi, this.clock);
+    const seq = new Sequencer(this.engineView(project), this.midi, this.clock);
     seq.setBackground(typeof document !== 'undefined' && document.hidden);
     const ev = seq.events;
     this.unsubscribers = [
@@ -204,9 +225,11 @@ export class AppStore {
     return seq;
   }
 
-  open(project: ProjectState): void {
+  open(incoming: ProjectState): void {
     const wasPlaying = this.sequencer.playing;
     this.sequencer.stop();
+    // Tracks pick up this device's synths by role (templates, imports, old projects).
+    const project = assignDevices(incoming, this.rack);
     this.project = project;
     this.sequencer = this.createSequencer(project);
     this.live.step = -1;
@@ -241,7 +264,7 @@ export class AppStore {
   /** Every edit goes through here: new state → engine → autosave → render. */
   change(mutator: (p: ProjectState) => ProjectState): void {
     this.project = mutator(this.project);
-    this.sequencer.update(this.project);
+    this.sequencer.update(this.engineView());
     clearTimeout(this.saveTimer);
     this.saveTimer = setTimeout(() => this.flushSave(), 600);
     this.notify();
@@ -270,7 +293,16 @@ export class AppStore {
     if (!t || t.generator.type === type) return;
     const generator = defaultConfig(type);
     const fresh = createTrack({ name: t.name, color: t.color, type, output: t.output });
-    this.updateTrack(id, { generator, register: fresh.register, userPattern: undefined });
+    // Moving between e.g. melody and drums also moves to the matching device.
+    const role = roleForType(type);
+    const device = roleOf(t) !== role ? deviceForRole(this.rack, role) : undefined;
+    this.updateTrack(id, {
+      generator,
+      register: fresh.register,
+      userPattern: undefined,
+      role,
+      ...(device ? { deviceId: device.id } : {}),
+    });
   }
 
   addTrack(): void {
@@ -281,6 +313,8 @@ export class AppStore {
       type: 'motif',
       output: { portName: this.ports[0] ?? 'Lead synth', channel: Math.min(16, this.project.tracks.length + 1) },
     });
+    const device = deviceForRole(this.rack, 'lead');
+    if (device) track.deviceId = device.id;
     this.change((p) => ({ ...p, tracks: [...p.tracks, track] }));
     this.go({ name: 'track', trackId: track.id });
   }
@@ -371,6 +405,40 @@ export class AppStore {
   async refreshInstruments(): Promise<void> {
     this.instruments = await this.library.list().catch(() => []);
     this.notify();
+  }
+
+  // ---------- rack ----------
+
+  /** Replace the device setup; `reassign` re-picks every track's device by role. */
+  setRack(rack: Rack, reassign = false): void {
+    this.rack = rack;
+    saveRack(rack);
+    const assigned = assignDevices(this.project, rack, reassign);
+    if (assigned !== this.project) this.change(() => assigned);
+    else {
+      this.sequencer.update(this.engineView());
+      this.notify();
+    }
+  }
+
+  updateDevice(id: string, patch: Partial<RackDevice>): void {
+    this.setRack({ devices: this.rack.devices.map((d) => (d.id === id ? { ...d, ...patch } : d)) });
+  }
+
+  removeDevice(id: string): void {
+    this.setRack({ devices: this.rack.devices.filter((d) => d.id !== id) });
+  }
+
+  device(id: string | undefined): RackDevice | undefined {
+    return id ? this.rack.devices.find((d) => d.id === id) : undefined;
+  }
+
+  trackOutput(track: TrackState): MidiTarget {
+    return effectiveOutput(track, this.rack);
+  }
+
+  trackInstrument(track: TrackState): InstrumentDefinition | undefined {
+    return this.instrument(effectiveInstrumentId(track, this.rack));
   }
 
   instrument(id: string | undefined): InstrumentDefinition | undefined {

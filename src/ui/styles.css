@@ -274,6 +274,22 @@ button.readout { padding: 0 0 0 14px; }
 
 .toast.update { display: flex; align-items: center; gap: 12px; bottom: max(84px, calc(env(safe-area-inset-bottom) + 64px)); }
 
+/* ---------- devices ---------- */
+
+.setup-banner { flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-color: color-mix(in srgb, var(--accent) 50%, var(--line)); }
+.setup-banner b { font-size: 16px; }
+.lead-hint { font-size: 15px; max-width: 720px; }
+.setup-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.setup-grid .card.unused { opacity: 0.75; }
+.big-action { min-height: 52px; padding: 0 24px; font-size: 16px; }
+.devices-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 12px; }
+.device-card { background: var(--well); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 12px; }
+.device-name { font-size: 17px; font-weight: 600; background: transparent; border-color: transparent; min-width: 0; flex: 1 1 140px; }
+.device-name:focus { background: var(--surface-2); border-color: var(--line-2); }
+.device-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.device-option { gap: 8px; font-family: inherit; }
+button.device-chip { cursor: pointer; }
+
 /* ---------- pattern editor ---------- */
 
 .pattern-editor { display: flex; flex-direction: column; gap: 12px; }

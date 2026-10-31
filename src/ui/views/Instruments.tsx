@@ -3,6 +3,7 @@ import { convertMidiGuide, isTriggerCsv, parseCsv } from '../../core/instruments
 import type { MidiGuideDevice } from '../../io/midiGuideClient';
 import { Card, Icon } from '../components/controls';
 import { useStore } from '../store';
+import { MyDevices } from './MyDevices';
 
 export function Instruments() {
   const s = useStore();
@@ -65,8 +66,10 @@ export function Instruments() {
         <button type="button" class="ghost" onClick={() => s.go({ name: 'performance' })}>
           <Icon name="back" /> Performance
         </button>
-        <h1>Instruments</h1>
+        <h1>Devices</h1>
       </div>
+
+      <MyDevices />
 
       <div class="editor-grid">
         <div class="col wide">
@@ -138,7 +141,7 @@ export function Instruments() {
         </div>
 
         <div class="col">
-          <Card title="Installed">
+          <Card title="Installed definitions">
             <ul class="device-list">
               {s.instruments.map((i) => (
                 <li>
