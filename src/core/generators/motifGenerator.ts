@@ -1,5 +1,6 @@
 import type { Pattern, PatternEvent } from '../pattern/pattern';
 import type { Rng } from '../random/rng';
+import { generatePhraseMelody, mutatePhraseMelody } from './phraseMelody';
 import {
   humanizeVelocity,
   isStrongStep,
@@ -8,7 +9,15 @@ import {
   type PatternGenerator,
 } from './types';
 
+/**
+ * phrase: song-like phrases (repetition, cadences, voice-leading rules).
+ * walk: the original constrained random walk.
+ */
+export type MotifStyle = 'phrase' | 'walk';
+
 export interface MotifParams extends CommonParams {
+  /** Melody algorithm; projects saved before this existed use 'phrase'. */
+  style?: MotifStyle;
   /** 0..1 chance a step starts a note (strong beats get a bonus). */
   density: number;
   /** Highest degree offset from the chord root, both directions. */
@@ -29,6 +38,7 @@ export class MotifGenerator implements PatternGenerator<MotifParams> {
 
   defaults(): MotifParams {
     return {
+      style: 'phrase',
       lengthSteps: 32,
       density: 0.45,
       rangeDegrees: 7,
@@ -43,6 +53,7 @@ export class MotifGenerator implements PatternGenerator<MotifParams> {
 
   generate(params: MotifParams, ctx: GeneratorContext): Pattern {
     const { rng, stepsPerBar } = ctx;
+    if ((params.style ?? 'phrase') === 'phrase') return generatePhraseMelody(params, rng, stepsPerBar);
     const events: PatternEvent[] = [];
     let degree = 0;
     for (let step = 0; step < params.lengthSteps; step++) {
@@ -62,6 +73,7 @@ export class MotifGenerator implements PatternGenerator<MotifParams> {
 
   mutate(pattern: Pattern, params: MotifParams, ctx: GeneratorContext): Pattern {
     const { rng, stepsPerBar } = ctx;
+    if ((params.style ?? 'phrase') === 'phrase') return mutatePhraseMelody(pattern, params, rng, stepsPerBar);
     const events = pattern.events.map((e) => ({ ...e }));
     for (const e of events) {
       if (!rng.chance(params.mutation) || e.pitch.kind !== 'degree') continue;

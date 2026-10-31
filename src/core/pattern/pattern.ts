@@ -6,8 +6,12 @@ import type { MidiNote } from '../theory/note';
  * shape while following the chord progression and any key change.
  */
 export type PitchSpec =
-  /** Scale degree offset from the current chord's root degree (+ optional octave jump). */
-  | { kind: 'degree'; degree: number; octave?: number }
+  /**
+   * Scale degree offset from the current chord's root degree (+ optional
+   * octave jump). With `nearest`, the octave closest to the previous note is
+   * chosen, so a melody moves smoothly across chord changes.
+   */
+  | { kind: 'degree'; degree: number; octave?: number; nearest?: boolean }
   /** Scale degree offset from the key's root (ignores chords). */
   | { kind: 'keyDegree'; degree: number }
   /** A tone of the current chord: 0 = root, 1 = third, 2 = fifth, … */

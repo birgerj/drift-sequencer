@@ -18,6 +18,15 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
   motif: [
     { kind: 'range', key: 'density', label: 'Density', min: 0, max: 1, step: 0.01, format: pct },
     mutation,
+    {
+      kind: 'choice',
+      key: 'style',
+      label: 'Melody style',
+      options: [
+        { value: 'phrase', label: 'Phrases' },
+        { value: 'walk', label: 'Random walk' },
+      ],
+    },
     { kind: 'range', key: 'rangeDegrees', label: 'Range', min: 2, max: 14, step: 1, format: (v) => `${v} degrees` },
     { kind: 'range', key: 'maxLeap', label: 'Max leap', min: 1, max: 7, step: 1, format: steps },
     { kind: 'range', key: 'chordToneBias', label: 'Chord-tone pull', min: 0, max: 1, step: 0.01, format: pct },
