@@ -16,10 +16,28 @@ function usePwa() {
   return { canInstall: pwa.canInstall, updateReady: pwa.updateReady };
 }
 
+/** Space toggles play/stop, except while typing in a field or on a focused control. */
+function useSpaceToPlay() {
+  const s = useStore();
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== 'Space' || e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+      const el = e.target as HTMLElement | null;
+      if (el?.closest('input, textarea, select, [contenteditable="true"]')) return;
+      e.preventDefault();
+      (el as HTMLElement | null)?.blur?.();
+      void s.togglePlay();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [s]);
+}
+
 export function App() {
   const s = useStore();
   const v = s.view;
   const pwaState = usePwa();
+  useSpaceToPlay();
   return (
     <>
       <Header />
@@ -66,7 +84,7 @@ function Header() {
         </button>
       </div>
 
-      <button type="button" class={`play ${playing ? 'on' : ''}`} aria-label={playing ? 'Stop' : 'Play'} onClick={() => void s.togglePlay()}>
+      <button type="button" class={`play ${playing ? 'on' : ''}`} aria-label={playing ? 'Stop' : 'Play'} title="Space" onClick={() => void s.togglePlay()}>
         <Icon name={playing ? 'stop' : 'play'} size={22} />
       </button>
 
