@@ -1,0 +1,1426 @@
+{
+  "id": "korg-wavestate",
+  "manufacturer": "KORG",
+  "device": "Wavestate",
+  "params": [
+    {
+      "id": "general-modulation",
+      "name": "Modulation",
+      "msg": {
+        "type": "cc",
+        "cc": 1
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-volume",
+      "name": "Volume",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General",
+      "target": "level"
+    },
+    {
+      "id": "general-pan",
+      "name": "Pan",
+      "msg": {
+        "type": "cc",
+        "cc": 10
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": true,
+      "section": "General"
+    },
+    {
+      "id": "general-expression",
+      "name": "Expression",
+      "msg": {
+        "type": "cc",
+        "cc": 11
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "vector-vector-joystick-x",
+      "name": "Vector joystick X",
+      "msg": {
+        "type": "cc",
+        "cc": 16
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Vector"
+    },
+    {
+      "id": "vector-vector-joystick-y",
+      "name": "Vector joystick Y",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Vector"
+    },
+    {
+      "id": "pedals-damper",
+      "name": "Damper",
+      "msg": {
+        "type": "cc",
+        "cc": 64
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pedals"
+    },
+    {
+      "id": "pedals-sostenuto",
+      "name": "Sostenuto",
+      "msg": {
+        "type": "cc",
+        "cc": 66
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pedals"
+    },
+    {
+      "id": "pedals-soft",
+      "name": "Soft",
+      "msg": {
+        "type": "cc",
+        "cc": 67
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pedals"
+    },
+    {
+      "id": "general-all-sounds-off",
+      "name": "All sounds off",
+      "msg": {
+        "type": "cc",
+        "cc": 120
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-reset-all-controllers",
+      "name": "Reset all controllers",
+      "msg": {
+        "type": "cc",
+        "cc": 121
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "assignable-assignable-cc-2",
+      "name": "Assignable CC 2",
+      "msg": {
+        "type": "cc",
+        "cc": 2
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-3",
+      "name": "Assignable CC 3",
+      "msg": {
+        "type": "cc",
+        "cc": 3
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-4",
+      "name": "Assignable CC 4",
+      "msg": {
+        "type": "cc",
+        "cc": 4
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-5",
+      "name": "Assignable CC 5",
+      "msg": {
+        "type": "cc",
+        "cc": 5
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-6",
+      "name": "Assignable CC 6",
+      "msg": {
+        "type": "cc",
+        "cc": 6
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-8",
+      "name": "Assignable CC 8",
+      "msg": {
+        "type": "cc",
+        "cc": 8
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-9",
+      "name": "Assignable CC 9",
+      "msg": {
+        "type": "cc",
+        "cc": 9
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-12",
+      "name": "Assignable CC 12",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-13",
+      "name": "Assignable CC 13",
+      "msg": {
+        "type": "cc",
+        "cc": 13
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-14",
+      "name": "Assignable CC 14",
+      "msg": {
+        "type": "cc",
+        "cc": 14
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-15",
+      "name": "Assignable CC 15",
+      "msg": {
+        "type": "cc",
+        "cc": 15
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-16",
+      "name": "Assignable CC 16",
+      "msg": {
+        "type": "cc",
+        "cc": 16
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-17",
+      "name": "Assignable CC 17",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-18",
+      "name": "Assignable CC 18",
+      "msg": {
+        "type": "cc",
+        "cc": 18
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-19",
+      "name": "Assignable CC 19",
+      "msg": {
+        "type": "cc",
+        "cc": 19
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-20",
+      "name": "Assignable CC 20",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-21",
+      "name": "Assignable CC 21",
+      "msg": {
+        "type": "cc",
+        "cc": 21
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-22",
+      "name": "Assignable CC 22",
+      "msg": {
+        "type": "cc",
+        "cc": 22
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-23",
+      "name": "Assignable CC 23",
+      "msg": {
+        "type": "cc",
+        "cc": 23
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-24",
+      "name": "Assignable CC 24",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-25",
+      "name": "Assignable CC 25",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-26",
+      "name": "Assignable CC 26",
+      "msg": {
+        "type": "cc",
+        "cc": 26
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-27",
+      "name": "Assignable CC 27",
+      "msg": {
+        "type": "cc",
+        "cc": 27
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-28",
+      "name": "Assignable CC 28",
+      "msg": {
+        "type": "cc",
+        "cc": 28
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-29",
+      "name": "Assignable CC 29",
+      "msg": {
+        "type": "cc",
+        "cc": 29
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-30",
+      "name": "Assignable CC 30",
+      "msg": {
+        "type": "cc",
+        "cc": 30
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-31",
+      "name": "Assignable CC 31",
+      "msg": {
+        "type": "cc",
+        "cc": 31
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-32",
+      "name": "Assignable CC 32",
+      "msg": {
+        "type": "cc",
+        "cc": 32
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-33",
+      "name": "Assignable CC 33",
+      "msg": {
+        "type": "cc",
+        "cc": 33
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-34",
+      "name": "Assignable CC 34",
+      "msg": {
+        "type": "cc",
+        "cc": 34
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-35",
+      "name": "Assignable CC 35",
+      "msg": {
+        "type": "cc",
+        "cc": 35
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-36",
+      "name": "Assignable CC 36",
+      "msg": {
+        "type": "cc",
+        "cc": 36
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-37",
+      "name": "Assignable CC 37",
+      "msg": {
+        "type": "cc",
+        "cc": 37
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-38",
+      "name": "Assignable CC 38",
+      "msg": {
+        "type": "cc",
+        "cc": 38
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-39",
+      "name": "Assignable CC 39",
+      "msg": {
+        "type": "cc",
+        "cc": 39
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-40",
+      "name": "Assignable CC 40",
+      "msg": {
+        "type": "cc",
+        "cc": 40
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-41",
+      "name": "Assignable CC 41",
+      "msg": {
+        "type": "cc",
+        "cc": 41
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-42",
+      "name": "Assignable CC 42",
+      "msg": {
+        "type": "cc",
+        "cc": 42
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-43",
+      "name": "Assignable CC 43",
+      "msg": {
+        "type": "cc",
+        "cc": 43
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-44",
+      "name": "Assignable CC 44",
+      "msg": {
+        "type": "cc",
+        "cc": 44
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-45",
+      "name": "Assignable CC 45",
+      "msg": {
+        "type": "cc",
+        "cc": 45
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-46",
+      "name": "Assignable CC 46",
+      "msg": {
+        "type": "cc",
+        "cc": 46
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-47",
+      "name": "Assignable CC 47",
+      "msg": {
+        "type": "cc",
+        "cc": 47
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-48",
+      "name": "Assignable CC 48",
+      "msg": {
+        "type": "cc",
+        "cc": 48
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-49",
+      "name": "Assignable CC 49",
+      "msg": {
+        "type": "cc",
+        "cc": 49
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-50",
+      "name": "Assignable CC 50",
+      "msg": {
+        "type": "cc",
+        "cc": 50
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-51",
+      "name": "Assignable CC 51",
+      "msg": {
+        "type": "cc",
+        "cc": 51
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-52",
+      "name": "Assignable CC 52",
+      "msg": {
+        "type": "cc",
+        "cc": 52
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-53",
+      "name": "Assignable CC 53",
+      "msg": {
+        "type": "cc",
+        "cc": 53
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-54",
+      "name": "Assignable CC 54",
+      "msg": {
+        "type": "cc",
+        "cc": 54
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-55",
+      "name": "Assignable CC 55",
+      "msg": {
+        "type": "cc",
+        "cc": 55
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-56",
+      "name": "Assignable CC 56",
+      "msg": {
+        "type": "cc",
+        "cc": 56
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-57",
+      "name": "Assignable CC 57",
+      "msg": {
+        "type": "cc",
+        "cc": 57
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-58",
+      "name": "Assignable CC 58",
+      "msg": {
+        "type": "cc",
+        "cc": 58
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-59",
+      "name": "Assignable CC 59",
+      "msg": {
+        "type": "cc",
+        "cc": 59
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-60",
+      "name": "Assignable CC 60",
+      "msg": {
+        "type": "cc",
+        "cc": 60
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-61",
+      "name": "Assignable CC 61",
+      "msg": {
+        "type": "cc",
+        "cc": 61
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-62",
+      "name": "Assignable CC 62",
+      "msg": {
+        "type": "cc",
+        "cc": 62
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-63",
+      "name": "Assignable CC 63",
+      "msg": {
+        "type": "cc",
+        "cc": 63
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-65",
+      "name": "Assignable CC 65",
+      "msg": {
+        "type": "cc",
+        "cc": 65
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-67",
+      "name": "Assignable CC 67",
+      "msg": {
+        "type": "cc",
+        "cc": 67
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-68",
+      "name": "Assignable CC 68",
+      "msg": {
+        "type": "cc",
+        "cc": 68
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-69",
+      "name": "Assignable CC 69",
+      "msg": {
+        "type": "cc",
+        "cc": 69
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-70",
+      "name": "Assignable CC 70",
+      "msg": {
+        "type": "cc",
+        "cc": 70
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-71",
+      "name": "Assignable CC 71",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-72",
+      "name": "Assignable CC 72",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-73",
+      "name": "Assignable CC 73",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-74",
+      "name": "Assignable CC 74",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-75",
+      "name": "Assignable CC 75",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-76",
+      "name": "Assignable CC 76",
+      "msg": {
+        "type": "cc",
+        "cc": 76
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-77",
+      "name": "Assignable CC 77",
+      "msg": {
+        "type": "cc",
+        "cc": 77
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-78",
+      "name": "Assignable CC 78",
+      "msg": {
+        "type": "cc",
+        "cc": 78
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-79",
+      "name": "Assignable CC 79",
+      "msg": {
+        "type": "cc",
+        "cc": 79
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-80",
+      "name": "Assignable CC 80",
+      "msg": {
+        "type": "cc",
+        "cc": 80
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-81",
+      "name": "Assignable CC 81",
+      "msg": {
+        "type": "cc",
+        "cc": 81
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-82",
+      "name": "Assignable CC 82",
+      "msg": {
+        "type": "cc",
+        "cc": 82
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-83",
+      "name": "Assignable CC 83",
+      "msg": {
+        "type": "cc",
+        "cc": 83
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-84",
+      "name": "Assignable CC 84",
+      "msg": {
+        "type": "cc",
+        "cc": 84
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-85",
+      "name": "Assignable CC 85",
+      "msg": {
+        "type": "cc",
+        "cc": 85
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-86",
+      "name": "Assignable CC 86",
+      "msg": {
+        "type": "cc",
+        "cc": 86
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-87",
+      "name": "Assignable CC 87",
+      "msg": {
+        "type": "cc",
+        "cc": 87
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-88",
+      "name": "Assignable CC 88",
+      "msg": {
+        "type": "cc",
+        "cc": 88
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-89",
+      "name": "Assignable CC 89",
+      "msg": {
+        "type": "cc",
+        "cc": 89
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-90",
+      "name": "Assignable CC 90",
+      "msg": {
+        "type": "cc",
+        "cc": 90
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-91",
+      "name": "Assignable CC 91",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-92",
+      "name": "Assignable CC 92",
+      "msg": {
+        "type": "cc",
+        "cc": 92
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-93",
+      "name": "Assignable CC 93",
+      "msg": {
+        "type": "cc",
+        "cc": 93
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-94",
+      "name": "Assignable CC 94",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-95",
+      "name": "Assignable CC 95",
+      "msg": {
+        "type": "cc",
+        "cc": 95
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-102",
+      "name": "Assignable CC 102",
+      "msg": {
+        "type": "cc",
+        "cc": 102
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-103",
+      "name": "Assignable CC 103",
+      "msg": {
+        "type": "cc",
+        "cc": 103
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-104",
+      "name": "Assignable CC 104",
+      "msg": {
+        "type": "cc",
+        "cc": 104
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-105",
+      "name": "Assignable CC 105",
+      "msg": {
+        "type": "cc",
+        "cc": 105
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-106",
+      "name": "Assignable CC 106",
+      "msg": {
+        "type": "cc",
+        "cc": 106
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-107",
+      "name": "Assignable CC 107",
+      "msg": {
+        "type": "cc",
+        "cc": 107
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-108",
+      "name": "Assignable CC 108",
+      "msg": {
+        "type": "cc",
+        "cc": 108
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-109",
+      "name": "Assignable CC 109",
+      "msg": {
+        "type": "cc",
+        "cc": 109
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-110",
+      "name": "Assignable CC 110",
+      "msg": {
+        "type": "cc",
+        "cc": 110
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-111",
+      "name": "Assignable CC 111",
+      "msg": {
+        "type": "cc",
+        "cc": 111
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-112",
+      "name": "Assignable CC 112",
+      "msg": {
+        "type": "cc",
+        "cc": 112
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-113",
+      "name": "Assignable CC 113",
+      "msg": {
+        "type": "cc",
+        "cc": 113
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-114",
+      "name": "Assignable CC 114",
+      "msg": {
+        "type": "cc",
+        "cc": 114
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-115",
+      "name": "Assignable CC 115",
+      "msg": {
+        "type": "cc",
+        "cc": 115
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-116",
+      "name": "Assignable CC 116",
+      "msg": {
+        "type": "cc",
+        "cc": 116
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-117",
+      "name": "Assignable CC 117",
+      "msg": {
+        "type": "cc",
+        "cc": 117
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-118",
+      "name": "Assignable CC 118",
+      "msg": {
+        "type": "cc",
+        "cc": 118
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    },
+    {
+      "id": "assignable-assignable-cc-119",
+      "name": "Assignable CC 119",
+      "msg": {
+        "type": "cc",
+        "cc": 119
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Assignable"
+    }
+  ],
+  "triggers": [],
+  "source": "midi.guide (github.com/pencilresearch/midi), CC BY-SA 4.0"
+}

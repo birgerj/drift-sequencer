@@ -78,3 +78,22 @@ describe('rack', () => {
     expect(loadRack(storage)).toEqual(rack);
   });
 });
+
+describe('port guessing for a real setup', () => {
+  it('Hydrasynth lead, TB-03 bass, Wavestate pad, TR-8S drums', () => {
+    const ports = ['TR-8S CTRL', 'wavestate SOUND', 'TB-03', 'HYDRASYNTH EXPLORER', 'TR-8S'];
+    expect(guessPorts(ports)).toEqual({ drums: 'TR-8S', lead: 'HYDRASYNTH EXPLORER', bass: 'TB-03', pad: 'wavestate SOUND' });
+    expect(guessPorts(['HYDRASYNTH EXPLORER', 'TB-03', 'wavestate SOUND', 'TR-8S'])).toEqual({
+      drums: 'TR-8S',
+      lead: 'HYDRASYNTH EXPLORER',
+      bass: 'TB-03',
+      pad: 'wavestate SOUND',
+    });
+    for (const [port, id] of [
+      ['HYDRASYNTH EXPLORER', 'asm-hydrasynth'],
+      ['TB-03', 'roland-tb-03'],
+      ['wavestate SOUND', 'korg-wavestate'],
+      ['TR-8S', 'roland-tr-8s'],
+    ]) expect(suggestInstrument(port!, BUILT_IN_INSTRUMENTS)?.id).toBe(id);
+  });
+});

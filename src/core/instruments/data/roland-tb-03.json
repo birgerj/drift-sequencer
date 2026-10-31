@@ -1,0 +1,136 @@
+{
+  "id": "roland-tb-03",
+  "manufacturer": "Roland",
+  "device": "TB-03",
+  "params": [
+    {
+      "id": "all-ccs-envelope-modulation",
+      "name": "Envelope modulation",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs"
+    },
+    {
+      "id": "all-ccs-accent-level",
+      "name": "Accent level",
+      "msg": {
+        "type": "cc",
+        "cc": 16
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs"
+    },
+    {
+      "id": "all-ccs-overdrive",
+      "name": "Overdrive",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "fx"
+    },
+    {
+      "id": "all-ccs-delay-time",
+      "name": "Delay time",
+      "msg": {
+        "type": "cc",
+        "cc": 18
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "fx"
+    },
+    {
+      "id": "all-ccs-delay-feedback",
+      "name": "Delay feedback",
+      "msg": {
+        "type": "cc",
+        "cc": 19
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "fx"
+    },
+    {
+      "id": "all-ccs-resonance",
+      "name": "Resonance",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "filterResonance"
+    },
+    {
+      "id": "all-ccs-filter-cutoff-frequency",
+      "name": "Filter cutoff frequency",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "filterCutoff"
+    },
+    {
+      "id": "all-ccs-decay",
+      "name": "Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "envDecay"
+    },
+    {
+      "id": "all-ccs-slide-status",
+      "name": "Slide status",
+      "msg": {
+        "type": "cc",
+        "cc": 102
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs"
+    },
+    {
+      "id": "all-ccs-tuning",
+      "name": "Tuning",
+      "msg": {
+        "type": "cc",
+        "cc": 104
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "All CCs",
+      "target": "tune"
+    }
+  ],
+  "triggers": [],
+  "source": "midi.guide (github.com/pencilresearch/midi), CC BY-SA 4.0"
+}

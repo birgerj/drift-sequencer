@@ -1,0 +1,1430 @@
+{
+  "id": "asm-hydrasynth",
+  "manufacturer": "ASM",
+  "device": "Hydrasynth",
+  "params": [
+    {
+      "id": "amp-amp-lfo2amt",
+      "name": "AMP Lfo2amt",
+      "msg": {
+        "type": "cc",
+        "cc": 62
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Amp",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "arp-arp-division",
+      "name": "ARP Division",
+      "msg": {
+        "type": "cc",
+        "cc": 106
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "arp-arp-gate",
+      "name": "ARP Gate",
+      "msg": {
+        "type": "cc",
+        "cc": 107
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "arp-arp-mode",
+      "name": "ARP Mode",
+      "msg": {
+        "type": "cc",
+        "cc": 108
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "arp-arp-ratchet",
+      "name": "ARP Ratchet",
+      "msg": {
+        "type": "cc",
+        "cc": 109
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "arp-arp-chance",
+      "name": "ARP Chance",
+      "msg": {
+        "type": "cc",
+        "cc": 110
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "arp-arp-octave",
+      "name": "ARP Octave",
+      "msg": {
+        "type": "cc",
+        "cc": 120
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "arp-arp-length",
+      "name": "ARP Length",
+      "msg": {
+        "type": "cc",
+        "cc": 122
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Arp"
+    },
+    {
+      "id": "effects-delay-feedback",
+      "name": "Delay Feedback",
+      "msg": {
+        "type": "cc",
+        "cc": 14
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "effects-delay-time",
+      "name": "Delay Time",
+      "msg": {
+        "type": "cc",
+        "cc": 15
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "effects-delay-wet-tone",
+      "name": "Delay WET Tone",
+      "msg": {
+        "type": "cc",
+        "cc": 63
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "effects-delay-dry-wet",
+      "name": "Delay DRY WET",
+      "msg": {
+        "type": "cc",
+        "cc": 92
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "envelope-env1-attack",
+      "name": "ENV1 Attack",
+      "msg": {
+        "type": "cc",
+        "cc": 81
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envAttack"
+    },
+    {
+      "id": "envelope-env1-decay",
+      "name": "ENV1 Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 82
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envDecay"
+    },
+    {
+      "id": "envelope-env1-sustain",
+      "name": "ENV1 Sustain",
+      "msg": {
+        "type": "cc",
+        "cc": 83
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope"
+    },
+    {
+      "id": "envelope-env1-release",
+      "name": "ENV1 Release",
+      "msg": {
+        "type": "cc",
+        "cc": 84
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envRelease"
+    },
+    {
+      "id": "envelope-env2-attack",
+      "name": "ENV2 Attack",
+      "msg": {
+        "type": "cc",
+        "cc": 85
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envAttack"
+    },
+    {
+      "id": "envelope-env2-decay",
+      "name": "ENV2 Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 86
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envDecay"
+    },
+    {
+      "id": "envelope-env2-sustain",
+      "name": "ENV2 Sustain",
+      "msg": {
+        "type": "cc",
+        "cc": 87
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope"
+    },
+    {
+      "id": "envelope-env2-release",
+      "name": "ENV2 Release",
+      "msg": {
+        "type": "cc",
+        "cc": 88
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envRelease"
+    },
+    {
+      "id": "envelope-env3-attack",
+      "name": "ENV3 Attack",
+      "msg": {
+        "type": "cc",
+        "cc": 89
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envAttack"
+    },
+    {
+      "id": "envelope-env3-decay",
+      "name": "ENV3 Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 90
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envDecay"
+    },
+    {
+      "id": "envelope-env3-sustain",
+      "name": "ENV3 Sustain",
+      "msg": {
+        "type": "cc",
+        "cc": 96
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope"
+    },
+    {
+      "id": "envelope-env3-release",
+      "name": "ENV3 Release",
+      "msg": {
+        "type": "cc",
+        "cc": 97
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envRelease"
+    },
+    {
+      "id": "envelope-env4-attack",
+      "name": "ENV4 Attack",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envAttack"
+    },
+    {
+      "id": "envelope-env4-decay",
+      "name": "ENV4 Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 27
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envDecay"
+    },
+    {
+      "id": "envelope-env4-release",
+      "name": "ENV4 Release",
+      "msg": {
+        "type": "cc",
+        "cc": 124
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envRelease"
+    },
+    {
+      "id": "envelope-env4-sustain",
+      "name": "ENV4 Sustain",
+      "msg": {
+        "type": "cc",
+        "cc": 125
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope"
+    },
+    {
+      "id": "envelope-env5-attack",
+      "name": "ENV5 Attack",
+      "msg": {
+        "type": "cc",
+        "cc": 102
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envAttack"
+    },
+    {
+      "id": "envelope-env5-decay",
+      "name": "ENV5 Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 103
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envDecay"
+    },
+    {
+      "id": "envelope-env5-sustain",
+      "name": "ENV5 Sustain",
+      "msg": {
+        "type": "cc",
+        "cc": 104
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope"
+    },
+    {
+      "id": "envelope-env5-release",
+      "name": "ENV5 Release",
+      "msg": {
+        "type": "cc",
+        "cc": 105
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Envelope",
+      "target": "envRelease"
+    },
+    {
+      "id": "filter-f1-drive",
+      "name": "F1 Drive",
+      "msg": {
+        "type": "cc",
+        "cc": 50
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "fx"
+    },
+    {
+      "id": "filter-f1-keytrack",
+      "name": "F1 Keytrack",
+      "msg": {
+        "type": "cc",
+        "cc": 51
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "filter-f1-lfo1amt",
+      "name": "F1 Lfo1amt",
+      "msg": {
+        "type": "cc",
+        "cc": 52
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "filter-f1-vel-env",
+      "name": "F1 VEL ENV",
+      "msg": {
+        "type": "cc",
+        "cc": 53
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "filter-f1-env1amt",
+      "name": "F1 Env1amt",
+      "msg": {
+        "type": "cc",
+        "cc": 54
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "filter-f1-res",
+      "name": "F1 RES",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "filterResonance"
+    },
+    {
+      "id": "filter-f1-cutoff",
+      "name": "F1 Cutoff",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "filterCutoff"
+    },
+    {
+      "id": "filter-f2-cutoff",
+      "name": "F2 Cutoff",
+      "msg": {
+        "type": "cc",
+        "cc": 55
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "filterCutoff"
+    },
+    {
+      "id": "filter-f2-res",
+      "name": "F2 RES",
+      "msg": {
+        "type": "cc",
+        "cc": 56
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "filterResonance"
+    },
+    {
+      "id": "filter-f2-type",
+      "name": "F2 Type",
+      "msg": {
+        "type": "cc",
+        "cc": 57
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "filter-f2-keytrack",
+      "name": "F2 Keytrack",
+      "msg": {
+        "type": "cc",
+        "cc": 58
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "filter-f2-lfo1amt",
+      "name": "F2 Lfo1amt",
+      "msg": {
+        "type": "cc",
+        "cc": 59
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "filter-f2-vel-env",
+      "name": "F2 VEL ENV",
+      "msg": {
+        "type": "cc",
+        "cc": 60
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "filter-f2-env1amt",
+      "name": "F2 Env1amt",
+      "msg": {
+        "type": "cc",
+        "cc": 61
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Filter"
+    },
+    {
+      "id": "lfo-lfo1-gain",
+      "name": "LFO1 Gain",
+      "msg": {
+        "type": "cc",
+        "cc": 70
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "lfo-lfo1-rate",
+      "name": "LFO1 Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoRate"
+    },
+    {
+      "id": "lfo-lfo2-gain",
+      "name": "LFO2 Gain",
+      "msg": {
+        "type": "cc",
+        "cc": 28
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "lfo-lfo2-rate",
+      "name": "LFO2 Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoRate"
+    },
+    {
+      "id": "lfo-lfo3-gain",
+      "name": "LFO3 Gain",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "lfo-lfo3-rate",
+      "name": "LFO3 Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 76
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoRate"
+    },
+    {
+      "id": "lfo-lfo4-gain",
+      "name": "LFO4 Gain",
+      "msg": {
+        "type": "cc",
+        "cc": 77
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "lfo-lfo4-rate",
+      "name": "LFO4 Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 78
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoRate"
+    },
+    {
+      "id": "lfo-lfo5-gain",
+      "name": "LFO5 Gain",
+      "msg": {
+        "type": "cc",
+        "cc": 79
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoDepth"
+    },
+    {
+      "id": "lfo-lfo5-rate",
+      "name": "LFO5 Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 80
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "LFO",
+      "target": "lfoRate"
+    },
+    {
+      "id": "macro-macro1",
+      "name": "Macro1",
+      "msg": {
+        "type": "cc",
+        "cc": 16
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro2",
+      "name": "Macro2",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro3",
+      "name": "Macro3",
+      "msg": {
+        "type": "cc",
+        "cc": 18
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro4",
+      "name": "Macro4",
+      "msg": {
+        "type": "cc",
+        "cc": 19
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro5",
+      "name": "Macro5",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro6",
+      "name": "Macro6",
+      "msg": {
+        "type": "cc",
+        "cc": 21
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro7",
+      "name": "Macro7",
+      "msg": {
+        "type": "cc",
+        "cc": 22
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "macro-macro8",
+      "name": "Macro8",
+      "msg": {
+        "type": "cc",
+        "cc": 23
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Macro"
+    },
+    {
+      "id": "noise-noise-vol",
+      "name": "Noise VOL",
+      "msg": {
+        "type": "cc",
+        "cc": 3
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Noise"
+    },
+    {
+      "id": "noise-noise-pan",
+      "name": "Noise PAN",
+      "msg": {
+        "type": "cc",
+        "cc": 8
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Noise"
+    },
+    {
+      "id": "ring-mod-ring-mod-vol",
+      "name": "Ring MOD VOL",
+      "msg": {
+        "type": "cc",
+        "cc": 9
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Ring mod"
+    },
+    {
+      "id": "ring-mod-ring-mod-pan",
+      "name": "Ring MOD PAN",
+      "msg": {
+        "type": "cc",
+        "cc": 10
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Ring mod"
+    },
+    {
+      "id": "ring-mod-rm12-depth",
+      "name": "RM12 Depth",
+      "msg": {
+        "type": "cc",
+        "cc": 43
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Ring mod"
+    },
+    {
+      "id": "oscillator-osc1-vol",
+      "name": "OSC1 VOL",
+      "msg": {
+        "type": "cc",
+        "cc": 44
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc1-pan",
+      "name": "OSC1 PAN",
+      "msg": {
+        "type": "cc",
+        "cc": 45
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc2-vol",
+      "name": "OSC2 VOL",
+      "msg": {
+        "type": "cc",
+        "cc": 46
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc2-pan",
+      "name": "OSC2 PAN",
+      "msg": {
+        "type": "cc",
+        "cc": 47
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc3-vol",
+      "name": "OSC3 VOL",
+      "msg": {
+        "type": "cc",
+        "cc": 48
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc3-pan",
+      "name": "OSC3 PAN",
+      "msg": {
+        "type": "cc",
+        "cc": 49
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc3-f-rate",
+      "name": "OSC3 F Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 114
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-noise-f-rate",
+      "name": "Noise F Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 115
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-ring-mod-f-rate",
+      "name": "Ring MOD F Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 116
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc1-f-rate",
+      "name": "OSC1 F Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 118
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc2-f-rate",
+      "name": "OSC2 F Rate",
+      "msg": {
+        "type": "cc",
+        "cc": 119
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "mutator-mut1-ratio",
+      "name": "MUT1 Ratio",
+      "msg": {
+        "type": "cc",
+        "cc": 29
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut1-depth",
+      "name": "MUT1 Depth",
+      "msg": {
+        "type": "cc",
+        "cc": 30
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut1-dry-wet",
+      "name": "MUT1 DRY WET",
+      "msg": {
+        "type": "cc",
+        "cc": 31
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut2-ratio",
+      "name": "MUT2 Ratio",
+      "msg": {
+        "type": "cc",
+        "cc": 33
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut2-depth",
+      "name": "MUT2 Depth",
+      "msg": {
+        "type": "cc",
+        "cc": 34
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut2-dry-wet",
+      "name": "MUT2 DRY WET",
+      "msg": {
+        "type": "cc",
+        "cc": 35
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut3-ratio",
+      "name": "MUT3 Ratio",
+      "msg": {
+        "type": "cc",
+        "cc": 36
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut3-depth",
+      "name": "MUT3 Depth",
+      "msg": {
+        "type": "cc",
+        "cc": 37
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut3-dry-wet",
+      "name": "MUT3 DRY WET",
+      "msg": {
+        "type": "cc",
+        "cc": 39
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut4-ratio",
+      "name": "MUT4 Ratio",
+      "msg": {
+        "type": "cc",
+        "cc": 40
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut4-depth",
+      "name": "MUT4 Depth",
+      "msg": {
+        "type": "cc",
+        "cc": 41
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "mutator-mut4-dry-wet",
+      "name": "MUT4 DRY WET",
+      "msg": {
+        "type": "cc",
+        "cc": 42
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Mutator"
+    },
+    {
+      "id": "oscillator-osc1-wavscan",
+      "name": "OSC1 Wavscan",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc1-cent",
+      "name": "OSC1 Cent",
+      "msg": {
+        "type": "cc",
+        "cc": 111
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc2-wav-scan",
+      "name": "OSC2 WAV Scan",
+      "msg": {
+        "type": "cc",
+        "cc": 26
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc2-cent",
+      "name": "OSC2 Cent",
+      "msg": {
+        "type": "cc",
+        "cc": 112
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "oscillator-osc3-cent",
+      "name": "OSC3 Cent",
+      "msg": {
+        "type": "cc",
+        "cc": 113
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Oscillator"
+    },
+    {
+      "id": "pre-post-post-param1",
+      "name": "Post Param1",
+      "msg": {
+        "type": "cc",
+        "cc": 68
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pre/post"
+    },
+    {
+      "id": "pre-post-post-param2",
+      "name": "Post Param2",
+      "msg": {
+        "type": "cc",
+        "cc": 69
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pre/post"
+    },
+    {
+      "id": "pre-post-post-mix",
+      "name": "Post MIX",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pre/post"
+    },
+    {
+      "id": "pre-post-pre-param1",
+      "name": "PRE Param1",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pre/post"
+    },
+    {
+      "id": "pre-post-pre-param2",
+      "name": "PRE Param2",
+      "msg": {
+        "type": "cc",
+        "cc": 13
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pre/post"
+    },
+    {
+      "id": "pre-post-pre-mix",
+      "name": "PRE MIX",
+      "msg": {
+        "type": "cc",
+        "cc": 93
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Pre/post"
+    },
+    {
+      "id": "effects-reverb-time",
+      "name": "Reverb Time",
+      "msg": {
+        "type": "cc",
+        "cc": 65
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "effects-reverb-tone",
+      "name": "Reverb Tone",
+      "msg": {
+        "type": "cc",
+        "cc": 67
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "effects-reverb-dry-wet",
+      "name": "Reverb DRY WET",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "Effects",
+      "target": "fx"
+    },
+    {
+      "id": "general-mod-wheel",
+      "name": "Mod wheel",
+      "msg": {
+        "type": "cc",
+        "cc": 1
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-volume",
+      "name": "Volume",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General",
+      "target": "level"
+    },
+    {
+      "id": "general-exp-pedal",
+      "name": "EXP Pedal",
+      "msg": {
+        "type": "cc",
+        "cc": 11
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-sus-pedal",
+      "name": "SUS Pedal",
+      "msg": {
+        "type": "cc",
+        "cc": 64
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-note-off",
+      "name": "Note OFF",
+      "msg": {
+        "type": "cc",
+        "cc": 123
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-glide-time",
+      "name": "Glide Time",
+      "msg": {
+        "type": "cc",
+        "cc": 5
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-glide",
+      "name": "Glide",
+      "msg": {
+        "type": "cc",
+        "cc": 66
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-detune",
+      "name": "Detune",
+      "msg": {
+        "type": "cc",
+        "cc": 95
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    },
+    {
+      "id": "general-st-width",
+      "name": "ST Width",
+      "msg": {
+        "type": "cc",
+        "cc": 117
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "section": "General"
+    }
+  ],
+  "triggers": [],
+  "source": "midi.guide (github.com/pencilresearch/midi), CC BY-SA 4.0"
+}

@@ -63,6 +63,28 @@ export function isTriggerCsv(rows: Record<string, string>[]): boolean {
   return rows.length > 0 && 'sound_name' in rows[0]!;
 }
 
+/**
+ * Best-guess musical role from a parameter's name, so LFOs and knobs can
+ * target "filter cutoff" on any synth. midi.guide has no standard roles.
+ * Only the first matching parameter per section matters for defaults.
+ */
+const TARGET_RULES: [RegExp, NonNullable<InstrumentParam['target']>][] = [
+  [/cut-?off|filter (freq|frequency)|\bfreq(uency)?\b.*filter/i, 'filterCutoff'],
+  [/reson|\bres\b|emphasis|\bq\b/i, 'filterResonance'],
+  [/lfo.*(rate|speed|freq)/i, 'lfoRate'],
+  [/lfo.*(depth|amount|amt|gain|int)/i, 'lfoDepth'],
+  [/attack/i, 'envAttack'],
+  [/decay/i, 'envDecay'],
+  [/release/i, 'envRelease'],
+  [/\btun(e|ing)\b|pitch/i, 'tune'],
+  [/^(?!.*accent).*(\blevel\b|volume)/i, 'level'],
+  [/delay|reverb|chorus|overdrive|drive|distortion/i, 'fx'],
+];
+
+export function guessTarget(name: string): InstrumentParam['target'] | undefined {
+  return TARGET_RULES.find(([re]) => re.test(name))?.[1];
+}
+
 export function convertMidiGuide(paramsCsv: string, triggersCsv?: string): InstrumentDefinition {
   const rows = parseCsv(paramsCsv);
   if (rows.length === 0) throw new Error('The CSV file has no rows.');
@@ -103,6 +125,8 @@ export function convertMidiGuide(paramsCsv: string, triggersCsv?: string): Instr
     if (def !== undefined) param.default = def;
     if (r.section) param.section = r.section;
     if (r.usage) param.usage = r.usage;
+    const target = guessTarget(`${r.section ?? ''} ${param.name}`);
+    if (target) param.target = target;
     params.push(param);
   }
 

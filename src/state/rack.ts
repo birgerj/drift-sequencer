@@ -144,15 +144,23 @@ export function resolveProject(project: ProjectState, rack: Rack): ProjectState 
 /** Guess which port is which: drum machines by name, the rest in order. */
 export function guessPorts(ports: string[]): Partial<Record<DeviceRole, string>> {
   const drumLike = /tr-?\d|drum|rhythm|beat|rd-?\d|machinedrum|digitakt|syntakt|rytm|tr8|tr-8|\bdrm\b/i;
-  const thru = /through|thru|midi \d$|virtual|iac/i;
-  const usable = ports.filter((p) => !thru.test(p));
+  const bassLike = /tb-?0?3|td-?3|303|bass|mono ?station|sh-?101/i;
+  // Thru/virtual ports and secondary control ports (e.g. "TR-8S CTRL") aren't instruments.
+  const skip = /through|thru|midi \d$|virtual|iac|ctrl|control|\bdaw\b|remote/i;
+  const usable = ports.filter((p) => !skip.test(p));
   const drums = usable.find((p) => drumLike.test(p));
-  const others = usable.filter((p) => p !== drums);
+  const bassNamed = usable.find((p) => p !== drums && bassLike.test(p));
+  const padLike = /wavestate|pad|string|ensemble|choir|organ|wavetable|opsix|modwave/i;
+  const padNamed = usable.find((p) => p !== drums && p !== bassNamed && padLike.test(p));
+  const others = usable.filter((p) => p !== drums && p !== bassNamed && p !== padNamed);
   const guess: Partial<Record<DeviceRole, string>> = {};
   if (drums) guess.drums = drums;
-  if (others[0]) guess.lead = others[0];
-  if (others[1]) guess.bass = others[1];
-  if (others[0]) guess.pad = others[2] ?? others[0];
+  const lead = others[0] ?? padNamed;
+  if (lead) guess.lead = lead;
+  const bass = bassNamed ?? others[1];
+  if (bass) guess.bass = bass;
+  const pad = padNamed ?? others.filter((p) => p !== bass)[1] ?? lead;
+  if (pad) guess.pad = pad;
   return guess;
 }
 

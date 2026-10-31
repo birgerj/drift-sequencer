@@ -1,4 +1,7 @@
 import type { InstrumentDefinition } from '../core/instruments/instrument';
+import hydrasynth from '../core/instruments/data/asm-hydrasynth.json';
+import wavestate from '../core/instruments/data/korg-wavestate.json';
+import tb03 from '../core/instruments/data/roland-tb-03.json';
 import tr8s from '../core/instruments/data/roland-tr-8s.json';
 import { openDriftDb, INSTRUMENTS_STORE } from './db';
 
@@ -9,7 +12,7 @@ export interface InstalledInstrument {
   importedAt?: string;
 }
 
-export const BUILT_IN_INSTRUMENTS: InstrumentDefinition[] = [tr8s as InstrumentDefinition];
+export const BUILT_IN_INSTRUMENTS: InstrumentDefinition[] = [hydrasynth, wavestate, tb03, tr8s] as InstrumentDefinition[];
 
 export interface InstrumentStore {
   all(): Promise<InstrumentDefinition[]>;

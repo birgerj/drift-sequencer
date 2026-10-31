@@ -12,7 +12,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "bd-decay",
@@ -23,7 +24,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "bd-ctrl",
@@ -45,7 +47,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "sd-tune",
@@ -56,7 +59,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "sd-decay",
@@ -67,7 +71,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "sd-ctrl",
@@ -89,7 +94,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "lt-tune",
@@ -100,7 +106,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "lt-decay",
@@ -111,7 +118,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "lt-ctrl",
@@ -133,7 +141,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "mt-tune",
@@ -144,7 +153,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "mt-decay",
@@ -155,7 +165,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "mt-ctrl",
@@ -177,7 +188,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "ht-tune",
@@ -188,7 +200,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "ht-decay",
@@ -199,7 +212,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "ht-ctrl",
@@ -221,7 +235,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "rs-tune",
@@ -232,7 +247,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "rs-decay",
@@ -243,7 +259,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "rs-ctrl",
@@ -265,7 +282,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "hc-tune",
@@ -276,7 +294,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "hc-decay",
@@ -287,7 +306,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "hc-ctrl",
@@ -309,7 +329,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "ch-tune",
@@ -320,7 +341,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "ch-decay",
@@ -331,7 +353,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "ch-ctrl",
@@ -353,7 +376,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "accent",
@@ -375,7 +399,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "oh-decay",
@@ -386,7 +411,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "oh-ctrl",
@@ -408,7 +434,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "cc-tune",
@@ -419,7 +446,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "cc-decay",
@@ -430,7 +458,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "cc-ctrl",
@@ -452,7 +481,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "rc-tune",
@@ -463,7 +493,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "tune"
     },
     {
       "id": "rc-decay",
@@ -474,7 +505,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "envDecay"
     },
     {
       "id": "rc-ctrl",
@@ -496,7 +528,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "reverb-level",
@@ -507,7 +540,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "delay-level",
@@ -518,7 +552,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "delay-time",
@@ -529,7 +564,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "fx"
     },
     {
       "id": "delay-feedback",
@@ -540,7 +576,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "fx"
     },
     {
       "id": "master-fx-ctrl",
@@ -595,7 +632,8 @@
       },
       "min": 0,
       "max": 127,
-      "bipolar": false
+      "bipolar": false,
+      "target": "level"
     },
     {
       "id": "shuffle",

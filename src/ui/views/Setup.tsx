@@ -30,7 +30,11 @@ export function Setup() {
       const suggestion = portName ? suggestInstrument(portName, instruments) : undefined;
       rows[role] = {
         portName,
-        channel: d?.channel ?? (role === 'pad' && portName === guess.lead ? 3 : DEFAULT_CHANNEL[role]),
+        // Separate synths usually listen on channel 1 (drum machines on 10);
+        // a synth shared between roles gets distinct channels.
+        channel:
+          d?.channel ??
+          (role === 'drums' ? 10 : role !== 'lead' && portName && portName === guess.lead ? DEFAULT_CHANNEL[role] : 1),
         instrumentId: d?.instrumentId ?? suggestion?.id ?? '',
         name: d?.name ?? suggestion?.device ?? portName,
       };
