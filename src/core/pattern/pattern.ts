@@ -1,0 +1,51 @@
+import type { MidiNote } from '../theory/note';
+
+/**
+ * How an event's pitch is expressed. Patterns store pitch *relative to the
+ * harmony* and are resolved to MIDI only at play time, so a motif keeps its
+ * shape while following the chord progression and any key change.
+ */
+export type PitchSpec =
+  /** Scale degree offset from the current chord's root degree. */
+  | { kind: 'degree'; degree: number }
+  /** Scale degree offset from the key's root (ignores chords). */
+  | { kind: 'keyDegree'; degree: number }
+  /** A tone of the current chord: 0 = root, 1 = third, 2 = fifth, … */
+  | { kind: 'chordTone'; index: number; octave: number }
+  /** The whole current chord, voice-led from the previous voicing. */
+  | { kind: 'chord' }
+  /** A fixed MIDI note, e.g. a drum voice on the TR-8S. */
+  | { kind: 'fixed'; note: MidiNote };
+
+export interface PatternEvent {
+  /** Start step within the pattern (0-based). */
+  step: number;
+  /** Duration in steps (may be fractional). */
+  length: number;
+  /** 1..127 */
+  velocity: number;
+  pitch: PitchSpec;
+  /** Chance (0..1) the event actually plays each pass. Defaults to 1. */
+  probability?: number;
+}
+
+export interface Pattern {
+  lengthSteps: number;
+  events: PatternEvent[];
+}
+
+/** Pitch range a track plays in. */
+export interface Register {
+  /** Octave in which degree 0 / chord tone 0 is placed. */
+  baseOctave: number;
+  low: MidiNote;
+  high: MidiNote;
+}
+
+export function emptyPattern(lengthSteps: number): Pattern {
+  return { lengthSteps, events: [] };
+}
+
+export function eventsAtStep(pattern: Pattern, step: number): PatternEvent[] {
+  return pattern.events.filter((e) => e.step === step);
+}

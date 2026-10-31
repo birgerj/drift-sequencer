@@ -1,0 +1,748 @@
+{
+  "id": "roland-tr-8s",
+  "manufacturer": "Roland",
+  "device": "TR-8S",
+  "defaultChannel": 10,
+  "params": [
+    {
+      "id": "bd-tune",
+      "name": "BD Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "bd-decay",
+      "name": "BD Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 23
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "bd-ctrl",
+      "name": "BD Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 96
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "bd-level",
+      "name": "BD Level",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "sd-tune",
+      "name": "SD Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "sd-decay",
+      "name": "SD Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 28
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "sd-ctrl",
+      "name": "SD Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 97
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "sd-level",
+      "name": "SD Level",
+      "msg": {
+        "type": "cc",
+        "cc": 29
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "lt-tune",
+      "name": "LT Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 46
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "lt-decay",
+      "name": "LT Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 47
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "lt-ctrl",
+      "name": "LT Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 102
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "lt-level",
+      "name": "LT Level",
+      "msg": {
+        "type": "cc",
+        "cc": 48
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "mt-tune",
+      "name": "MT Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 49
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "mt-decay",
+      "name": "MT Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 50
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "mt-ctrl",
+      "name": "MT Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 103
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "mt-level",
+      "name": "MT Level",
+      "msg": {
+        "type": "cc",
+        "cc": 51
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ht-tune",
+      "name": "HT Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 52
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ht-decay",
+      "name": "HT Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 53
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ht-ctrl",
+      "name": "HT Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 104
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ht-level",
+      "name": "HT Level",
+      "msg": {
+        "type": "cc",
+        "cc": 54
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rs-tune",
+      "name": "RS Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 55
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rs-decay",
+      "name": "RS Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 56
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rs-ctrl",
+      "name": "RS Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 105
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rs-level",
+      "name": "RS Level",
+      "msg": {
+        "type": "cc",
+        "cc": 57
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "hc-tune",
+      "name": "HC Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 58
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "hc-decay",
+      "name": "HC Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 59
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "hc-ctrl",
+      "name": "HC Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 106
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "hc-level",
+      "name": "HC Level",
+      "msg": {
+        "type": "cc",
+        "cc": 60
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ch-tune",
+      "name": "CH Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 61
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ch-decay",
+      "name": "CH Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 62
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ch-ctrl",
+      "name": "CH Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 107
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "ch-level",
+      "name": "CH Level",
+      "msg": {
+        "type": "cc",
+        "cc": 63
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "accent",
+      "name": "Accent",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "oh-tune",
+      "name": "OH Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 80
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "oh-decay",
+      "name": "OH Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 81
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "oh-ctrl",
+      "name": "OH Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 108
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "oh-level",
+      "name": "OH Level",
+      "msg": {
+        "type": "cc",
+        "cc": 82
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "cc-tune",
+      "name": "CC Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 83
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "cc-decay",
+      "name": "CC Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 84
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "cc-ctrl",
+      "name": "CC Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 109
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "cc-level",
+      "name": "CC Level",
+      "msg": {
+        "type": "cc",
+        "cc": 85
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rc-tune",
+      "name": "RC Tune",
+      "msg": {
+        "type": "cc",
+        "cc": 86
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rc-decay",
+      "name": "RC Decay",
+      "msg": {
+        "type": "cc",
+        "cc": 87
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rc-ctrl",
+      "name": "RC Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 110
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "rc-level",
+      "name": "RC Level",
+      "msg": {
+        "type": "cc",
+        "cc": 88
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "reverb-level",
+      "name": "Reverb Level",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "delay-level",
+      "name": "Delay Level",
+      "msg": {
+        "type": "cc",
+        "cc": 16
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "delay-time",
+      "name": "Delay Time",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "delay-feedback",
+      "name": "Delay Feedback",
+      "msg": {
+        "type": "cc",
+        "cc": 18
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "master-fx-ctrl",
+      "name": "Master FX Ctrl",
+      "msg": {
+        "type": "cc",
+        "cc": 19
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "master-fx-on",
+      "name": "Master FX ON",
+      "msg": {
+        "type": "cc",
+        "cc": 15
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "auto-fill-in-manual-trig",
+      "name": "Auto Fill IN Manual Trig",
+      "msg": {
+        "type": "cc",
+        "cc": 70
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "auto-fill-in-on",
+      "name": "Auto Fill IN ON",
+      "msg": {
+        "type": "cc",
+        "cc": 14
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "external-in-level",
+      "name": "External IN Level",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    },
+    {
+      "id": "shuffle",
+      "name": "Shuffle",
+      "msg": {
+        "type": "cc",
+        "cc": 9
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false
+    }
+  ],
+  "triggers": [
+    {
+      "name": "Bass drum",
+      "note": 36,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Snare drum",
+      "note": 38,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Low tom",
+      "note": 43,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Mid tom",
+      "note": 47,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "High tom",
+      "note": 50,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Rim shot",
+      "note": 37,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Hand clap",
+      "note": 39,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Closed hi-hat",
+      "note": 42,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Open hi-hat",
+      "note": 46,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Crash cymbal",
+      "note": 49,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Ride cymbal",
+      "note": 51,
+      "channel": 10,
+      "map": "Default note map"
+    },
+    {
+      "name": "Bass drum",
+      "note": 35,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Snare drum",
+      "note": 40,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Low tom",
+      "note": 41,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Mid tom",
+      "note": 45,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "High tom",
+      "note": 48,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Rim shot",
+      "note": 56,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Hand clap",
+      "note": 54,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Closed hi-hat",
+      "note": 44,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Open hi-hat",
+      "note": 55,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Crash cymbal",
+      "note": 61,
+      "channel": 10,
+      "map": "Alternate note map"
+    },
+    {
+      "name": "Ride cymbal",
+      "note": 63,
+      "channel": 10,
+      "map": "Alternate note map"
+    }
+  ],
+  "source": "midi.guide (github.com/pencilresearch/midi), CC BY-SA 4.0"
+}

@@ -1,1 +1,86 @@
-# drift-sequencer
+# Drift
+
+A generative MIDI sequencer that runs entirely in the browser. Drift plays
+evolving patterns — lead, bass, chords, arps, drones and drums — on your
+hardware over USB MIDI, always in the same key and on the same chord, so you
+can keep your hands on the synths.
+
+- **No backend.** A static single-page app; projects are stored in the
+  browser (IndexedDB) and can be exported/imported as `.json`.
+- **Web MIDI.** Works in Chrome, Edge and Firefox (not Safari/iOS). Every
+  port of a multi-port USB MIDI interface appears as its own output with 16
+  channels, and each track picks a port + channel.
+- **Tight timing.** A lookahead scheduler hands Web MIDI exact timestamps,
+  so JavaScript timer jitter never reaches the music. Drift can send MIDI
+  clock + start/stop to e.g. a Roland TR-8S.
+
+## Getting started
+
+```sh
+npm install
+npm run dev      # http://localhost:5173
+npm test         # unit tests (theory, generators, scheduler, storage)
+npm run build    # static site in dist/
+```
+
+## Architecture
+
+```
+src/
+  core/                  pure TypeScript, no DOM — testable and Worker-ready
+    theory/              Note, Scale/modes, Chord + voice leading, Harmony
+    random/              seeded Rng (reproducible patterns and mutations)
+    pattern/             chord-relative Pattern + resolver to MIDI notes
+    generators/          one PatternGenerator per track type + registry
+    engine/              LookaheadScheduler, TrackRuntime, Sequencer, LFOs
+    instruments/         instrument definitions (CC/NRPN maps, drum notes)
+    events.ts            typed event emitter (engine → UI)
+  io/midi/               Web MIDI wrapper behind a MidiOutputPort interface
+  state/                 ProjectState schema, templates, storage + migrations
+  ui/                    view layer; talks only to the Sequencer API + events
+```
+
+**Harmony is the single source of truth.** Patterns never store MIDI notes
+for melodic tracks. They store pitch *relative to the harmony* — a scale
+degree from the current chord root, a chord tone, or "the whole chord" — and
+the resolver turns that into notes at play time. A motif therefore keeps its
+shape while following the progression, and all tracks always agree on key and
+chord.
+
+**Track types**
+
+| Type     | What it plays                                                  |
+| -------- | -------------------------------------------------------------- |
+| `motif`  | Random-walk melody; strong beats pulled to chord tones; mutates |
+| `arp`    | Chord tones up/down/up-down/random over N octaves               |
+| `bass`   | Root on the downbeat, roots/fifths/octave jumps, offbeat option |
+| `chords` | Voice-led chords, sustained or euclidean pulses                 |
+| `drone`  | Long root note (key or chord)                                   |
+| `drums`  | Euclidean voices with per-step probability (TR-8S note map)     |
+
+**Evolution.** Every track mutates every N bars: a fraction of its notes
+change, the rest stays, so music evolves without losing identity. Freeze a
+track to stop it; every variation is kept in its history.
+
+**Modulation.** Tracks can carry software LFOs that send MIDI CC (e.g. filter
+cutoff). Instrument definitions map parameter names to CC numbers.
+
+**State & storage.** `ProjectState` is one serialisable object with a
+`schemaVersion`; `storage.ts` migrates older files on load. The UI never
+mutates engine internals: it produces a new `ProjectState` and calls
+`sequencer.update()`.
+
+## Instrument data
+
+`src/core/instruments/data/` is generated from
+[midi.guide](https://midi.guide) by Pencil Research (CC BY-SA 4.0). Add a
+device with `node scripts/import-midi-guide.mjs path/to/Device.csv`.
+
+## Roadmap
+
+- UI from the mockups (performance view, track editor, templates)
+- Engine in a Web Worker
+- Knob panel + LFO targets from instrument definitions
+- More templates and progression generators
+- External clock sync (follow the TR-8S)
+- PWA for offline use
