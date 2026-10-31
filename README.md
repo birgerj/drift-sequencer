@@ -19,6 +19,10 @@ can keep your hands on the synths.
 **Open the app:** [birgerj.github.io/drift-sequencer](https://birgerj.github.io/drift-sequencer/)
 — use Chrome or Edge and connect your synths over USB MIDI.
 
+**Install it:** on the live site, use *Install app* in the top bar (or the
+install icon in Chrome's address bar). The installed app opens in its own
+window and starts without internet.
+
 **Offline, no install needed:** download [`docs/index.html`](docs/index.html) and
 open it in Chrome or Edge (double-click). The whole app — code, styles and
 icon — is inside that one file. Projects are saved in the browser.
@@ -99,15 +103,22 @@ column on phones and tablets.
 - **Perform** — all tracks with live pattern views, quick knobs, mute/solo,
   progression with the current chord, now playing, scale, evolution log.
 - **Track editor** — track type, MIDI port/channel, instrument, generator
-  knobs, drum voices, variations history, CC LFOs.
+  knobs, drum voices, variations history, CC LFOs with a live waveform.
+  Draw your own patterns: a step grid for drums (hit / 50% chance) and a
+  note grid for motifs in scale degrees, so drawn melodies still follow the
+  chords. Edited patterns are saved with the project.
 - **Harmony** — key, mode and chord progression (with presets).
 - **Projects** — templates, saved projects, JSON import/export.
 - **Instruments** — browse and import midi.guide definitions straight from
   GitHub, or import CSV files.
 
+**Timing in the background.** Browsers throttle timers in hidden tabs, so
+the scheduler's clock runs in a Web Worker and the lookahead grows while the
+page is hidden. (The engine stays on the main thread: Web MIDI isn't
+available in workers.)
+
 ## Roadmap
 
-- Engine in a Web Worker
 - Knob panel that sends CCs from instrument definitions
 - More templates and progression generators
 - External clock sync (follow the TR-8S)

@@ -1,5 +1,5 @@
 import type { GeneratorConfig } from '../core/generators/registry';
-import type { Register } from '../core/pattern/pattern';
+import type { Pattern, Register } from '../core/pattern/pattern';
 import type { ProgressionStep } from '../core/theory/harmony';
 import type { PitchClass } from '../core/theory/note';
 import type { ModeName } from '../core/theory/scale';
@@ -46,6 +46,11 @@ export interface TrackState {
   mutationIntervalBars: number;
   /** Seed for this track's generator, so a pattern can be reproduced. */
   seed: number;
+  /**
+   * A pattern the user drew or edited. It is saved with the project and is
+   * where the track starts from; unfreeze the track to let it evolve.
+   */
+  userPattern?: Pattern;
   modulations: CcModulation[];
 }
 

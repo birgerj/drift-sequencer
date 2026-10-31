@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Sequencer } from '../core/engine/sequencer';
+import { createWorkerTimerHost } from '../core/engine/workerClock';
 import { defaultConfig, type GeneratorConfig } from '../core/generators/registry';
 import type { TrackType } from '../core/generators/types';
 import type { InstrumentDefinition } from '../core/instruments/instrument';
 import type { MidiNote } from '../core/theory/note';
+import type { Pattern } from '../core/pattern/pattern';
 import { WebMidiService } from '../io/midi/webMidiService';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
@@ -55,6 +57,8 @@ export class AppStore {
   readonly midiGuide = new MidiGuideClient();
   readonly library = new InstrumentLibrary(new IndexedDbInstrumentStore());
   private repo = new IndexedDbProjectRepository();
+  /** Worker-driven timer: keeps the scheduler ticking in background tabs. */
+  private readonly clock = createWorkerTimerHost();
 
   project: ProjectState;
   sequencer: Sequencer;
@@ -80,11 +84,21 @@ export class AppStore {
 
   async init(): Promise<void> {
     const { lastProjectId } = loadSettings();
-    if (lastProjectId) {
-      const stored = await this.repo.load(lastProjectId).catch(() => undefined);
-      if (stored) this.open(stored);
+    const stored = lastProjectId ? await this.repo.load(lastProjectId).catch(() => undefined) : undefined;
+    if (stored) this.open(stored);
+    else {
+      // First run: remember the starter project so work survives a reload.
+      saveSettings({ lastProjectId: this.project.id });
+      await this.repo.save(this.project).catch(() => undefined);
     }
     this.midi.onChange(() => this.refreshPorts());
+    document.addEventListener('visibilitychange', () => {
+      this.sequencer.setBackground(document.hidden);
+      if (document.hidden && this.saveTimer) this.flushSave();
+    });
+    window.addEventListener('pagehide', () => {
+      if (this.saveTimer) this.flushSave();
+    });
     await Promise.all([this.refreshInstruments(), this.refreshProjects()]);
     // Reconnect silently if MIDI permission was granted before.
     try {
@@ -162,11 +176,14 @@ export class AppStore {
 
   private createSequencer(project: ProjectState): Sequencer {
     this.unsubscribers.forEach((u) => u());
-    const seq = new Sequencer(project, this.midi);
+    const seq = new Sequencer(project, this.midi, this.clock);
+    seq.setBackground(typeof document !== 'undefined' && document.hidden);
     const ev = seq.events;
     this.unsubscribers = [
       ev.on('step', ({ step, bar, timeMs }) => {
         this.lastStepAt = timeMs;
+        // Animation frames pause in a hidden tab; don't let the display queue grow.
+        if (this.pending.length > 2000) this.pending.splice(0, this.pending.length - 1000);
         this.pending.push({ at: timeMs, kind: 'step', step, bar });
       }),
       ev.on('chord', ({ chord }) => this.pending.push({ at: this.lastStepAt, kind: 'chord', chord: chord.symbol() })),
@@ -221,8 +238,15 @@ export class AppStore {
     this.project = mutator(this.project);
     this.sequencer.update(this.project);
     clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => void this.repo.save(this.project).then(() => this.refreshProjects()), 600);
+    this.saveTimer = setTimeout(() => this.flushSave(), 600);
     this.notify();
+  }
+
+  private flushSave(): void {
+    clearTimeout(this.saveTimer);
+    this.saveTimer = undefined;
+    saveSettings({ lastProjectId: this.project.id });
+    void this.repo.save(this.project).then(() => this.refreshProjects());
   }
 
   updateTrack(id: string, patch: Partial<TrackState>): void {
@@ -241,7 +265,7 @@ export class AppStore {
     if (!t || t.generator.type === type) return;
     const generator = defaultConfig(type);
     const fresh = createTrack({ name: t.name, color: t.color, type, output: t.output });
-    this.updateTrack(id, { generator, register: fresh.register });
+    this.updateTrack(id, { generator, register: fresh.register, userPattern: undefined });
   }
 
   addTrack(): void {
@@ -261,9 +285,23 @@ export class AppStore {
     this.go({ name: 'performance' });
   }
 
-  regenerate(id: string): void {
-    this.sequencer.track(id)?.regenerate();
+  /**
+   * Apply a user edit to a track's current pattern. The result is saved in
+   * the project; the track is frozen so the edit isn't mutated away.
+   */
+  editPattern(id: string, edit: (p: Pattern) => Pattern): void {
+    const rt = this.sequencer.track(id);
     const t = this.project.tracks.find((x) => x.id === id);
+    if (!rt || !t) return;
+    const userPattern = edit(rt.pattern);
+    if (!t.frozen) this.showToast(`${t.name} is frozen so your edit stays. Unfreeze it to let it evolve.`);
+    this.updateTrack(id, { userPattern, frozen: true });
+  }
+
+  regenerate(id: string): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (t?.userPattern) this.updateTrack(id, { userPattern: undefined });
+    this.sequencer.track(id)?.regenerate();
     if (t) this.addLog(Math.max(0, this.live.bar), `${t.name} · new pattern`, t.color);
     this.notify();
   }

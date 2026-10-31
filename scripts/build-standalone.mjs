@@ -3,7 +3,8 @@
 // docs/index.html. It runs by double-clicking it (file://), from any static
 // host, or from GitHub Pages ("Deploy from a branch" → /docs).
 
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { build } from 'vite';
 
@@ -46,5 +47,17 @@ if (/\.\/assets\//.test(html)) throw new Error('Some assets were not inlined: ' 
 mkdirSync('docs', { recursive: true });
 writeFileSync(outFile, html);
 writeFileSync('docs/.nojekyll', '');
+
+// PWA files (manifest, icons, service worker) sit next to index.html. They are
+// only used when served over https (GitHub Pages); opening the file from disk
+// ignores them. The service worker's cache name changes with every build.
+const version = createHash('sha256').update(html).digest('hex').slice(0, 12);
+for (const entry of readdirSync(tmp)) {
+  if (entry === 'index.html' || entry === 'assets') continue;
+  const from = join(tmp, entry);
+  const to = join('docs', entry);
+  if (entry === 'sw.js') writeFileSync(to, readFileSync(from, 'utf8').replace("'__BUILD__'", `'${version}'`));
+  else cpSync(from, to, { recursive: true });
+}
 rmSync(tmp, { recursive: true, force: true });
 console.log(`Wrote ${outFile} (${Math.round(html.length / 1024)} kB) — open it directly in Chrome or Edge.`);

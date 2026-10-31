@@ -32,7 +32,7 @@ export class LookaheadScheduler {
   private bpm: number;
   private swing: number;
   private readonly stepsPerBeat: number;
-  private readonly lookaheadMs: number;
+  private lookaheadMs: number;
   private readonly intervalMs: number;
   private handle: unknown;
   private nextStep = 0;
@@ -60,6 +60,14 @@ export class LookaheadScheduler {
 
   setBpm(bpm: number): void {
     this.bpm = Math.max(20, Math.min(300, bpm));
+  }
+
+  /**
+   * A longer lookahead survives late timer ticks (e.g. a hidden tab) at the
+   * cost of changes taking a bit longer to be heard.
+   */
+  setLookahead(ms: number): void {
+    this.lookaheadMs = Math.max(20, Math.min(1000, ms));
   }
 
   setSwing(swing: number): void {

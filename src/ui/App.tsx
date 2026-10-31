@@ -1,4 +1,6 @@
+import { useEffect, useState } from 'preact/hooks';
 import { NOTE_NAMES } from '../core/theory/note';
+import { pwa } from './pwa';
 import { Icon, Stepper } from './components/controls';
 import { useLive, useStore } from './store';
 import { HarmonyEditor } from './views/HarmonyEditor';
@@ -7,9 +9,16 @@ import { Library } from './views/Library';
 import { Performance } from './views/Performance';
 import { TrackEditor } from './views/TrackEditor';
 
+function usePwa() {
+  const [, setTick] = useState(0);
+  useEffect(() => pwa.subscribe(() => setTick((t) => t + 1)), []);
+  return { canInstall: pwa.canInstall, updateReady: pwa.updateReady };
+}
+
 export function App() {
   const s = useStore();
   const v = s.view;
+  const pwaState = usePwa();
   return (
     <>
       <Header />
@@ -18,6 +27,14 @@ export function App() {
       {v.name === 'templates' && <Library />}
       {v.name === 'instruments' && <Instruments />}
       {v.name === 'harmony' && <HarmonyEditor />}
+      {pwaState.updateReady && (
+        <div class="toast update" role="status">
+          A new version of Drift is ready.
+          <button type="button" class="primary" onClick={() => pwa.applyUpdate()}>
+            Reload
+          </button>
+        </div>
+      )}
       {s.toast && (
         <div class="toast" role="status">
           {s.toast}
@@ -34,6 +51,7 @@ function Header() {
   const position = useLive((l) => (playing && l.step >= 0 ? `${String(l.bar + 1).padStart(3, '0')}.${Math.floor((l.step % p.stepsPerBar) / 4) + 1}` : '001.1'));
   const chord = useLive((l) => (playing ? l.chord : ''));
   const clockTarget = p.clock.sendTo[0] ?? '';
+  const pwaState = usePwa();
 
   return (
     <header class="topbar">
@@ -85,6 +103,12 @@ function Header() {
       </div>
 
       <div class="spacer" />
+
+      {pwaState.canInstall && (
+        <button type="button" onClick={() => void pwa.install()}>
+          <Icon name="download" /> Install app
+        </button>
+      )}
 
       <div class="devices">
         {!s.midi.connected ? (

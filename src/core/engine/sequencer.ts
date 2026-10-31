@@ -77,11 +77,17 @@ export class Sequencer {
       const rt = this.tracks.get(t.id);
       if (!rt) this.tracks.set(t.id, new TrackRuntime(t, next.stepsPerBar));
       else {
-        const prevGen = rt.config.generator;
+        const prev = rt.config;
         rt.config = t;
-        if (prevGen !== t.generator && needsRegenerate(prevGen, t.generator)) rt.regenerate(t.seed);
+        if (t.userPattern && t.userPattern !== prev.userPattern) rt.setPattern(t.userPattern);
+        else if (prev.generator !== t.generator && needsRegenerate(prev.generator, t.generator, !!t.userPattern)) rt.regenerate(t.seed);
       }
     }
+  }
+
+  /** Call when the page is hidden/visible; hidden pages get a longer lookahead. */
+  setBackground(hidden: boolean): void {
+    this.scheduler.setLookahead(hidden ? 400 : 100);
   }
 
   start(): void {
@@ -169,8 +175,10 @@ export class Sequencer {
  * new settings shape the next mutations, so the music keeps evolving rather
  * than jumping. Structural changes regenerate right away.
  */
-function needsRegenerate(prev: GeneratorConfig, next: GeneratorConfig): boolean {
+function needsRegenerate(prev: GeneratorConfig, next: GeneratorConfig, hasUserPattern: boolean): boolean {
   if (prev.type !== next.type) return true;
+  // A drawn pattern is never thrown away by moving a knob.
+  if (hasUserPattern) return false;
   if (prev.params.lengthSteps !== next.params.lengthSteps) return true;
   return next.type !== 'motif' && next.type !== 'bass';
 }

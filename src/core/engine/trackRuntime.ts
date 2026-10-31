@@ -30,8 +30,15 @@ export class TrackRuntime {
     private readonly stepsPerBar: number,
   ) {
     this.rng = new Rng(config.seed);
-    this.pattern = generatePattern(config.generator, this.ctx());
+    this.pattern = config.userPattern ?? generatePattern(config.generator, this.ctx());
     this.history.push(this.pattern);
+  }
+
+  /** Replace the pattern with one the user edited. */
+  setPattern(pattern: Pattern): void {
+    this.pattern = pattern;
+    this.history.push(pattern);
+    if (this.history.length > 64) this.history.shift();
   }
 
   /** Throw away the pattern and generate a new one (new seed). */

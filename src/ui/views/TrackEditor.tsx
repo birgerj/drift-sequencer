@@ -3,8 +3,10 @@ import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle } from '../components/controls';
+import { LfoPreview } from '../components/LfoPreview';
+import { PatternEditor } from '../components/PatternEditor';
 import { PatternView } from '../components/PatternView';
-import { PARAM_SCHEMA, TRACK_TYPES, type Control } from '../paramSchema';
+import { PARAM_SCHEMA, TRACK_TYPES, typeLabel, type Control } from '../paramSchema';
 import { useStore } from '../store';
 
 export function TrackEditor({ trackId }: { trackId: string }) {
@@ -109,6 +111,26 @@ export function TrackEditor({ trackId }: { trackId: string }) {
         <div class="col wide">
           <Card title={`Pattern · ${rt ? rt.pattern.lengthSteps / s.project.stepsPerBar : 0} bar(s)`}>
             {rt && <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={260} showLabels />}
+          </Card>
+
+          <Card
+            title="Edit pattern"
+            actions={
+              track.userPattern ? (
+                <button type="button" onClick={() => s.regenerate(track.id)}>
+                  <Icon name="dice" /> Back to generated
+                </button>
+              ) : undefined
+            }
+          >
+            {track.generator.type === 'drums' || track.generator.type === 'motif' ? (
+              <PatternEditor track={track} />
+            ) : (
+              <p class="hint">
+                {typeLabel(track.generator.type)} tracks are built from the chords, so they can't be drawn note by note.
+                Switch the type to Motif to draw a melody, or to Drums for a step grid.
+              </p>
+            )}
           </Card>
 
           {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
@@ -267,14 +289,17 @@ const SHAPES: { value: LfoShape; label: string }[] = [
 function Modulations({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition | undefined }) {
   const s = useStore();
   const ccParams = (instrument?.params ?? []).filter((p) => p.msg.type === 'cc' && p.msg.lsb === undefined);
+  // Always read the latest track state, so quick successive edits never work
+  // from a stale copy.
+  const current = () => s.project.tracks.find((t) => t.id === track.id)?.modulations ?? [];
   const set = (modulations: CcModulation[]) => s.updateTrack(track.id, { modulations });
-  const update = (id: string, patch: Partial<CcModulation>) =>
-    set(track.modulations.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  const update = (id: string, patch: Partial<CcModulation>) => set(current().map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  const removeModulation = (id: string) => set(current().filter((m) => m.id !== id));
   const add = () => {
     const cutoff = ccParams.find((p) => /cutoff|filter/i.test(p.name)) ?? ccParams[0];
     const cc = cutoff?.msg.type === 'cc' ? cutoff.msg.cc : 74;
     set([
-      ...track.modulations,
+      ...current(),
       { id: newId(), enabled: true, cc, label: cutoff?.name ?? 'CC 74', shape: 'sine', periodBars: 4, min: 20, max: 110 },
     ]);
   };
@@ -293,8 +318,23 @@ function Modulations({ track, instrument }: { track: TrackState; instrument: Ins
           {!instrument && ' Pick an instrument above to choose parameters by name.'}
         </p>
       )}
-      {track.modulations.map((m) => (
-        <div class="modulation">
+      {track.modulations.map((m, index) => (
+        <div class="modulation" key={m.id}>
+          <div class="row gap-s wrap">
+            <b class="mod-title">LFO {index + 1}</b>
+            <span class="muted small mod-target">{m.label}</span>
+            <div class="spacer" />
+            <Toggle label="On" checked={m.enabled} onChange={(enabled) => update(m.id, { enabled })} />
+            <button
+              type="button"
+              class="danger"
+              aria-label={`Remove LFO ${index + 1}`}
+              onClick={() => removeModulation(m.id)}
+            >
+              <Icon name="trash" /> Remove
+            </button>
+          </div>
+          <LfoPreview mod={m} color={track.color} />
           <div class="row gap-s wrap">
             {ccParams.length > 0 ? (
               <Select
@@ -315,11 +355,6 @@ function Modulations({ track, instrument }: { track: TrackState; instrument: Ins
                 <Stepper label="CC number" value={m.cc} min={0} max={127} onChange={(cc) => update(m.id, { cc, label: `CC ${cc}` })} />
               </div>
             )}
-            <div class="spacer" />
-            <Toggle label="On" checked={m.enabled} onChange={(enabled) => update(m.id, { enabled })} />
-            <button type="button" class="square" aria-label="Remove LFO" onClick={() => set(track.modulations.filter((x) => x.id !== m.id))}>
-              <Icon name="trash" />
-            </button>
           </div>
           <Segmented label="Shape" value={m.shape} options={SHAPES} onChange={(shape) => update(m.id, { shape })} />
           <Segmented
