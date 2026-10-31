@@ -84,6 +84,9 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
           <NavButton view={{ name: 'templates' }} icon="folder" label="Projects" />
           <NavButton view={{ name: 'instruments' }} icon="devices" label="Devices" also={['setup']} />
         </nav>
+        <button type="button" class="rail-help" onClick={() => s.openVisuals()}>
+          <Icon name="eye" size={16} /> Visuals
+        </button>
         <button type="button" class="rail-help" onClick={() => s.setShortcutsOpen(true)}>
           <Icon name="keyboard" size={16} /> Shortcuts <kbd>?</kbd>
         </button>

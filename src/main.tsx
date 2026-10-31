@@ -1,12 +1,16 @@
-import { render } from 'preact';
-import { App } from './ui/App';
-import { pwa } from './ui/pwa';
-import { store } from './ui/store';
 import './ui/styles.css';
+import { VISUALS_HASH } from './visuals/protocol';
 
 const root = document.getElementById('app');
-if (root) {
-  pwa.init();
-  render(<App />, root);
-  void store.init();
+if (root && location.hash === VISUALS_HASH) {
+  // The visuals window: no MIDI, no store, just drawing.
+  void import('./visuals/VisualsApp').then(({ startVisuals }) => startVisuals(root));
+} else if (root) {
+  void Promise.all([import('preact'), import('./ui/App'), import('./ui/pwa'), import('./ui/store')]).then(
+    ([{ render }, { App }, { pwa }, { store }]) => {
+      pwa.init();
+      render(<App />, root);
+      void store.init();
+    },
+  );
 }

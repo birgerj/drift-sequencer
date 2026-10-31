@@ -533,3 +533,15 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .panel-pages button { flex: 0 0 auto; }
   .panel-pages .eyebrow { display: none; }
 }
+
+/* ---------- visuals window ---------- */
+
+.visuals-root { position: fixed; inset: 0; background: #000; overflow: hidden; cursor: default; }
+.visuals-root.idle { cursor: none; }
+.vis-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; image-rendering: auto; }
+.vis-status { position: absolute; top: 20px; left: 50%; transform: translateX(-50%); color: var(--text-2); font-size: 14px; background: rgba(0, 0, 0, 0.5); padding: 8px 14px; border-radius: 10px; pointer-events: none; }
+.vis-hud { position: absolute; left: 50%; bottom: 20px; transform: translateX(-50%); display: flex; gap: 6px; align-items: center; padding: 8px; border-radius: 14px; background: rgba(11, 12, 15, 0.75); backdrop-filter: blur(8px); transition: opacity 0.3s; }
+.visuals-root.idle .vis-hud { opacity: 0; pointer-events: none; }
+.vis-hud button { min-height: 40px; padding: 0 14px; font-size: 13px; background: transparent; border-color: var(--line-2); }
+.vis-hud button[aria-pressed='true'] { background: var(--text); color: var(--bg); }
+.vis-sep { width: 1px; height: 24px; background: var(--line-2); margin: 0 4px; }

@@ -41,6 +41,7 @@ import {
 import { createProject, createTrack, TRACK_COLORS } from '../state/templates';
 
 import type { SectionId } from './shortcuts';
+import { toEpoch, VisualsLink } from '../visuals/link';
 import type { DrumVoice } from '../core/generators/drumGenerator';
 import { DRUM_PRESETS, orderDrumVoices, presetPattern, presetVoices, tr8sKey, tr8sVoices } from '../core/generators/drumPresets';
 
@@ -126,6 +127,9 @@ export class AppStore {
   private logId = 0;
   private lastStepAt = 0;
   private unsubscribers: (() => void)[] = [];
+  /** Stream to the visuals window, if one is open. */
+  readonly visuals = typeof window !== 'undefined' ? new VisualsLink() : undefined;
+  private visualsTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
     this.project = assignDevices(createProject('deep-house'), this.rack);
@@ -182,6 +186,39 @@ export class AppStore {
 
   private notify(): void {
     this.listeners.forEach((l) => l());
+    if (this.visuals?.active && !this.visualsTimer) {
+      this.visualsTimer = setTimeout(() => {
+        this.visualsTimer = undefined;
+        this.sendVisualsState();
+      }, 200);
+    }
+  }
+
+  openVisuals(): void {
+    if (!this.visuals) return;
+    this.visuals.onHello = () => this.sendVisualsState();
+    this.visuals.open();
+  }
+
+  private sendVisualsState(): void {
+    if (!this.visuals?.active) return;
+    const soloed = this.project.tracks.some((t) => t.solo);
+    const chord = this.sequencer.harmonyAt(Math.max(0, this.live.bar)).chord;
+    this.visuals.send({
+      t: 'state',
+      tracks: this.project.tracks.map((t) => ({
+        id: t.id,
+        name: t.name,
+        color: t.color,
+        type: t.generator.type,
+        silent: t.muted || (soloed && !t.solo),
+      })),
+      bpm: this.project.bpm,
+      playing: this.sequencer.playing,
+      stepsPerBar: this.project.stepsPerBar,
+      chord: chord.symbol(),
+      chordPcs: [...chord.tones],
+    });
   }
 
   // ---------- navigation & feedback ----------
@@ -263,11 +300,16 @@ export class AppStore {
         // Animation frames pause in a hidden tab; don't let the display queue grow.
         if (this.pending.length > 2000) this.pending.splice(0, this.pending.length - 1000);
         this.pending.push({ at: timeMs, kind: 'step', step, bar });
+        this.visuals?.send({ t: 'step', step, bar, at: toEpoch(timeMs) });
       }),
-      ev.on('chord', ({ chord }) => this.pending.push({ at: this.lastStepAt, kind: 'chord', chord: chord.symbol() })),
-      ev.on('note', ({ trackId, notes, timeMs, durationMs }) =>
-        this.pending.push({ at: timeMs, kind: 'note', trackId, notes, until: timeMs + durationMs }),
-      ),
+      ev.on('chord', ({ chord }) => {
+        this.pending.push({ at: this.lastStepAt, kind: 'chord', chord: chord.symbol() });
+        this.visuals?.send({ t: 'chord', name: chord.symbol(), pcs: [...chord.tones], at: toEpoch(this.lastStepAt) });
+      }),
+      ev.on('note', ({ trackId, notes, velocity, timeMs, durationMs }) => {
+        this.pending.push({ at: timeMs, kind: 'note', trackId, notes, until: timeMs + durationMs });
+        this.visuals?.send({ t: 'note', track: trackId, notes: [...notes], vel: velocity, at: toEpoch(timeMs), dur: durationMs });
+      }),
       ev.on('mutation', ({ trackId, bar }) => {
         const t = this.project.tracks.find((x) => x.id === trackId);
         if (t) this.addLog(bar, `${t.name} · pattern mutated`, t.color);
