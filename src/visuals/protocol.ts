@@ -23,6 +23,7 @@ export type VisualsMessage =
   | { t: 'step'; step: number; bar: number; at: number }
   | { t: 'chord'; name: string; pcs: number[]; at: number }
   | { t: 'cc'; track: string; cc: number; value: number }
+  | { t: 'lfo'; track: string; value: number; at: number }
   | { t: 'hello' }
   | { t: 'bye' };
 

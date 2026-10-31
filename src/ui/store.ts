@@ -310,6 +310,7 @@ export class AppStore {
         this.pending.push({ at: timeMs, kind: 'note', trackId, notes, until: timeMs + durationMs });
         this.visuals?.send({ t: 'note', track: trackId, notes: [...notes], vel: velocity, at: toEpoch(timeMs), dur: durationMs });
       }),
+      ev.on('lfo', ({ trackId, value, timeMs }) => this.visuals?.send({ t: 'lfo', track: trackId, value, at: toEpoch(timeMs) })),
       ev.on('mutation', ({ trackId, bar }) => {
         const t = this.project.tracks.find((x) => x.id === trackId);
         if (t) this.addLog(bar, `${t.name} · pattern mutated`, t.color);
@@ -471,6 +472,7 @@ export class AppStore {
     if (panel.values[cc] === v) return;
     this.updateTrack(id, { panel: { ...panel, values: { ...panel.values, [cc]: v } } });
     this.queueCc(t, cc, v);
+    this.visuals?.send({ t: 'cc', track: id, cc, value: v });
   }
 
   /** Send every stored panel value, so the synth matches what Drift shows. */

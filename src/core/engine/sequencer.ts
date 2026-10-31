@@ -20,6 +20,8 @@ export interface SequencerEvents extends Record<string, unknown> {
   chord: { bar: number; chord: Chord };
   note: { trackId: string; notes: MidiNote[]; velocity: number; timeMs: number; durationMs: number };
   mutation: { trackId: string; bar: number };
+  /** An LFO value as it is sent, for displays (0..127). */
+  lfo: { trackId: string; index: number; cc: number; value: number; timeMs: number };
   transport: { playing: boolean };
   /**
    * The progression is about to start again. Emitted synchronously before
@@ -240,16 +242,16 @@ export class Sequencer {
   private sendModulations(t: TrackState, step: number, timeMs: number): void {
     if (t.modulations.length === 0) return;
     const port = this.ports.byName(t.output.portName);
-    if (!port) return;
     const stepsPerBar = this.project.stepsPerBar;
-    for (const m of t.modulations) {
-      if (!m.enabled) continue;
+    t.modulations.forEach((m, index) => {
+      if (!m.enabled) return;
       const period = Math.max(1, m.periodBars * stepsPerBar);
       const phase = (step % period) / period;
       const cycle = Math.floor(step / period);
       const value = m.min + (m.max - m.min) * lfoValue(m.shape, phase, cycle);
-      port.send(Midi.cc(t.output.channel, m.cc, value), timeMs);
-    }
+      port?.send(Midi.cc(t.output.channel, m.cc, value), timeMs);
+      this.events.emit('lfo', { trackId: t.id, index, cc: m.cc, value, timeMs });
+    });
   }
 
   private forEachClockPort(fn: (send: (data: readonly number[], ts?: number) => void) => void): void {

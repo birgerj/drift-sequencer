@@ -15,6 +15,16 @@ interface Particle {
   kind: 'note' | 'spark' | 'ring';
 }
 
+type Role = 'bass' | 'lead' | 'pad';
+
+/** What a track drives in the visuals is decided by its type. */
+function roleOf(type: string): Role | undefined {
+  if (type === 'bass' || type === 'acid') return 'bass';
+  if (type === 'motif' || type === 'arp') return 'lead';
+  if (type === 'chords' || type === 'drone') return 'pad';
+  return undefined;
+}
+
 const DRUM = {
   kick: [35, 36],
   snare: [37, 38, 39, 40, 41, 43, 45, 47, 48, 50],
@@ -58,6 +68,11 @@ export function startVisuals(root: HTMLElement): void {
   let snare = 0;
   let hat = 0;
   let energy = 0;
+  const env: Record<Role, number> = { bass: 0, lead: 0, pad: 0 };
+  const pitch: Record<Role, number> = { bass: 0.3, lead: 0.6, pad: 0.5 };
+  const modTarget: Record<Role, number> = { bass: 0.5, lead: 0.5, pad: 0.5 };
+  const mod: Record<Role, number> = { bass: 0.5, lead: 0.5, pad: 0.5 };
+  let padHoldUntil = 0;
   let target: [number, number, number][] = [hsl(200, 0.7, 0.35), hsl(280, 0.7, 0.5), hsl(30, 0.9, 0.6)];
   let cols: [number, number, number][] = target.map((c) => [...c] as [number, number, number]);
   const particles: Particle[] = [];
@@ -79,8 +94,11 @@ export function startVisuals(root: HTMLElement): void {
       if (msg.chordPcs.length) setChord(msg.chordPcs);
       status.textContent = playing ? '' : 'Connected · press Play in Drift';
       status.hidden = playing;
-    } else if (msg.t === 'note' || msg.t === 'step' || msg.t === 'chord') {
+    } else if (msg.t === 'note' || msg.t === 'step' || msg.t === 'chord' || msg.t === 'lfo') {
       queue.push(msg);
+    } else if (msg.t === 'cc') {
+      const role = roleOf(tracks.get(msg.track)?.type ?? '');
+      if (role) modTarget[role] = msg.value / 127;
     }
   };
 
@@ -118,6 +136,11 @@ export function startVisuals(root: HTMLElement): void {
       setChord(msg.pcs);
       return;
     }
+    if (msg.t === 'lfo') {
+      const role = roleOf(tracks.get(msg.track)?.type ?? '');
+      if (role) modTarget[role] = msg.value / 127;
+      return;
+    }
     if (msg.t !== 'note') return;
     const track = tracks.get(msg.track);
     if (!track || track.silent) return;
@@ -143,6 +166,13 @@ export function startVisuals(root: HTMLElement): void {
       return;
     }
     energy = Math.min(1, energy + 0.06 + v * 0.05);
+    const role = roleOf(track.type);
+    if (role) {
+      env[role] = Math.max(env[role], 0.5 + v * 0.5);
+      const top = Math.max(...msg.notes);
+      pitch[role] = Math.max(0, Math.min(1, (top - 24) / 72));
+      if (role === 'pad') padHoldUntil = Math.max(padHoldUntil, now + msg.dur);
+    }
     if (!showNotes) return;
     const ids = [...tracks.values()].filter((t) => t.type !== 'drums').map((t) => t.id);
     const lane = Math.max(0, ids.indexOf(track.id));
@@ -248,6 +278,10 @@ export function startVisuals(root: HTMLElement): void {
     snare *= Math.exp(-dt * 6);
     hat *= Math.exp(-dt * 10);
     energy *= Math.exp(-dt * 0.8);
+    env.bass *= Math.exp(-dt * 5);
+    env.lead *= Math.exp(-dt * 4);
+    env.pad = now < padHoldUntil ? Math.max(env.pad * Math.exp(-dt * 0.3), 0.55) : env.pad * Math.exp(-dt * 1.2);
+    for (const r of ['bass', 'lead', 'pad'] as Role[]) mod[r] += (modTarget[r] - mod[r]) * (1 - Math.exp(-dt * 6));
     const k = 1 - Math.exp(-dt * 1.5);
     cols = cols.map((c, i) => c.map((x, j) => x + (target[i]![j]! - x) * k) as [number, number, number]);
 
@@ -278,6 +312,14 @@ export function startVisuals(root: HTMLElement): void {
       gl.uniform1f(u('uBeat'), beat);
       gl.uniform1f(u('uBar'), barF);
       gl.uniform1f(u('uSpeed'), (playing ? 1.2 : 0.4) * (bpm / 120) * (1 + energy * 0.6));
+      gl.uniform1f(u('uBass'), env.bass);
+      gl.uniform1f(u('uLead'), env.lead);
+      gl.uniform1f(u('uPad'), env.pad);
+      gl.uniform1f(u('uBassPitch'), pitch.bass);
+      gl.uniform1f(u('uLeadPitch'), pitch.lead);
+      gl.uniform1f(u('uModBass'), mod.bass);
+      gl.uniform1f(u('uModLead'), mod.lead);
+      gl.uniform1f(u('uModPad'), mod.pad);
       gl.uniform3fv(u('uCol0'), cols[0]!);
       gl.uniform3fv(u('uCol1'), cols[1]!);
       gl.uniform3fv(u('uCol2'), cols[2]!);
