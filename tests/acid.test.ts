@@ -111,3 +111,34 @@ describe('acid in the engine', () => {
     expect(slideCcs.slice(0, 2)).toEqual([0, 127]);
   });
 });
+
+describe('track octave', () => {
+  it('shifts melodic notes by whole octaves, drums untouched', async () => {
+    const { shiftRegister } = await import('../src/core/engine/trackRuntime');
+    const r = { baseOctave: 1, low: 24, high: 60 };
+    expect(shiftRegister(r, 1)).toEqual({ baseOctave: 2, low: 36, high: 72 });
+    expect(shiftRegister(r, -2)).toEqual({ baseOctave: -1, low: 0, high: 36 });
+    expect(shiftRegister(r, 0)).toBe(r);
+
+    const timer = new FakeTimer();
+    const project = createProject('acid');
+    const acid = project.tracks.find((t) => t.generator.type === 'acid')!;
+    const userPattern: Pattern = { lengthSteps: 16, events: [{ step: 0, length: 0.58, velocity: 88, pitch: { kind: 'degree', degree: 0 } }] };
+    const run = (octave: number) => {
+      const out = new RecordingOutput('TD');
+      const seq = new Sequencer(
+        { ...project, tracks: [{ ...acid, octave, output: { portName: 'TD', channel: 1 }, modulations: [], userPattern, frozen: true }] },
+        new StaticPortResolver([out]),
+        timer,
+      );
+      seq.start();
+      timer.time += 200;
+      (seq as unknown as { scheduler: LookaheadScheduler }).scheduler.tick();
+      seq.stop();
+      return out.sent.find((m) => m.data[0] === 0x90)!.data[1]!;
+    };
+    const base = run(0);
+    expect(run(1)).toBe(base + 12);
+    expect(run(-1)).toBe(base - 12);
+  });
+});

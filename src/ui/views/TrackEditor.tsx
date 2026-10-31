@@ -5,6 +5,7 @@ import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../c
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
+import { OctaveControl } from '../components/OctaveControl';
 import { PatternEditor } from '../components/PatternEditor';
 import { PatternView } from '../components/PatternView';
 import { PARAM_SCHEMA, TRACK_TYPES, typeLabel, type Control } from '../paramSchema';
@@ -65,6 +66,12 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           <OutputCard track={track} />
 
           <Card title="Generator">
+            {track.generator.type !== 'drums' && (
+              <div class="field">
+                <span class="field-label">Octave</span>
+                <OctaveControl track={track} />
+              </div>
+            )}
             {PARAM_SCHEMA[track.generator.type].map((c) => (
               <ParamControl control={c} track={track} />
             ))}

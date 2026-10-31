@@ -64,6 +64,8 @@ export interface TrackState {
    * where the track starts from; unfreeze the track to let it evolve.
    */
   userPattern?: Pattern;
+  /** Octave shift for the whole track (−3…+3), on top of its register. */
+  octave?: number;
   /** Call-and-response role; the track only plays in its own phrases. */
   phrase?: PhraseSettings;
   modulations: CcModulation[];

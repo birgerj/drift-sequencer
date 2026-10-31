@@ -20,6 +20,7 @@ import {
 } from '../../core/pattern/edit';
 import { conditionLabel, type Pattern, type PatternEvent } from '../../core/pattern/pattern';
 import { fold } from '../../core/pattern/resolve';
+import { shiftRegister } from '../../core/engine/trackRuntime';
 import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { useLive, useStore } from '../store';
@@ -166,8 +167,9 @@ function MotifGrid({ track, pattern, playStep, mode }: { track: TrackState; patt
   const moment = s.sequencer.harmonyAt(bar);
   const range = Math.max(4, Math.min(14, params.rangeDegrees));
   const degrees = Array.from({ length: range * 2 + 1 }, (_, i) => range - i);
+  const reg = shiftRegister(track.register, track.octave ?? 0);
   const label = (d: number) =>
-    noteName(fold(moment.scale.degreeToMidi(moment.chord.degree + d, track.register.baseOctave), track.register));
+    noteName(fold(moment.scale.degreeToMidi(moment.chord.degree + d, reg.baseOctave), reg));
 
   const tap = (step: number, degree: number) => {
     const covering = motifNoteCovering(pattern, step);

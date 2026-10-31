@@ -215,6 +215,10 @@ button.readout { padding: 0 0 0 14px; }
 .lane-pattern { padding: 10px; border-left: 1px solid #1e2128; border-right: 1px solid #1e2128; min-width: 0; display: flex; align-items: center; }
 .pattern-view { display: block; width: 100%; border-radius: 8px; }
 .lane-params { padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.octave-control { display: inline-flex; align-items: center; gap: 4px; }
+.octave-value { flex-direction: column; gap: 0; min-width: 56px; padding: 0 8px; line-height: 1.1; }
+.octave-value .mono { font-size: 16px; font-weight: 600; }
+.octave-control.compact .octave-value { min-width: 48px; }
 .phrase-badge { align-self: flex-start; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--text-2); }
 .lane .lane-pattern { transition: opacity 0.2s; }
 .lane.resting .lane-pattern { opacity: 0.3; }

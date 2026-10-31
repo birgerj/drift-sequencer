@@ -1,5 +1,5 @@
 import { generatePattern, mutatePattern } from '../generators/registry';
-import { conditionMet, type Pattern, type PatternEvent } from '../pattern/pattern';
+import { conditionMet, type Pattern, type PatternEvent, type Register } from '../pattern/pattern';
 import { resolvePitch, type ResolveState } from '../pattern/resolve';
 import { Rng } from '../random/rng';
 import type { HarmonicMoment } from '../theory/harmony';
@@ -101,13 +101,14 @@ export class TrackRuntime {
     source?: Pattern,
   ): ScheduledNote[] {
     const pass = Math.floor(globalStep / this.pattern.lengthSteps);
+    const register = shiftRegister(this.config.register, this.config.octave ?? 0);
     const out: ScheduledNote[] = [];
     for (const ev of events) {
       if (ev.condition && !conditionMet(ev.condition, pass)) continue;
       if (ev.probability !== undefined && !this.rng.chance(ev.probability)) continue;
       out.push({
         trackId: this.config.id,
-        notes: resolvePitch(ev.pitch, moment, this.config.register, this.resolveState),
+        notes: resolvePitch(ev.pitch, moment, register, this.resolveState),
         velocity: ev.velocity,
         length: ev.length,
         ratchet: Math.max(1, Math.min(4, Math.round(ev.ratchet ?? 1))),
@@ -122,6 +123,15 @@ export class TrackRuntime {
   private ctx() {
     return { rng: this.rng, stepsPerBar: this.stepsPerBar };
   }
+}
+
+/** Move a register up or down by whole octaves (drum notes are fixed and unaffected). */
+export function shiftRegister(register: Register, octaves: number): Register {
+  if (!octaves) return register;
+  const d = Math.round(octaves) * 12;
+  const low = Math.max(0, register.low + d);
+  const high = Math.min(127, register.high + d);
+  return { baseOctave: register.baseOctave + Math.round(octaves), low, high: Math.max(low + 11, high) };
 }
 
 /**

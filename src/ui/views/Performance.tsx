@@ -3,6 +3,7 @@ import { Chord } from '../../core/theory/chord';
 import { NOTE_NAMES, noteName, pitchClassOf } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { Icon, Slider } from '../components/controls';
+import { OctaveControl } from '../components/OctaveControl';
 import { PatternView } from '../components/PatternView';
 import { PARAM_SCHEMA, typeLabel } from '../paramSchema';
 import { useLive, useStore, store } from '../store';
@@ -120,6 +121,7 @@ function Lane({ track }: { track: TrackState }) {
             {track.phrase.bars > 1 ? 's' : ''}
           </span>
         )}
+        <OctaveControl track={track} compact />
         <div class="row gap-s lane-buttons">
           <button type="button" class="square" aria-pressed={track.muted} aria-label={`Mute ${track.name}`} onClick={() => s.updateTrack(track.id, { muted: !track.muted })}>
             M

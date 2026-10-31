@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'preact/hooks';
 import type { Pattern } from '../../core/pattern/pattern';
 import { answerPattern, type AnswerTransform } from '../../core/engine/phrasing';
+import { shiftRegister } from '../../core/engine/trackRuntime';
 import { resolvePitch } from '../../core/pattern/resolve';
 import type { Harmony } from '../../core/theory/harmony';
 import type { DrumParams } from '../../core/generators/drumGenerator';
@@ -153,9 +154,10 @@ function draw(
   } else {
     const blockStartBar = step >= 0 ? Math.floor(step / len) * (len / stepsPerBar) : 0;
     const state = {};
+    const reg = shiftRegister(track.register, track.octave ?? 0);
     const resolved = pattern.events.map((e) => {
       const bar = blockStartBar + Math.floor(e.step / stepsPerBar);
-      return { e, notes: resolvePitch(e.pitch, store.sequencer.harmonyAt(bar), track.register, state) };
+      return { e, notes: resolvePitch(e.pitch, store.sequencer.harmonyAt(bar), reg, state) };
     });
     const all = resolved.flatMap((r) => r.notes);
     if (all.length) {
