@@ -106,7 +106,14 @@ export class AppStore {
 
   /** The project with outputs, instruments and clock taken from the rack. */
   private engineView(project: ProjectState = this.project): ProjectState {
-    return resolveProject(project, this.rack);
+    const resolved = resolveProject(project, this.rack);
+    // Per-instrument extras the engine needs, e.g. the TB-03's slide CC.
+    const tracks = resolved.tracks.map((t) => {
+      const slide = this.instrument(t.instrumentId)?.params.find((p) => /\bslide\b/i.test(p.name) && p.msg.type === 'cc');
+      const slideCc = slide?.msg.type === 'cc' ? slide.msg.cc : undefined;
+      return slideCc === t.slideCc ? t : { ...t, slideCc };
+    });
+    return { ...resolved, tracks };
   }
 
   async init(): Promise<void> {
@@ -415,6 +422,8 @@ export class AppStore {
 
   async refreshInstruments(): Promise<void> {
     this.instruments = await this.library.list().catch(() => []);
+    // Instrument extras (e.g. slide CC) feed the engine.
+    this.sequencer.update(this.engineView());
     this.notify();
   }
 
@@ -455,6 +464,37 @@ export class AppStore {
       port.send(Midi.noteOff(ch, n), now + i * 180 + 150);
     });
     return true;
+  }
+
+  /**
+   * Four notes to hear how a 303-style synth handles accent and slide:
+   * plain → accent → slide up an octave → slide down with accent.
+   */
+  async acidTest(id: string): Promise<void> {
+    const d = this.device(id);
+    if (!d) return;
+    if (!this.midi.connected) await this.connectMidi();
+    const port = this.midi.byName(d.portName);
+    if (!port) return this.showToast(`${d.name}: port “${d.portName}” is not connected.`);
+    const ch = d.channel;
+    const slideCc = this.instrument(d.instrumentId)?.params.find((p) => /\bslide\b/i.test(p.name) && p.msg.type === 'cc');
+    const cc = slideCc?.msg.type === 'cc' ? slideCc.msg.cc : undefined;
+    const step = 260;
+    const t0 = performance.now() + 30;
+    const plan = [
+      { note: 36, vel: 80, slide: false },
+      { note: 36, vel: 127, slide: false },
+      { note: 48, vel: 80, slide: true },
+      { note: 43, vel: 127, slide: true },
+    ];
+    plan.forEach((p, i) => {
+      const at = t0 + i * step;
+      if (cc !== undefined) port.send(Midi.cc(ch, cc, p.slide ? 127 : 0), at - 1);
+      port.send(Midi.noteOn(ch, p.note, p.vel), at);
+      const nextSlides = plan[i + 1]?.slide;
+      port.send(Midi.noteOff(ch, p.note), nextSlides ? at + step + 15 : at + step * 0.58);
+    });
+    if (cc !== undefined) port.send(Midi.cc(ch, cc, 0), t0 + plan.length * step);
   }
 
   removeDevice(id: string): void {

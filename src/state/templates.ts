@@ -5,7 +5,7 @@ import type { Register } from '../core/pattern/pattern';
 import type { ProgressionStep } from '../core/theory/harmony';
 import { parsePitchClass } from '../core/theory/note';
 import type { ModeName } from '../core/theory/scale';
-import { newId, SCHEMA_VERSION, type MidiTarget, type ProjectState, type TrackState } from './project';
+import { newId, SCHEMA_VERSION, type CcModulation, type MidiTarget, type ProjectState, type TrackState } from './project';
 import { roleForType, type DeviceRole } from './rack';
 
 export const TRACK_COLORS = {
@@ -19,6 +19,7 @@ const REGISTERS: Record<TrackType, Register> = {
   motif: { baseOctave: 4, low: 60, high: 84 },
   arp: { baseOctave: 4, low: 57, high: 88 },
   bass: { baseOctave: 1, low: 28, high: 52 },
+  acid: { baseOctave: 1, low: 24, high: 60 },
   chords: { baseOctave: 3, low: 52, high: 76 },
   drone: { baseOctave: 2, low: 36, high: 60 },
   drums: { baseOctave: 0, low: 0, high: 127 },
@@ -34,6 +35,8 @@ export interface TrackSpec {
   /** Shallow overrides for the generator's default params. */
   params?: Record<string, unknown>;
   mutationIntervalBars?: number;
+  /** CC LFOs, e.g. a slow filter sweep. */
+  modulations?: Omit<CcModulation, 'id'>[];
   /** Call-and-response role; `answerFrom` names another track in the template. */
   phrase?: { role: PhraseRole; bars: number; answerFrom?: string; transform?: AnswerTransform };
 }
@@ -54,7 +57,7 @@ export function createTrack(spec: TrackSpec): TrackState {
     frozen: false,
     mutationIntervalBars: spec.mutationIntervalBars ?? 4,
     seed: Math.floor(Math.random() * 2 ** 32),
-    modulations: [],
+    modulations: (spec.modulations ?? []).map((m) => ({ ...m, id: newId() })),
   };
 }
 
@@ -114,6 +117,34 @@ export const TEMPLATES: TemplateSpec[] = [
       { name: 'Bass', color: TRACK_COLORS.bass, type: 'bass', output: BASS, params: { offbeat: true, fifthChance: 0.3 } },
       { name: 'Pad', color: TRACK_COLORS.pad, type: 'chords', output: PAD, params: { style: 'pulse', pulses: 3, gate: 0.5 } },
       { name: 'Drums', color: TRACK_COLORS.drums, type: 'drums', output: DRUMS },
+    ],
+  },
+  {
+    id: 'acid',
+    name: 'Acid',
+    bpm: 128,
+    swing: 0.06,
+    key: 'A',
+    mode: 'phrygian',
+    progression: [
+      { degree: 0, bars: 4 },
+      { degree: 1, bars: 2 },
+      { degree: 0, bars: 2 },
+    ],
+    tracks: [
+      {
+        name: '303',
+        color: TRACK_COLORS.bass,
+        type: 'acid',
+        output: BASS,
+        mutationIntervalBars: 4,
+        modulations: [
+          { enabled: true, cc: 74, label: 'Cutoff', shape: 'sine', periodBars: 8, min: 25, max: 105 },
+          { enabled: true, cc: 12, label: 'Env mod', shape: 'triangle', periodBars: 16, min: 40, max: 120 },
+        ],
+      },
+      { name: 'Drums', color: TRACK_COLORS.drums, type: 'drums', output: DRUMS, params: { ratchetChance: 0.15, conditionChance: 0.12 } },
+      { name: 'Drone', color: TRACK_COLORS.pad, type: 'drone', output: PAD, params: { velocity: 55 } },
     ],
   },
   {

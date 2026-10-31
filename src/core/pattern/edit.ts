@@ -104,6 +104,47 @@ export function cycleRatchet(pattern: Pattern, match: EventMatcher): Pattern {
   };
 }
 
+// ---------- acid (303-style) steps ----------
+
+export type AcidFlag = 'accent' | 'slide' | 'up' | 'down';
+
+export function acidStepAt(pattern: Pattern, step: number): PatternEvent | undefined {
+  return pattern.events.find((e) => e.step === step && e.pitch.kind === 'degree');
+}
+
+/** Tap a note cell: set that degree on the step, or make it a rest if it already is that degree. */
+export function setAcidNote(pattern: Pattern, step: number, degree: number, defaults: { gate: number; velocity: number }): Pattern {
+  const existing = acidStepAt(pattern, step);
+  const others = pattern.events.filter((e) => e !== existing);
+  if (existing?.pitch.kind === 'degree' && existing.pitch.degree === degree) {
+    // Becomes a rest; a following slide has nothing to slide from.
+    return { ...pattern, events: unslideAfter(sortByStep(others), step) };
+  }
+  const ev: PatternEvent = existing
+    ? { ...existing, pitch: { kind: 'degree', degree, octave: existing.pitch.kind === 'degree' ? existing.pitch.octave : 0 } }
+    : { step, length: defaults.gate, velocity: defaults.velocity, pitch: { kind: 'degree', degree, octave: 0 } };
+  return { ...pattern, events: sortByStep([...others, ev]) };
+}
+
+/** Toggle accent, slide or an octave jump on a step that has a note. */
+export function toggleAcidFlag(pattern: Pattern, step: number, flag: AcidFlag): Pattern {
+  return {
+    ...pattern,
+    events: pattern.events.map((e) => {
+      if (e.step !== step || e.pitch.kind !== 'degree') return e;
+      if (flag === 'accent') return { ...e, accent: !e.accent };
+      if (flag === 'slide') return { ...e, slide: !e.slide };
+      const octave = e.pitch.octave ?? 0;
+      const next = flag === 'up' ? (octave === 1 ? 0 : 1) : octave === -1 ? 0 : -1;
+      return { ...e, pitch: { ...e.pitch, octave: next } };
+    }),
+  };
+}
+
+function unslideAfter(events: PatternEvent[], step: number): PatternEvent[] {
+  return events.map((e) => (e.step === step + 1 && e.slide ? { ...e, slide: false } : e));
+}
+
 export function clearPattern(pattern: Pattern): Pattern {
   return { ...pattern, events: [] };
 }

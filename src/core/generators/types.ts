@@ -1,7 +1,7 @@
 import type { Rng } from '../random/rng';
 import type { Pattern } from '../pattern/pattern';
 
-export type TrackType = 'motif' | 'arp' | 'bass' | 'chords' | 'drone' | 'drums';
+export type TrackType = 'motif' | 'arp' | 'bass' | 'acid' | 'chords' | 'drone' | 'drums';
 
 export interface GeneratorContext {
   rng: Rng;

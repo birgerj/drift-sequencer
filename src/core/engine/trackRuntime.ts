@@ -14,6 +14,14 @@ export interface ScheduledNote {
   length: number;
   /** Number of repeats within the step (1 = a single note). */
   ratchet: number;
+  accent: boolean;
+  /** This note is slid into from the previous one. */
+  slide: boolean;
+  /**
+   * When the next note slides in, hold this one for this many steps so the
+   * two overlap (a 303 slides when notes overlap).
+   */
+  holdSteps?: number;
 }
 
 /**
@@ -78,7 +86,7 @@ export class TrackRuntime {
 
   /** Notes to play at a global step, resolved against the harmonic moment. */
   notesAt(globalStep: number, moment: HarmonicMoment): ScheduledNote[] {
-    return this.resolveEvents(this.eventsAt(globalStep), globalStep, moment);
+    return this.resolveEvents(this.eventsAt(globalStep), globalStep, moment, this.pattern);
   }
 
   /**
@@ -86,7 +94,12 @@ export class TrackRuntime {
    * call-and-response answer) in this track's register, applying trig
    * conditions and probability.
    */
-  resolveEvents(events: readonly PatternEvent[], globalStep: number, moment: HarmonicMoment): ScheduledNote[] {
+  resolveEvents(
+    events: readonly PatternEvent[],
+    globalStep: number,
+    moment: HarmonicMoment,
+    source?: Pattern,
+  ): ScheduledNote[] {
     const pass = Math.floor(globalStep / this.pattern.lengthSteps);
     const out: ScheduledNote[] = [];
     for (const ev of events) {
@@ -98,6 +111,9 @@ export class TrackRuntime {
         velocity: ev.velocity,
         length: ev.length,
         ratchet: Math.max(1, Math.min(4, Math.round(ev.ratchet ?? 1))),
+        accent: !!ev.accent,
+        slide: !!ev.slide,
+        holdSteps: source ? slideHold(source, ev) : undefined,
       });
     }
     return out;
@@ -106,4 +122,24 @@ export class TrackRuntime {
   private ctx() {
     return { rng: this.rng, stepsPerBar: this.stepsPerBar };
   }
+}
+
+/**
+ * If the next note after `ev` slides in, the steps until it starts (so this
+ * note can be held into it); otherwise undefined.
+ */
+export function slideHold(pattern: Pattern, ev: PatternEvent): number | undefined {
+  if (ev.pitch.kind === 'fixed') return undefined;
+  const len = pattern.lengthSteps;
+  let next: PatternEvent | undefined;
+  let best = Infinity;
+  for (const e of pattern.events) {
+    if (e === ev || e.pitch.kind === 'fixed') continue;
+    const d = (((e.step - ev.step) % len) + len) % len || len;
+    if (d < best) {
+      best = d;
+      next = e;
+    }
+  }
+  return next?.slide ? best : undefined;
 }

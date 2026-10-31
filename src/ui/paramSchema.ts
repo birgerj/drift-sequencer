@@ -46,6 +46,18 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     velocity,
     velVar,
   ],
+  acid: [
+    { kind: 'range', key: 'accentChance', label: 'Accents', min: 0, max: 1, step: 0.01, format: pct },
+    { kind: 'range', key: 'slideChance', label: 'Slides', min: 0, max: 1, step: 0.01, format: pct },
+    { kind: 'range', key: 'density', label: 'Density', min: 0.2, max: 1, step: 0.01, format: pct },
+    { kind: 'range', key: 'octaveUpChance', label: 'Octave up', min: 0, max: 0.8, step: 0.01, format: pct },
+    { kind: 'range', key: 'octaveDownChance', label: 'Octave down', min: 0, max: 0.5, step: 0.01, format: pct },
+    { kind: 'range', key: 'noteVariety', label: 'Note variety', min: 2, max: 7, step: 1, format: (v) => `${v} notes` },
+    { kind: 'range', key: 'gate', label: 'Gate', min: 0.2, max: 1, step: 0.01, format: pct },
+    mutation,
+    length,
+    velocity,
+  ],
   arp: [
     {
       kind: 'choice',
@@ -117,6 +129,7 @@ export const TRACK_TYPES: { type: TrackType; label: string; description: string 
   { type: 'motif', label: 'Motif', description: 'Short theme that slowly mutates' },
   { type: 'arp', label: 'Arpeggio', description: 'Breaks up the current chord' },
   { type: 'bass', label: 'Bass', description: 'Root, fifth and octave' },
+  { type: 'acid', label: 'Acid', description: '303 lines: accent, slide, octaves' },
   { type: 'chords', label: 'Chords', description: 'Voice-led chords of the progression' },
   { type: 'drone', label: 'Drone', description: 'Long notes on the root' },
   { type: 'drums', label: 'Drums', description: 'Euclidean voices + step chance' },

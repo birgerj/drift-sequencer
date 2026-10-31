@@ -117,6 +117,11 @@ export function MyDevices() {
                   <button type="button" onClick={() => setFinding(d.id)}>
                     Find channel…
                   </button>
+                  {(d.roles.includes('bass') || /tb-?03|td-?3|303/i.test(`${d.instrumentId ?? ''} ${d.portName}`)) && (
+                    <button type="button" onClick={() => void s.acidTest(d.id)} title="Plain, accent, slide up, slide down with accent">
+                      Acid test
+                    </button>
+                  )}
                 </div>
               )}
             </div>

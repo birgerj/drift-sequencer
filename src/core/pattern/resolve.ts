@@ -20,7 +20,7 @@ export function resolvePitch(
     case 'fixed':
       return [spec.note];
     case 'degree':
-      return [fold(scale.degreeToMidi(chord.degree + spec.degree, register.baseOctave), register)];
+      return [fold(scale.degreeToMidi(chord.degree + spec.degree, register.baseOctave) + (spec.octave ?? 0) * 12, register)];
     case 'keyDegree':
       return [fold(scale.degreeToMidi(spec.degree, register.baseOctave), register)];
     case 'chordTone': {

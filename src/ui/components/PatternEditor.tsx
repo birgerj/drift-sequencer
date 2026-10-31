@@ -1,7 +1,11 @@
 import { useMemo, useState } from 'preact/hooks';
 import type { DrumParams } from '../../core/generators/drumGenerator';
 import type { MotifParams } from '../../core/generators/motifGenerator';
+import type { AcidParams } from '../../core/generators/acidGenerator';
 import {
+  setAcidNote,
+  toggleAcidFlag,
+  type AcidFlag,
   clearPattern,
   cycleCondition,
   cycleDrumCell,
@@ -53,7 +57,7 @@ export function PatternEditor({ track }: { track: TrackState }) {
           <Icon name="trash" /> Clear
         </button>
       </div>
-      <Segmented
+      {track.generator.type !== 'acid' && <Segmented
         label="Tap edits"
         value={mode}
         options={[
@@ -62,8 +66,10 @@ export function PatternEditor({ track }: { track: TrackState }) {
           { value: 'ratchet', label: 'Ratchet' },
         ]}
         onChange={setMode}
-      />
-      {track.generator.type === 'drums' ? (
+      />}
+      {track.generator.type === 'acid' ? (
+        <AcidGrid track={track} pattern={pattern} playStep={playStep} />
+      ) : track.generator.type === 'drums' ? (
         <DrumGrid track={track} pattern={pattern} playStep={playStep} mode={mode} />
       ) : (
         <MotifGrid track={track} pattern={pattern} playStep={playStep} mode={mode} />
@@ -96,7 +102,7 @@ type EditMode = 'notes' | 'condition' | 'ratchet';
  */
 function Playhead({ step, rows }: { step: number; rows: number }) {
   if (step < 0) return null;
-  return <div class="grid-playhead" aria-hidden="true" style={{ gridColumn: String(step + 2), gridRow: `1 / span ${rows}` }} />;
+  return <div class="grid-playhead" aria-hidden="true" style={{ gridColumn: `${step + 2} / span 1`, gridRow: `1 / span ${rows}` }} />;
 }
 
 /** Short text shown inside a cell for its condition / ratchet. */
@@ -238,6 +244,93 @@ function MotifGrid({ track, pattern, playStep, mode }: { track: TrackState; patt
       <p class="hint">
         Rows are scale degrees from the current chord, so your melody follows the progression. Highlighted rows are chord
         tones. Tap to add or remove a note; tap the tail of a note to shorten it.
+      </p>
+    </>
+  );
+}
+
+const ACID_FLAGS: { flag: AcidFlag; label: string }[] = [
+  { flag: 'up', label: 'Oct ▲' },
+  { flag: 'down', label: 'Oct ▼' },
+  { flag: 'accent', label: 'Accent' },
+  { flag: 'slide', label: 'Slide' },
+];
+
+/**
+ * 303-style editor: one note (or rest) per step, chosen from scale degrees
+ * of the current chord, plus Octave up/down, Accent and Slide per step.
+ */
+function AcidGrid({ track, pattern, playStep }: { track: TrackState; pattern: Pattern; playStep: number }) {
+  const s = useStore();
+  const params = track.generator.params as AcidParams;
+  const len = pattern.lengthSteps;
+  const bar = useLive((l) => (s.sequencer.playing ? l.bar : 0));
+  const moment = s.sequencer.harmonyAt(bar);
+  const degrees = [7, 6, 5, 4, 3, 2, 1, 0];
+  const label = (d: number) => {
+    const n = moment.scale.degreeToMidi(moment.chord.degree + d, track.register.baseOctave);
+    return noteName(n).replace(/-?\d+$/, '') + (d === 7 ? '′' : '');
+  };
+
+  const cells = useMemo(() => {
+    const at = new Map(pattern.events.filter((e) => e.pitch.kind === 'degree').map((e) => [e.step, e]));
+    const noteRows = degrees.map((d) => {
+      const chordTone = [0, 2, 4, 7].includes(d);
+      return (
+        <>
+          <span class={`row-label mono ${chordTone ? 'chord-tone' : ''}`}>{label(d)}</span>
+          {Array.from({ length: len }, (_, step) => {
+            const ev = at.get(step);
+            const on = ev?.pitch.kind === 'degree' && ev.pitch.degree === d;
+            return (
+              <button
+                type="button"
+                class={`cell ${on ? 'hit' : 'off'} ${chordTone ? 'tone-row' : ''} ${step % 4 === 0 ? 'beat' : ''} ${on && ev?.accent ? 'accented' : ''}`}
+                aria-label={`${label(d)} step ${step + 1}${on ? ': note' : ''}`}
+                aria-pressed={on}
+                onClick={() => s.editPattern(track.id, (p) => setAcidNote(p, step, d, { gate: params.gate, velocity: params.velocity }))}
+              />
+            );
+          })}
+        </>
+      );
+    });
+    const flagRows = ACID_FLAGS.map(({ flag, label: name }) => (
+      <>
+        <span class="row-label mono flag-label">{name}</span>
+        {Array.from({ length: len }, (_, step) => {
+          const ev = at.get(step);
+          const octave = ev?.pitch.kind === 'degree' ? (ev.pitch.octave ?? 0) : 0;
+          const on = !!ev && (flag === 'accent' ? !!ev.accent : flag === 'slide' ? !!ev.slide : flag === 'up' ? octave === 1 : octave === -1);
+          const disabled = !ev || (flag === 'slide' && !at.has(step - 1) && step !== 0);
+          return (
+            <button
+              type="button"
+              class={`cell flag ${on ? 'hit' : 'off'} ${step % 4 === 0 ? 'beat' : ''}`}
+              aria-label={`${name} step ${step + 1}${on ? ': on' : ''}`}
+              aria-pressed={on}
+              disabled={disabled}
+              onClick={() => s.editPattern(track.id, (p) => toggleAcidFlag(p, step, flag))}
+            />
+          );
+        })}
+      </>
+    ));
+    return [...noteRows, <div class="flag-sep" style={{ gridColumn: `1 / span ${len + 1}` }} />, ...flagRows];
+  }, [pattern, len, moment.chord.degree, moment.scale, params.gate, params.velocity, track.id]);
+
+  return (
+    <>
+      <div class="grid-scroll">
+        <div class="step-grid acid" style={{ gridTemplateColumns: `56px repeat(${len}, minmax(34px, 1fr))` }}>
+          <StepHeader length={len} playStep={playStep} />
+          {cells}
+          <Playhead step={playStep} rows={degrees.length + ACID_FLAGS.length + 2} />
+        </div>
+      </div>
+      <p class="hint">
+        Tap a note to place it, tap it again for a rest. Below: octave up/down, accent and slide per step. A slide glides from
+        the previous note, so it needs a note right before it.
       </p>
     </>
   );

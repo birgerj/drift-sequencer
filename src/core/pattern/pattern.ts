@@ -6,8 +6,8 @@ import type { MidiNote } from '../theory/note';
  * shape while following the chord progression and any key change.
  */
 export type PitchSpec =
-  /** Scale degree offset from the current chord's root degree. */
-  | { kind: 'degree'; degree: number }
+  /** Scale degree offset from the current chord's root degree (+ optional octave jump). */
+  | { kind: 'degree'; degree: number; octave?: number }
   /** Scale degree offset from the key's root (ignores chords). */
   | { kind: 'keyDegree'; degree: number }
   /** A tone of the current chord: 0 = root, 1 = third, 2 = fifth, … */
@@ -31,6 +31,10 @@ export interface PatternEvent {
   condition?: StepCondition;
   /** Repeat the note this many times within its step (2–4). */
   ratchet?: number;
+  /** 303-style accent: played at full velocity. */
+  accent?: boolean;
+  /** 303-style slide into this note: the previous note is held until it starts. */
+  slide?: boolean;
 }
 
 /**

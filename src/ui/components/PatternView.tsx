@@ -174,12 +174,28 @@ function draw(
           if (harmony.scale.contains(n) && n % 12 === harmony.scale.root % 12) ctx.fillText(noteName(n), 4, y(n) + rowH / 2);
         }
       }
+      const acid = track.generator.type === 'acid';
+      let prev: { x: number; y: number } | undefined;
       for (const { e, notes } of resolved) {
         const active = local >= e.step && local < e.step + e.length;
+        const n0 = notes[0];
+        // Acid: slides drawn as a line from the previous note, accents brighter.
+        if (acid && e.slide && prev && n0 !== undefined) {
+          ctx.globalAlpha = 0.8;
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(prev.x, prev.y);
+          ctx.lineTo(sx(e.step) + 1, y(n0) + rowH / 2);
+          ctx.stroke();
+        }
+        ctx.globalAlpha = acid && !e.accent ? 0.55 : 1;
         ctx.fillStyle = active ? '#ffffff' : color;
         for (const n of notes) {
           roundRect(ctx, sx(e.step) + 1, y(n) + 1, Math.max(3, (e.length / len) * w - 2), Math.max(2, rowH - 2), 2);
         }
+        ctx.globalAlpha = 1;
+        if (n0 !== undefined) prev = { x: sx(e.step) + Math.max(3, (e.length / len) * w - 2), y: y(n0) + rowH / 2 };
       }
     }
   }

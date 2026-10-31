@@ -186,7 +186,12 @@ export class Sequencer {
       if (!audible) continue;
       const port = this.ports.byName(t.output.portName);
       for (const n of scheduled) {
-        const durationMs = Math.max(5, n.length * stepMs - 2);
+        // A note followed by a slide is held into the next note (overlap → glide).
+        const durationMs = n.holdSteps ? n.holdSteps * stepMs + 15 : Math.max(5, n.length * stepMs - 2);
+        if (n.accent) n.velocity = 127;
+        if (t.slideCc !== undefined && n.ratchet <= 1) {
+          port?.send(Midi.cc(t.output.channel, t.slideCc, n.slide ? 127 : 0), Math.max(0, timeMs - 1));
+        }
         if (n.ratchet > 1) {
           // Ratchet: n quick repeats spread over one step.
           const slot = stepMs / n.ratchet;
@@ -253,7 +258,7 @@ function needsRegenerate(prev: GeneratorConfig, next: GeneratorConfig, hasUserPa
   // A drawn pattern is never thrown away by moving a knob.
   if (hasUserPattern) return false;
   if (prev.params.lengthSteps !== next.params.lengthSteps) return true;
-  return next.type !== 'motif' && next.type !== 'bass';
+  return next.type !== 'motif' && next.type !== 'bass' && next.type !== 'acid';
 }
 
 export function buildHarmony(project: ProjectState): Harmony {

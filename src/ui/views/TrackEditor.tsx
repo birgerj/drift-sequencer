@@ -92,7 +92,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
               ) : undefined
             }
           >
-            {track.generator.type === 'drums' || track.generator.type === 'motif' ? (
+            {track.generator.type === 'drums' || track.generator.type === 'motif' || track.generator.type === 'acid' ? (
               <PatternEditor track={track} />
             ) : (
               <p class="hint">

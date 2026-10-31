@@ -46,6 +46,11 @@ export interface TrackState {
   role?: DeviceRole;
   /** Instrument definition id; normally taken from the rack device. */
   instrumentId?: string;
+  /**
+   * Resolved at runtime from the instrument definition (not stored): the CC
+   * that switches slide on, e.g. 102 on the TB-03.
+   */
+  slideCc?: number;
   muted: boolean;
   solo: boolean;
   /** Frozen tracks keep their pattern and skip mutation. */

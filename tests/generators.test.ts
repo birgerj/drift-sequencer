@@ -15,7 +15,7 @@ const harmony = new Harmony(scale, [
   { degree: 4, bars: 1 },
 ]);
 const ctx = (seed = 1) => ({ rng: new Rng(seed), stepsPerBar: 16 });
-const types: TrackType[] = ['motif', 'arp', 'bass', 'chords', 'drone', 'drums'];
+const types: TrackType[] = ['motif', 'arp', 'bass', 'acid', 'chords', 'drone', 'drums'];
 
 describe('euclid', () => {
   it('spreads pulses evenly', () => {
@@ -42,7 +42,7 @@ describe('generators', () => {
     }
   });
 
-  it.each(['motif', 'arp', 'bass', 'chords', 'drone'] as TrackType[])(
+  it.each(['motif', 'arp', 'bass', 'acid', 'chords', 'drone'] as TrackType[])(
     '%s always resolves to notes in key, every bar',
     (type) => {
       const config = defaultConfig(type);

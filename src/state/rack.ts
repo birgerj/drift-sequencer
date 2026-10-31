@@ -81,6 +81,7 @@ export function roleForType(type: TrackType): DeviceRole {
     case 'drums':
       return 'drums';
     case 'bass':
+    case 'acid':
       return 'bass';
     case 'chords':
     case 'drone':

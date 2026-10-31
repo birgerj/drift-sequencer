@@ -1,4 +1,5 @@
 import type { Pattern } from '../pattern/pattern';
+import { AcidGenerator, type AcidParams } from './acidGenerator';
 import { ArpGenerator, type ArpParams } from './arpGenerator';
 import { BassGenerator, type BassParams } from './bassGenerator';
 import { ChordGenerator, type ChordParams } from './chordGenerator';
@@ -12,6 +13,7 @@ export type GeneratorConfig =
   | { type: 'motif'; params: MotifParams }
   | { type: 'arp'; params: ArpParams }
   | { type: 'bass'; params: BassParams }
+  | { type: 'acid'; params: AcidParams }
   | { type: 'chords'; params: ChordParams }
   | { type: 'drone'; params: DroneParams }
   | { type: 'drums'; params: DrumParams };
@@ -20,6 +22,7 @@ const generators = {
   motif: new MotifGenerator(),
   arp: new ArpGenerator(),
   bass: new BassGenerator(),
+  acid: new AcidGenerator(),
   chords: new ChordGenerator(),
   drone: new DroneGenerator(),
   drums: new DrumGenerator(),
@@ -33,6 +36,8 @@ export function defaultConfig(type: TrackType): GeneratorConfig {
       return { type, params: generators.arp.defaults() };
     case 'bass':
       return { type, params: generators.bass.defaults() };
+    case 'acid':
+      return { type, params: generators.acid.defaults() };
     case 'chords':
       return { type, params: generators.chords.defaults() };
     case 'drone':
@@ -50,6 +55,8 @@ export function generatePattern(config: GeneratorConfig, ctx: GeneratorContext):
       return generators.arp.generate(config.params, ctx);
     case 'bass':
       return generators.bass.generate(config.params, ctx);
+    case 'acid':
+      return generators.acid.generate(config.params, ctx);
     case 'chords':
       return generators.chords.generate(config.params, ctx);
     case 'drone':
@@ -67,6 +74,8 @@ export function mutatePattern(config: GeneratorConfig, pattern: Pattern, ctx: Ge
       return generators.arp.mutate(pattern, config.params, ctx);
     case 'bass':
       return generators.bass.mutate(pattern, config.params, ctx);
+    case 'acid':
+      return generators.acid.mutate(pattern, config.params, ctx);
     case 'chords':
       return generators.chords.mutate(pattern, config.params, ctx);
     case 'drone':
