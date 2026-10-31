@@ -14,12 +14,16 @@ import { lfoValue } from './lfo';
 import { browserTimerHost, LookaheadScheduler, type TimerHost } from './scheduler';
 import { MidiGuard } from '../../io/midi/guard';
 import { TrackRuntime, type ScheduledNote } from './trackRuntime';
+import { Rng } from '../random/rng';
+
+/** Kick drums on the TR-8S / GM map. */
+const KICK_NOTES = new Set([35, 36]);
 
 export interface SequencerEvents extends Record<string, unknown> {
   step: { step: number; bar: number; timeMs: number };
   chord: { bar: number; chord: Chord };
   note: { trackId: string; notes: MidiNote[]; velocity: number; timeMs: number; durationMs: number };
-  mutation: { trackId: string; bar: number };
+  mutation: { trackId: string; bar: number; kind: 'mutation' | 'theme' | 'recall' };
   /** An LFO value as it is sent, for displays (0..127). */
   lfo: { trackId: string; index: number; cc: number; value: number; timeMs: number };
   transport: { playing: boolean };
@@ -53,6 +57,8 @@ export class Sequencer {
   private schedulingBar = 0;
   private inLoopEvent = false;
   private readonly ports: MidiGuard;
+  /** Timing/velocity jitter for humanized tracks. */
+  private readonly humanRng = new Rng(0x5eed);
 
   constructor(project: ProjectState, ports: MidiPortResolver, timer: TimerHost = browserTimerHost) {
     this.project = project;
@@ -173,7 +179,7 @@ export class Sequencer {
         }
       }
       for (const rt of this.tracks.values()) {
-        if (rt.maybeMutate(bar)) this.events.emit('mutation', { trackId: rt.config.id, bar });
+        if (rt.maybeMutate(bar)) this.events.emit('mutation', { trackId: rt.config.id, bar, kind: rt.lastChange });
       }
       const moment = this.harmonyAt(bar);
       if (moment.barInChord === 0 || this.lastChordStep < 0) {
@@ -190,16 +196,25 @@ export class Sequencer {
 
     const anySolo = this.project.tracks.some((t) => t.solo);
     const moment = this.harmonyAt(bar);
+    const kickNow = this.kickAt(step, anySolo);
     for (const rt of this.tracks.values()) {
       const t = rt.config;
       const audible = !t.muted && (!anySolo || t.solo);
       this.sendModulations(t, step, timeMs);
-      const scheduled = this.notesFor(rt, step, bar, moment);
+      let scheduled = this.notesFor(rt, step, bar, moment);
       if (!audible) continue;
+      const kickMode = (t.generator.type === 'bass' || t.generator.type === 'acid') && t.kickMode ? t.kickMode : 'off';
+      if (kickMode !== 'off' && kickNow) scheduled = this.makeRoomForKick(scheduled, kickMode, step, anySolo, rt);
+      const human = t.humanize;
       const port = this.ports.byName(t.output.portName);
       for (const n of scheduled) {
         // Tracks faster than ×1 place some notes inside the step.
-        const noteTime = timeMs + n.offset * stepMs;
+        let noteTime = timeMs + n.offset * stepMs;
+        if (human) {
+          // Never earlier than the step itself: that time is still ahead of the clock.
+          noteTime = Math.max(timeMs, noteTime + human.layBack * 25 + (this.humanRng.next() * 2 - 1) * human.timing * 18);
+          if (!n.accent) n.velocity = Math.max(1, Math.min(127, Math.round(n.velocity + (this.humanRng.next() * 2 - 1) * human.velocity * 30)));
+        }
         // A note followed by a slide is held into the next note (overlap → glide).
         const durationMs = n.holdSteps ? n.holdSteps * stepMs + 15 : Math.max(5, n.length * stepMs - 2);
         if (n.accent) n.velocity = 127;
@@ -226,6 +241,40 @@ export class Sequencer {
         this.events.emit('note', { trackId: t.id, notes: n.notes, velocity: n.velocity, timeMs: noteTime, durationMs });
       }
     }
+  }
+
+  /** Does an audible drum track play a kick on this global step? (Pattern only; no dice rolls.) */
+  private kickAt(step: number, anySolo: boolean): boolean {
+    for (const rt of this.tracks.values()) {
+      const t = rt.config;
+      if (t.generator.type !== 'drums' || t.muted || (anySolo && !t.solo)) continue;
+      const rate = t.rate ?? 1;
+      if (rate < 1 && step % Math.round(1 / rate) !== 0) continue;
+      const ps = rt.patternStepAt(step);
+      const muted = new Set(t.generator.params.voices.filter((v) => v.muted).map((v) => v.note));
+      if (rt.pattern.events.some((e) => e.step === ps && e.pitch.kind === 'fixed' && KICK_NOTES.has(e.pitch.note) && !muted.has(e.pitch.note))) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Bass on a kick: duck it, or move it half a beat on if that spot is free. */
+  private makeRoomForKick(
+    notes: ScheduledNote[],
+    mode: 'avoid' | 'duck',
+    step: number,
+    anySolo: boolean,
+    rt: TrackRuntime,
+  ): ScheduledNote[] {
+    if (mode === 'duck') return notes.map((n) => (n.offset === 0 ? { ...n, velocity: Math.max(1, Math.round(n.velocity * 0.55)) } : n));
+    const nextIsBusy = this.kickAt(step + 1, anySolo) || rt.eventsAt(step + 1).length > 0;
+    return notes.flatMap((n) => {
+      if (n.offset !== 0) return [n];
+      if (nextIsBusy) return [];
+      // Move to the next step, a little shorter so it ends where it would have.
+      return [{ ...n, offset: n.offset + 1, length: Math.max(0.5, n.length - 1), holdSteps: n.holdSteps ? Math.max(1, n.holdSteps - 1) : n.holdSteps }];
+    });
   }
 
   /** A track's notes for this step, honouring its call-and-response role. */

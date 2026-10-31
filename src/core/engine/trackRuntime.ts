@@ -48,6 +48,11 @@ export class TrackRuntime {
   private resolveState: ResolveState = {};
   /** Every pattern this track has played; lets the UI jump back. */
   readonly history: Pattern[] = [];
+  /** The pattern a melody keeps coming back to (see TrackState.memory). */
+  theme: Pattern;
+  private mutations = 0;
+  /** What the last change at a bar boundary was. */
+  lastChange: 'mutation' | 'theme' | 'recall' = 'mutation';
 
   constructor(
     public config: TrackState,
@@ -55,12 +60,15 @@ export class TrackRuntime {
   ) {
     this.rng = new Rng(config.seed);
     this.pattern = config.userPattern ?? generatePattern(config.generator, this.ctx());
+    this.theme = this.pattern;
     this.history.push(this.pattern);
   }
 
   /** Replace the pattern with one the user edited. */
   setPattern(pattern: Pattern): void {
     this.pattern = pattern;
+    this.theme = pattern;
+    this.mutations = 0;
     this.history.push(pattern);
     if (this.history.length > 64) this.history.shift();
   }
@@ -71,6 +79,8 @@ export class TrackRuntime {
     this.rng = new Rng(seed);
     this.resolveState = {};
     this.pattern = generatePattern(this.config.generator, this.ctx());
+    this.theme = this.pattern;
+    this.mutations = 0;
     this.history.push(this.pattern);
     if (this.history.length > 64) this.history.shift();
   }
@@ -79,6 +89,20 @@ export class TrackRuntime {
   maybeMutate(bar: number): boolean {
     if (this.config.frozen || bar === 0) return false;
     if (bar % Math.max(1, this.config.mutationIntervalBars) !== 0) return false;
+    this.mutations++;
+    const memory = this.config.memory;
+    if (memory && memory.every > 0 && this.mutations % (memory.every + 1) === 0) {
+      // Melody memory: come back to something the listener has heard before.
+      const earlier = this.history.slice(-16).filter((p) => p !== this.pattern && p.lengthSteps === this.pattern.lengthSteps);
+      const back = memory.mode === 'recall' && earlier.length ? earlier[this.rng.int(0, earlier.length - 1)]! : this.theme;
+      if (back.lengthSteps !== this.pattern.lengthSteps || back === this.pattern) return false;
+      this.lastChange = memory.mode === 'recall' ? 'recall' : 'theme';
+      this.pattern = back;
+      this.history.push(back);
+      if (this.history.length > 64) this.history.shift();
+      return true;
+    }
+    this.lastChange = 'mutation';
     const next = mutatePattern(this.config.generator, this.pattern, this.ctx());
     if (next === this.pattern) return false;
     this.pattern = next;

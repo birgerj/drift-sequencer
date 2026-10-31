@@ -74,8 +74,33 @@ export interface TrackState {
   /** Call-and-response role; the track only plays in its own phrases. */
   phrase?: PhraseSettings;
   modulations: CcModulation[];
+  /** Human feel: small random timing/velocity changes and a laid-back offset. */
+  humanize?: HumanizeSettings;
+  /** Bass and acid tracks: make room for the kick drum. */
+  kickMode?: KickMode;
+  /** Every few mutations the track returns to its theme or an earlier variation. */
+  memory?: MemorySettings;
   /** Knob panel: last value sent per CC, and stored snapshots. */
   panel?: PanelState;
+}
+
+export interface HumanizeSettings {
+  /** 0..1 → up to ±18 ms random timing. */
+  timing: number;
+  /** 0..1 → up to ±30 random velocity. */
+  velocity: number;
+  /** 0..1 → up to 25 ms behind the beat. */
+  layBack: number;
+}
+
+/** off · avoid: move a note that lands on a kick to the next step · duck: play it softer. */
+export type KickMode = 'off' | 'avoid' | 'duck';
+
+export interface MemorySettings {
+  /** Return after this many mutations; 0 = never. */
+  every: number;
+  /** theme: back to the first pattern · recall: a random earlier variation. */
+  mode: 'theme' | 'recall';
 }
 
 export interface PanelState {

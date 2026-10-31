@@ -311,9 +311,10 @@ export class AppStore {
         this.visuals?.send({ t: 'note', track: trackId, notes: [...notes], vel: velocity, at: toEpoch(timeMs), dur: durationMs });
       }),
       ev.on('lfo', ({ trackId, value, timeMs }) => this.visuals?.send({ t: 'lfo', track: trackId, value, at: toEpoch(timeMs) })),
-      ev.on('mutation', ({ trackId, bar }) => {
+      ev.on('mutation', ({ trackId, bar, kind }) => {
         const t = this.project.tracks.find((x) => x.id === trackId);
-        if (t) this.addLog(bar, `${t.name} · pattern mutated`, t.color);
+        const text = kind === 'theme' ? 'back to the theme' : kind === 'recall' ? 'recalls an earlier variation' : 'pattern mutated';
+        if (t) this.addLog(bar, `${t.name} · ${text}`, t.color);
       }),
       ev.on('transport', ({ playing }) => {
         void keepAwake(playing);

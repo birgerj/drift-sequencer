@@ -180,6 +180,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
               />
             </div>
           </Card>
+          <FeelCard track={track} />
           {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
         </div>
 
@@ -286,11 +287,68 @@ function TrackOverview({ track }: { track: TrackState }) {
           <span>
             <small>Evolves</small>
             <b>{track.frozen ? 'Frozen' : `Every ${track.mutationIntervalBars} bar${track.mutationIntervalBars === 1 ? '' : 's'}`}</b>
-            <span class="muted">{typeLabel(track.generator.type)}</span>
+            <span class="muted">
+              {track.memory?.every ? `Returns to ${track.memory.mode === 'theme' ? 'theme' : 'earlier'} after ${track.memory.every}` : typeLabel(track.generator.type)}
+            </span>
           </span>
         </button>
       </div>
     </>
+  );
+}
+
+/** Humanize, kick awareness and melody memory. */
+function FeelCard({ track }: { track: TrackState }) {
+  const s = useStore();
+  const h = track.humanize ?? { timing: 0, velocity: 0, layBack: 0 };
+  const setH = (patch: Partial<typeof h>) => s.updateTrack(track.id, { humanize: { ...h, ...patch } });
+  const memory = track.memory ?? { every: 0, mode: 'theme' as const };
+  const bassLike = track.generator.type === 'bass' || track.generator.type === 'acid';
+  const pct = (x: number) => `${Math.round(x * 100)}%`;
+  return (
+    <Card title="Feel">
+      <div class="param-grid">
+        <Slider label="Timing drift" value={h.timing} min={0} max={1} step={0.01} format={(x) => `±${Math.round(x * 18)} ms`} color={track.color} onInput={(timing) => setH({ timing })} />
+        <Slider label="Velocity drift" value={h.velocity} min={0} max={1} step={0.01} format={pct} color={track.color} onInput={(velocity) => setH({ velocity })} />
+        <Slider label="Lay back" value={h.layBack} min={0} max={1} step={0.01} format={(x) => `${Math.round(x * 25)} ms`} color={track.color} onInput={(layBack) => setH({ layBack })} />
+        {bassLike && (
+          <Segmented
+            label="Kick drum"
+            value={track.kickMode ?? 'off'}
+            options={[
+              { value: 'off', label: 'Ignore' },
+              { value: 'avoid', label: 'Make room' },
+              { value: 'duck', label: 'Duck' },
+            ]}
+            onChange={(kickMode) => s.updateTrack(track.id, { kickMode })}
+          />
+        )}
+        <Segmented
+          label="Melody memory · return after"
+          value={memory.every}
+          options={[0, 2, 3, 4, 6].map((n) => ({ value: n, label: n === 0 ? 'Never' : `${n} changes` }))}
+          onChange={(every) => s.updateTrack(track.id, { memory: { ...memory, every } })}
+        />
+        {memory.every > 0 && (
+          <Segmented
+            label="Return to"
+            value={memory.mode}
+            options={[
+              { value: 'theme', label: 'The theme' },
+              { value: 'recall', label: 'An earlier variation' },
+            ]}
+            onChange={(mode) => s.updateTrack(track.id, { memory: { ...memory, mode } })}
+          />
+        )}
+      </div>
+      <p class="hint">
+        {bassLike && track.kickMode === 'avoid' ? 'Bass notes that land on a kick move to the next step, if it is free. ' : ''}
+        {bassLike && track.kickMode === 'duck' ? 'Bass notes on a kick play softer, like sidechain. ' : ''}
+        {memory.every > 0
+          ? `After ${memory.every} changes the track comes back to ${memory.mode === 'theme' ? 'its theme (the pattern it started with)' : 'one of its earlier variations'}, then evolves again.`
+          : 'Timing and velocity drift make a track sound played rather than programmed.'}
+      </p>
+    </Card>
   );
 }
 
