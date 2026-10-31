@@ -121,6 +121,14 @@ export class TrackRuntime {
     return out;
   }
 
+  /** Notes of muted drum voices, or undefined when none are muted. */
+  private mutedNotes(): Set<number> | undefined {
+    const g = this.config.generator;
+    if (g.type !== 'drums') return undefined;
+    const muted = g.params.voices.filter((v) => v.muted);
+    return muted.length ? new Set(muted.map((v) => v.note)) : undefined;
+  }
+
   /** The pattern step playing at a global step (for playheads). */
   patternStepAt(globalStep: number): number {
     return Math.floor(globalStep * normalizeRate(this.config.rate)) % this.pattern.lengthSteps;
@@ -143,8 +151,10 @@ export class TrackRuntime {
   ): ScheduledNote[] {
     const pass = Math.floor(patternStep / this.pattern.lengthSteps);
     const register = shiftRegister(this.config.register, this.config.octave ?? 0);
+    const muted = this.mutedNotes();
     const out: ScheduledNote[] = [];
     for (const ev of events) {
+      if (muted && ev.pitch.kind === 'fixed' && muted.has(ev.pitch.note)) continue;
       if (ev.condition && !conditionMet(ev.condition, pass)) continue;
       if (ev.probability !== undefined && !this.rng.chance(ev.probability)) continue;
       out.push({

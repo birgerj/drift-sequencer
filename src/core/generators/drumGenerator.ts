@@ -11,6 +11,8 @@ export interface DrumVoice {
   /** 0..1 chance each hit plays. */
   probability: number;
   velocity: number;
+  /** Silenced at play time; the lane keeps its hits. */
+  muted?: boolean;
 }
 
 export interface DrumParams {
@@ -30,7 +32,7 @@ export const TR8S_NOTES = {
   BD: 36,
   RS: 37,
   SD: 38,
-  CP: 39,
+  HC: 39,
   CH: 42,
   LT: 43,
   OH: 46,
@@ -58,7 +60,7 @@ export class DrumGenerator implements PatternGenerator<DrumParams> {
         { name: 'MT', note: TR8S_NOTES.MT, pulses: 0, rotate: 0, probability: 1, velocity: 95 },
         { name: 'HT', note: TR8S_NOTES.HT, pulses: 0, rotate: 0, probability: 1, velocity: 95 },
         { name: 'RS', note: TR8S_NOTES.RS, pulses: 0, rotate: 3, probability: 0.6, velocity: 90 },
-        { name: 'CP', note: TR8S_NOTES.CP, pulses: 1, rotate: 12, probability: 0.4, velocity: 95 },
+        { name: 'HC', note: TR8S_NOTES.HC, pulses: 1, rotate: 12, probability: 0.4, velocity: 95 },
         { name: 'CH', note: TR8S_NOTES.CH, pulses: 8, rotate: 0, probability: 0.85, velocity: 80 },
         { name: 'OH', note: TR8S_NOTES.OH, pulses: 4, rotate: 2, probability: 0.6, velocity: 85 },
         { name: 'CC', note: TR8S_NOTES.CC, pulses: 0, rotate: 0, probability: 1, velocity: 100 },

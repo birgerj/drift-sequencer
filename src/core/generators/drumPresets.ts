@@ -5,10 +5,10 @@ import { TR8S_NOTES } from './drumGenerator';
 export type DrumVoiceKey = keyof typeof TR8S_NOTES;
 
 /** All 11 TR-8S instruments, in the order of the front panel. */
-export const TR8S_VOICE_ORDER: DrumVoiceKey[] = ['BD', 'SD', 'LT', 'MT', 'HT', 'RS', 'CP', 'CH', 'OH', 'CC', 'RC'];
+export const TR8S_VOICE_ORDER: DrumVoiceKey[] = ['BD', 'SD', 'LT', 'MT', 'HT', 'RS', 'HC', 'CH', 'OH', 'CC', 'RC'];
 
 const BASE_VELOCITY: Record<DrumVoiceKey, number> = {
-  BD: 110, SD: 100, LT: 95, MT: 95, HT: 95, RS: 90, CP: 95, CH: 80, OH: 85, CC: 100, RC: 80,
+  BD: 110, SD: 100, LT: 95, MT: 95, HT: 95, RS: 90, HC: 95, CH: 80, OH: 85, CC: 100, RC: 80,
 };
 
 /** A full set of TR-8S voices; `pulses` 0 keeps a lane empty but visible. */
@@ -42,7 +42,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     id: 'house', name: 'Classic house', genre: 'House', bpm: 124,
     rows: {
       BD: 'X...X...X...X...',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: 'o.o.o.o.o.o.o.o.',
       OH: '..x...x...x...x.',
     },
@@ -52,7 +52,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     rows: {
       BD: 'X...X...X...X...',
       RS: '......o.......o.',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: '.o.o.o.o.o.o.o.o',
       OH: '..x...x...x...x.',
       RC: 'o...o...o...o...',
@@ -65,7 +65,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
       SD: '....X.......X...',
       CH: 'x.x.x.x.x.x.x.x.',
       OH: '..x...x...x...x.',
-      CP: '....o.......o...',
+      HC: '....o.......o...',
     },
   },
   {
@@ -76,7 +76,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
       MT: '...o.......o....',
       HT: '.........o......',
       RS: '..x..x....x..x..',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: '.o.o.o.o.o.o.o.o',
     },
   },
@@ -84,7 +84,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     id: 'techno', name: 'Driving techno', genre: 'Techno', bpm: 132,
     rows: {
       BD: 'X...X...X...X...',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: 'xoxoxoxoxoxoxoxo',
       OH: '..x...x...x...x.',
       RC: '..o...o...o...o.',
@@ -96,7 +96,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     rows: {
       BD: 'X...X...X...X...',
       RS: '..o..o....o..o..',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: '.o.o.o.o.o.o.o.o',
       OH: '..........o.....',
     },
@@ -105,7 +105,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     id: 'rumble', name: 'Hard techno rumble', genre: 'Techno', bpm: 145,
     rows: {
       BD: 'X..oX..oX..oX..o',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: 'oooooooooooooooo',
       OH: '..x...x...x...x.',
       RC: 'x.x.x.x.x.x.x.x.',
@@ -127,7 +127,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     rows: {
       BD: 'X...X...X...X...',
       SD: '....x.......x...',
-      CP: '....x.......x..o',
+      HC: '....x.......x..o',
       CH: 'x.x.x.x.x.x.x.x.',
       OH: '..x...x...x...x.',
     },
@@ -137,7 +137,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     rows: {
       BD: 'X......x..X.....',
       SD: '....X.......X...',
-      CP: '....x.......x...',
+      HC: '....x.......x...',
       CH: 'x.x.x.x.x.x.x.x.',
       HT: '..............o.',
       LT: '...........o....',
@@ -186,7 +186,7 @@ export const DRUM_PRESETS: DrumPreset[] = [
     rows: {
       BD: 'X......x..x.....',
       SD: '........X.......',
-      CP: '........x.......',
+      HC: '........x.......',
       CH: 'x.x.x.x.x.x3x.x2',
       OH: '...............o',
     },
@@ -248,4 +248,32 @@ export function presetVoices(preset: DrumPreset): DrumVoice[] {
     pulses[key] = [hits, Math.max(0, first)];
   }
   return tr8sVoices(pulses);
+}
+
+/** Colour groups of the TR-8S front panel, per instrument. */
+export const TR8S_GROUP_COLORS: Record<DrumVoiceKey, string> = {
+  BD: '#f87171', SD: '#fb923c', LT: '#4ade80', MT: '#4ade80', HT: '#4ade80',
+  RS: '#fb923c', HC: '#fb923c', CH: '#facc15', OH: '#facc15', CC: '#facc15', RC: '#facc15',
+};
+
+const NOTE_TO_KEY = new Map<number, DrumVoiceKey>(TR8S_VOICE_ORDER.map((k) => [TR8S_NOTES[k], k]));
+
+/** The TR-8S instrument a voice plays, if it is on the default note map. */
+export function tr8sKey(note: number): DrumVoiceKey | undefined {
+  return NOTE_TO_KEY.get(note);
+}
+
+/**
+ * Put voices in TR-8S panel order (other notes after them, as they were) and
+ * use the panel names: the hand clap is "HC", not "CP".
+ */
+export function orderDrumVoices(voices: DrumVoice[]): DrumVoice[] {
+  const rank = (v: DrumVoice) => {
+    const key = tr8sKey(v.note);
+    return key ? TR8S_VOICE_ORDER.indexOf(key) : TR8S_VOICE_ORDER.length;
+  };
+  return voices
+    .map((v, i) => ({ v: v.name === 'CP' && v.note === TR8S_NOTES.HC ? { ...v, name: 'HC' } : v, i }))
+    .sort((a, b) => rank(a.v) - rank(b.v) || a.i - b.i)
+    .map((x) => x.v);
 }

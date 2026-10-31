@@ -1,3 +1,4 @@
+import type { DrumParams } from '../generators/drumGenerator';
 import { Emitter } from '../events';
 import type { GeneratorConfig } from '../generators/registry';
 import { Harmony, type HarmonicMoment } from '../theory/harmony';
@@ -268,9 +269,16 @@ function needsRegenerate(prev: GeneratorConfig, next: GeneratorConfig, hasUserPa
   if (prev.type !== next.type) return true;
   // A drawn pattern is never thrown away by moving a knob.
   if (hasUserPattern) return false;
+  // Muting a drum voice only silences it at play time.
+  if (prev.type === 'drums' && next.type === 'drums' && sameIgnoringMutes(prev.params, next.params)) return false;
   return next.type !== 'motif' && next.type !== 'bass' && next.type !== 'acid';
 }
 
 export function buildHarmony(project: ProjectState): Harmony {
   return new Harmony(new Scale(project.key.root, project.key.mode), project.progression);
+}
+
+function sameIgnoringMutes(a: DrumParams, b: DrumParams): boolean {
+  const strip = (p: DrumParams) => JSON.stringify({ ...p, voices: p.voices.map(({ muted: _m, ...v }) => v) });
+  return strip(a) === strip(b);
 }

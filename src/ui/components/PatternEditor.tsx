@@ -24,6 +24,13 @@ import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { useLive, useStore } from '../store';
 import { drumIcon, Icon, Segmented } from './controls';
+import { tr8sKey, TR8S_GROUP_COLORS } from '../../core/generators/drumPresets';
+
+/** TR-8S lanes take the colour of their group on the panel. */
+function laneStyle(note: number): Record<string, string> | undefined {
+  const key = tr8sKey(note);
+  return key ? { '--accent': TR8S_GROUP_COLORS[key] } : undefined;
+}
 
 /** Tap-to-edit grid: drum steps for drum tracks, notes for motif tracks. */
 export function PatternEditor({ track }: { track: TrackState }) {
@@ -116,7 +123,18 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
           <StepHeader length={len} playStep={playStep} />
           {useMemo(() => params.voices.map((v) => (
             <>
-              <span class="row-label mono drum-label"><Icon name={drumIcon(v.name, v.note)} size={18} />{v.name}</span>
+              <button
+                type="button"
+                class={`row-label mono drum-label ${v.muted ? 'lane-muted' : ''}`}
+                style={laneStyle(v.note)}
+                aria-pressed={!!v.muted}
+                aria-label={`${v.muted ? 'Unmute' : 'Mute'} ${v.name}`}
+                title={v.muted ? 'Muted — tap to unmute' : 'Tap to mute'}
+                onClick={() => s.toggleDrumVoiceMute(track.id, v.note)}
+              >
+                <Icon name={v.muted ? 'mute' : drumIcon(v.name, v.note)} size={18} />
+                {v.name}
+              </button>
               {Array.from({ length: len }, (_, step) => {
                 const state = drumCell(pattern, step, v.note);
                 const ev = pattern.events.find(drumAt(step, v.note));
@@ -129,7 +147,8 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
                 return (
                   <button
                     type="button"
-                    class={`cell ${state} ${step % 4 === 0 ? 'beat' : ''} ${ev && ev.velocity < 75 ? 'soft' : ev && ev.velocity >= 115 ? 'loud' : ''}`}
+                    style={laneStyle(v.note)}
+                    class={`cell ${v.muted ? 'lane-muted' : ''} ${state} ${step % 4 === 0 ? 'beat' : ''} ${ev && ev.velocity < 75 ? 'soft' : ev && ev.velocity >= 115 ? 'loud' : ''}`}
                     aria-label={`${v.name} step ${step + 1}: ${state}${badge ? ' ' + badge : ''}`}
                     aria-pressed={state !== 'off'}
                     onClick={onTap}

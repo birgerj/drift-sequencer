@@ -491,3 +491,9 @@ kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border-radius
 .drum-label { display: flex; align-items: center; justify-content: flex-end; gap: 6px; color: var(--text-2); }
 .drum-label svg { color: var(--accent); flex: 0 0 auto; }
 .voice-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
+button.drum-label { background: transparent; border: 0; min-height: 30px; padding: 0 6px 0 0; border-radius: 6px; font-size: 11px; }
+button.drum-label:hover { background: var(--surface-2); }
+button.drum-label.lane-muted { color: var(--danger); text-decoration: line-through; }
+button.drum-label.lane-muted svg { color: var(--danger); }
+.cell.lane-muted { opacity: 0.3; }
+button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--danger) 14%, transparent); color: var(--danger); border: 0; }

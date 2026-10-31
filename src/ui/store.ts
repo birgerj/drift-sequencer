@@ -41,7 +41,27 @@ import {
 import { createProject, createTrack, TRACK_COLORS } from '../state/templates';
 
 import type { SectionId } from './shortcuts';
-import { DRUM_PRESETS, presetPattern, presetVoices, tr8sVoices } from '../core/generators/drumPresets';
+import type { DrumVoice } from '../core/generators/drumGenerator';
+import { DRUM_PRESETS, orderDrumVoices, presetPattern, presetVoices, tr8sKey, tr8sVoices } from '../core/generators/drumPresets';
+
+/** A TR-8S kit gets a lane for each of its 11 instruments, in panel order. */
+function withAllTr8sLanes(voices: DrumVoice[]): DrumVoice[] {
+  const isTr8s = voices.length > 0 && voices.every((v) => tr8sKey(v.note));
+  const have = new Set(voices.map((v) => v.note));
+  return orderDrumVoices(isTr8s ? [...voices, ...tr8sVoices().filter((v) => !have.has(v.note))] : voices);
+}
+
+/** Drum tracks: TR-8S panel order and names (older projects used "CP" and another order). */
+function normalizeDrums(project: ProjectState): ProjectState {
+  return {
+    ...project,
+    tracks: project.tracks.map((t) =>
+      t.generator.type === 'drums'
+        ? ({ ...t, generator: { ...t.generator, params: { ...t.generator.params, voices: withAllTr8sLanes(t.generator.params.voices) } } } as TrackState)
+        : t,
+    ),
+  };
+}
 
 export type View =
   | { name: 'performance' }
@@ -271,7 +291,7 @@ export class AppStore {
     const wasPlaying = this.sequencer.playing;
     this.sequencer.stop();
     // Tracks pick up this device's synths by role (templates, imports, old projects).
-    const project = assignDevices(incoming, this.rack);
+    const project = assignDevices(normalizeDrums(incoming), this.rack);
     this.project = project;
     this.sequencer = this.createSequencer(project);
     this.live.step = -1;
@@ -400,12 +420,19 @@ export class AppStore {
     this.showToast(`${preset.name} loaded (suggested ${preset.bpm} BPM). Frozen; unfreeze to let it evolve.`);
   }
 
+  /** Mute or unmute one drum voice (by note); the pattern stays as it is. */
+  toggleDrumVoiceMute(id: string, note: number): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (!t || t.generator.type !== 'drums') return;
+    this.setTrackParam(id, 'voices', t.generator.params.voices.map((v) => (v.note === note ? { ...v, muted: !v.muted } : v)));
+  }
+
   /** Give a drum track a lane for every TR-8S instrument it doesn't have yet. */
   addAllTr8sVoices(id: string): void {
     const t = this.project.tracks.find((x) => x.id === id);
     if (!t || t.generator.type !== 'drums') return;
     const have = new Set(t.generator.params.voices.map((v) => v.note));
-    const voices = [...t.generator.params.voices, ...tr8sVoices().filter((v) => !have.has(v.note))];
+    const voices = orderDrumVoices([...t.generator.params.voices, ...tr8sVoices().filter((v) => !have.has(v.note))]);
     this.setTrackParam(id, 'voices', voices);
   }
 

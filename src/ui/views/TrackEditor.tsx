@@ -5,7 +5,7 @@ import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../c
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { useState } from 'preact/hooks';
 import { Chord } from '../../core/theory/chord';
-import { DRUM_PRESETS, PRESET_GENRES, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
+import { DRUM_PRESETS, PRESET_GENRES, tr8sKey, TR8S_GROUP_COLORS, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS, drumIcon } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
@@ -458,7 +458,7 @@ function DrumVoices({ track, instrument }: { track: TrackState; instrument: Inst
         {params.voices.map((v, i) => (
           <div class="voice">
             <div class="row gap-s wrap">
-              <span class="voice-icon">
+              <span class="voice-icon" style={tr8sKey(v.note) ? { '--accent': TR8S_GROUP_COLORS[tr8sKey(v.note)!] } : undefined}>
                 <Icon name={drumIcon(v.name, v.note)} size={22} />
               </span>
               <input
