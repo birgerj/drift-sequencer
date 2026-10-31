@@ -16,7 +16,10 @@ can keep your hands on the synths.
 
 ## Run it
 
-**No install needed:** download [`docs/index.html`](docs/index.html) and
+**Open the app:** [birgerj.github.io/drift-sequencer](https://birgerj.github.io/drift-sequencer/)
+— use Chrome or Edge and connect your synths over USB MIDI.
+
+**Offline, no install needed:** download [`docs/index.html`](docs/index.html) and
 open it in Chrome or Edge (double-click). The whole app — code, styles and
 icon — is inside that one file. Projects are saved in the browser.
 
