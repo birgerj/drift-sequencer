@@ -40,6 +40,7 @@ import {
 } from '../state/storage';
 import { createProject, createTrack, TRACK_COLORS } from '../state/templates';
 
+import type { SectionId } from './shortcuts';
 import { DRUM_PRESETS, presetPattern, presetVoices, tr8sVoices } from '../core/generators/drumPresets';
 
 export type View =
@@ -95,6 +96,8 @@ export class AppStore {
   toast: string | undefined;
   /** Keyboard shortcut overlay. */
   shortcutsOpen = false;
+  /** Open tab of the track detail pane; kept when switching tracks. */
+  trackTab: SectionId = 'overview';
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
 
   private listeners = new Set<() => void>();
@@ -165,6 +168,11 @@ export class AppStore {
 
   go(view: View): void {
     this.view = view;
+    this.notify();
+  }
+
+  setTrackTab(tab: SectionId): void {
+    this.trackTab = tab;
     this.notify();
   }
 

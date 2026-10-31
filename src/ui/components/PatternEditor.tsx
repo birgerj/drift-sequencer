@@ -23,7 +23,7 @@ import { shiftRegister } from '../../core/engine/trackRuntime';
 import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { useLive, useStore } from '../store';
-import { Icon, Segmented } from './controls';
+import { drumIcon, Icon, Segmented } from './controls';
 
 /** Tap-to-edit grid: drum steps for drum tracks, notes for motif tracks. */
 export function PatternEditor({ track }: { track: TrackState }) {
@@ -112,11 +112,11 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
   return (
     <>
       <div class="grid-scroll">
-        <div class={`step-grid drums ${params.voices.length > 7 ? 'dense' : ''}`} style={{ gridTemplateColumns: `64px repeat(${len}, minmax(38px, 1fr))` }}>
+        <div class={`step-grid drums ${params.voices.length > 7 ? 'dense' : ''}`} style={{ gridTemplateColumns: `76px repeat(${len}, minmax(38px, 1fr))` }}>
           <StepHeader length={len} playStep={playStep} />
           {useMemo(() => params.voices.map((v) => (
             <>
-              <span class="row-label mono">{v.name}</span>
+              <span class="row-label mono drum-label"><Icon name={drumIcon(v.name, v.note)} size={18} />{v.name}</span>
               {Array.from({ length: len }, (_, step) => {
                 const state = drumCell(pattern, step, v.note);
                 const ev = pattern.events.find(drumAt(step, v.note));

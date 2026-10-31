@@ -2,12 +2,13 @@ import { useEffect } from 'preact/hooks';
 import { normalizeRate, TRACK_RATES } from '../core/engine/trackRuntime';
 import { store, type AppStore } from './store';
 
-/** Sections of the track detail pane, in order, with their shortcut keys. */
+/** Tabs of the track detail pane, in order, with their shortcut keys. */
 export const SECTIONS = [
-  { id: 'pattern', label: 'Pattern', icon: 'grid', key: 'Q' },
-  { id: 'generator', label: 'Generator', icon: 'sliders', key: 'W' },
-  { id: 'modulation', label: 'Modulation', icon: 'wave', key: 'E' },
-  { id: 'output', label: 'Output', icon: 'output', key: 'R' },
+  { id: 'overview', label: 'Overview', icon: 'list', key: 'Q' },
+  { id: 'pattern', label: 'Pattern', icon: 'grid', key: 'W' },
+  { id: 'generator', label: 'Generator', icon: 'sliders', key: 'E' },
+  { id: 'modulation', label: 'Modulation', icon: 'wave', key: 'R' },
+  { id: 'output', label: 'Output', icon: 'output', key: 'T' },
 ] as const;
 
 export type SectionId = (typeof SECTIONS)[number]['id'];
@@ -17,7 +18,7 @@ export const SHORTCUT_HELP: { keys: string; action: string }[] = [
   { keys: 'Space', action: 'Play / stop' },
   { keys: '1 – 9', action: 'Select track 1–9' },
   { keys: '↑  ↓', action: 'Previous / next track' },
-  { keys: 'Q W E R', action: 'Jump to Pattern, Generator, Modulation, Output' },
+  { keys: 'Q W E R T', action: 'Track tabs: Overview, Pattern, Generator, Modulation, Output' },
   { keys: 'M  S', action: 'Mute / solo the selected track' },
   { keys: 'N', action: 'New pattern' },
   { keys: 'F', action: 'Freeze / unfreeze' },
@@ -25,22 +26,12 @@ export const SHORTCUT_HELP: { keys: string; action: string }[] = [
   { keys: '←  →', action: 'Pattern length shorter / longer' },
   { keys: 'Shift + ←  →', action: 'Speed slower / faster' },
   { keys: ',  .', action: 'Tempo −1 / +1 (Shift: ±5)' },
-  { keys: 'O', action: 'Overview of all tracks' },
+  { keys: 'O', action: 'All tracks (Overview page)' },
   { keys: '?', action: 'Show this list' },
   { keys: 'Esc', action: 'Close' },
 ];
 
 const LENGTHS = [8, 16, 32, 64];
-
-/** Last jump, so the jump bar highlights it while the smooth scroll runs. */
-export const lastJump = { id: 'pattern' as SectionId, at: 0 };
-
-export function jumpToSection(id: SectionId): void {
-  lastJump.id = id;
-  lastJump.at = performance.now();
-  window.dispatchEvent(new CustomEvent('drift:section', { detail: id }));
-  document.getElementById(`sec-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
 
 function isTyping(el: EventTarget | null): boolean {
   const node = el as HTMLElement | null;
@@ -96,7 +87,7 @@ export function handleShortcut(s: AppStore, e: Pick<KeyboardEvent, 'key' | 'code
   if (!track) return false;
   const section = SECTIONS.find((x) => x.key === key.toUpperCase());
   if (section) {
-    jumpToSection(section.id);
+    s.setTrackTab(section.id);
     return true;
   }
   switch (key.toLowerCase()) {

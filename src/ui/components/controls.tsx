@@ -195,7 +195,32 @@ const PATHS: Record<string, string> = {
   speaker: 'M4 9h4l5-4v14l-5-4H4zM17 8.5a5 5 0 0 1 0 7',
   mute: 'M4 9h4l5-4v14l-5-4H4zM17 9l5 6M22 9l-5 6',
   keyboard: 'M3 6h18v12H3zM7 10h.01M11 10h.01M15 10h.01M7 14h10',
+  // Drum instruments
+  kick: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 8.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7zM5 20l-1.5 2M19 20l1.5 2',
+  snare: 'M4 10c0-1.4 3.6-2.5 8-2.5s8 1.1 8 2.5-3.6 2.5-8 2.5S4 11.4 4 10zM4 10v6c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-6M8 12.3v6M12 12.5v6M16 12.3v6M9 2l4 5M17 2l-3 5',
+  tom: 'M5 8c0-1.4 3.1-2.5 7-2.5s7 1.1 7 2.5-3.1 2.5-7 2.5S5 9.4 5 8zM5 8v8c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V8M12 18.5V22',
+  rim: 'M4 13c0-1.4 3.6-2.5 8-2.5s8 1.1 8 2.5-3.6 2.5-8 2.5S4 14.4 4 13zM4 13v4c0 1.4 3.6 2.5 8 2.5s8-1.1 8-2.5v-4M5 11L19 5',
+  clap: 'M8 21l-3-6V9a1.5 1.5 0 0 1 3 0v4M8 13V6.5a1.5 1.5 0 0 1 3 0V13M11 12V5.5a1.5 1.5 0 0 1 3 0V13M14 12.5V8a1.5 1.5 0 0 1 3 0v6c0 3-2 5-4 7M19 3l1.5-1.5M20 6h2M4 4L2.5 2.5',
+  hatClosed: 'M3 8.5h18M5 10h14M12 10v12M12 4v4.5M8 22h8',
+  hatOpen: 'M3 6h18M5 11h14M12 11v11M12 3v3M8 22h8M10 8.5h4',
+  crash: 'M2 11l20-4M12 9v13M8 22h8M17 2l1-2M20 4l2-1M14 3l-.5-2',
+  ride: 'M2 9.5h20M12 7.5a2 2 0 0 0-2 2h4a2 2 0 0 0-2-2zM12 9.5V22M8 22h8',
 };
+
+/** Icon per drum voice, by TR-8S style name (falls back to the GM note). */
+export function drumIcon(name: string, note: number): string {
+  const n = name.toUpperCase();
+  if (n.startsWith('BD') || note === 35 || note === 36) return 'kick';
+  if (n.startsWith('SD') || note === 38 || note === 40) return 'snare';
+  if (n.startsWith('RS') || note === 37) return 'rim';
+  if (n.startsWith('CP') || n.startsWith('HC') || note === 39) return 'clap';
+  if (n.startsWith('CH') || note === 42 || note === 44) return 'hatClosed';
+  if (n.startsWith('OH') || note === 46) return 'hatOpen';
+  if (n.startsWith('CC') || note === 49 || note === 57) return 'crash';
+  if (n.startsWith('RC') || note === 51 || note === 59) return 'ride';
+  if (/T$|TOM/.test(n) || [41, 43, 45, 47, 48, 50].includes(note)) return 'tom';
+  return 'drums';
+}
 
 /** Icon name per generator type. */
 export const TYPE_ICONS: Record<string, string> = {

@@ -3,23 +3,22 @@ import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { Chord } from '../../core/theory/chord';
 import { DRUM_PRESETS, PRESET_GENRES, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
-import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS } from '../components/controls';
+import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS, drumIcon } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
 import { TrackTiming } from '../components/TrackTiming';
 import { PatternEditor } from '../components/PatternEditor';
 import { PatternView } from '../components/PatternView';
 import { PARAM_SCHEMA, TRACK_TYPES, typeLabel, type Control } from '../paramSchema';
-import { jumpToSection, lastJump, SECTIONS, type SectionId } from '../shortcuts';
+import { SECTIONS, type SectionId } from '../shortcuts';
 import { useLive, useStore } from '../store';
 
 export function TrackEditor({ trackId }: { trackId: string }) {
   const s = useStore();
   const track = s.project.tracks.find((t) => t.id === trackId);
-  const active = useActiveSection();
   if (!track) {
     return (
       <div class="page">
@@ -34,6 +33,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
   const device = s.device(track.deviceId);
   const editable = track.generator.type === 'drums' || track.generator.type === 'motif' || track.generator.type === 'acid';
   const harmony = s.sequencer.currentHarmony;
+  const tab = s.trackTab;
 
   return (
     <div class="track-detail" style={{ '--accent': track.color }}>
@@ -58,9 +58,9 @@ export function TrackEditor({ trackId }: { trackId: string }) {
         </div>
       </div>
 
-      <nav class="jump-bar" aria-label="Jump to section">
+      <nav class="jump-bar" role="tablist" aria-label="Track sections">
         {SECTIONS.map((x) => (
-          <button type="button" class="jump" aria-current={active === x.id} onClick={() => jumpToSection(x.id)}>
+          <button type="button" role="tab" class="jump" aria-selected={tab === x.id} aria-current={tab === x.id} onClick={() => s.setTrackTab(x.id)}>
             <Icon name={x.icon} size={16} />
             {x.label}
             <kbd>{x.key}</kbd>
@@ -94,7 +94,10 @@ export function TrackEditor({ trackId }: { trackId: string }) {
       </nav>
 
       <div class="detail-body">
-        <div id="sec-pattern" class="detail-section span-all">
+        {tab === 'overview' && <TrackOverview track={track} />}
+
+        {tab === 'pattern' && (
+        <div class="detail-section span-all">
           <Card
             title={`Pattern · ${rt ? rt.pattern.lengthSteps / s.project.stepsPerBar : 0} bar(s)`}
             actions={
@@ -137,7 +140,10 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           </Card>
         </div>
 
-        <div id="sec-generator" class="detail-section">
+)}
+
+        {tab === 'generator' && (
+        <div class="detail-section span-all tab-columns">
           <Card title="Generator">
             <div class="type-chips" role="radiogroup" aria-label="Track type">
               {TRACK_TYPES.map((t) => (
@@ -154,25 +160,33 @@ export function TrackEditor({ trackId }: { trackId: string }) {
                 </button>
               ))}
             </div>
-            {PARAM_SCHEMA[track.generator.type].map((c) => (
-              <ParamControl control={c} track={track} />
-            ))}
-            <Segmented
-              label="Mutate every (bars)"
-              value={track.mutationIntervalBars}
-              options={[1, 2, 4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
-              onChange={(mutationIntervalBars) => s.updateTrack(track.id, { mutationIntervalBars })}
-            />
+            <div class="param-grid">
+              {PARAM_SCHEMA[track.generator.type].map((c) => (
+                <ParamControl control={c} track={track} />
+              ))}
+              <Segmented
+                label="Mutate every (bars)"
+                value={track.mutationIntervalBars}
+                options={[1, 2, 4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
+                onChange={(mutationIntervalBars) => s.updateTrack(track.id, { mutationIntervalBars })}
+              />
+            </div>
           </Card>
           {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
         </div>
 
-        <div id="sec-modulation" class="detail-section">
+)}
+
+        {tab === 'modulation' && (
+        <div class="detail-section span-all tab-columns">
           <Modulations track={track} instrument={instrument} />
           <CallResponse track={track} />
         </div>
 
-        <div id="sec-output" class="detail-section">
+)}
+
+        {tab === 'output' && (
+        <div class="detail-section span-all tab-columns">
           <OutputCard track={track} />
           <Card title="Track">
             <button
@@ -186,8 +200,83 @@ export function TrackEditor({ trackId }: { trackId: string }) {
             </button>
           </Card>
         </div>
+        )}
       </div>
     </div>
+  );
+}
+
+/** The most important things of a track at a glance; details live in the other tabs. */
+function TrackOverview({ track }: { track: TrackState }) {
+  const s = useStore();
+  const rt = s.sequencer.track(track.id);
+  const out = s.trackOutput(track);
+  const device = s.device(track.deviceId);
+  const quick = PARAM_SCHEMA[track.generator.type].filter((c) => c.kind === 'range').slice(0, 4);
+  const go = (tab: SectionId) => () => s.setTrackTab(tab);
+  const caller = track.phrase?.answer ? s.project.tracks.find((t) => t.id === track.phrase!.answer!.from) : undefined;
+  return (
+    <>
+      <div class="detail-section span-2">
+        <Card title="Pattern" actions={<button type="button" class="ghost" onClick={go('pattern')}>Edit <Icon name="grid" size={16} /></button>}>
+          {rt && <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? 200 : 160} showLabels />}
+          <div class="timing-row">
+            <TrackTiming track={track} />
+            {track.generator.type !== 'drums' && (
+              <div class="field">
+                <span class="field-label">Octave</span>
+                <OctaveControl track={track} compact />
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+      <div class="detail-section">
+        <Card title="Sound" actions={<button type="button" class="ghost" onClick={go('generator')}>All <Icon name="sliders" size={16} /></button>}>
+          {quick.map((c) => (
+            <ParamControl control={c} track={track} />
+          ))}
+          {quick.length === 0 && <p class="hint">Set the voices under Generator.</p>}
+        </Card>
+      </div>
+      <div class="detail-section span-all overview-facts">
+        <button type="button" class="fact" onClick={go('output')}>
+          <Icon name="output" size={18} />
+          <span>
+            <small>Output</small>
+            <b>{device?.name ?? out.portName}</b>
+            <span class={s.portAvailable(out.portName) ? 'muted' : 'warn'}>
+              ch {out.channel}
+              {s.portAvailable(out.portName) ? '' : ' · not connected'}
+            </span>
+          </span>
+        </button>
+        <button type="button" class="fact" onClick={go('modulation')}>
+          <Icon name="wave" size={18} />
+          <span>
+            <small>Modulation</small>
+            <b>{track.modulations.length === 0 ? 'None' : `${track.modulations.filter((m) => m.enabled).length} LFO active`}</b>
+            <span class="muted">{track.modulations.map((m) => m.label).join(', ') || 'Add an LFO'}</span>
+          </span>
+        </button>
+        <button type="button" class="fact" onClick={go('modulation')}>
+          <Icon name="list" size={18} />
+          <span>
+            <small>Call &amp; response</small>
+            <b>{!track.phrase ? 'Always plays' : track.phrase.role === 'call' ? 'Call' : caller ? `Answers ${caller.name}` : 'Response'}</b>
+            <span class="muted">{track.phrase ? `${track.phrase.bars} bar phrases` : 'Off'}</span>
+          </span>
+        </button>
+        <button type="button" class="fact" onClick={go('generator')}>
+          <Icon name={TYPE_ICONS[track.generator.type] ?? 'motif'} size={18} />
+          <span>
+            <small>Evolves</small>
+            <b>{track.frozen ? 'Frozen' : `Every ${track.mutationIntervalBars} bar${track.mutationIntervalBars === 1 ? '' : 's'}`}</b>
+            <span class="muted">{typeLabel(track.generator.type)}</span>
+          </span>
+        </button>
+      </div>
+    </>
   );
 }
 
@@ -227,44 +316,6 @@ function ChordChip({ index, label }: { index: number; label: string }) {
       {label}
     </button>
   );
-}
-
-/** The section nearest the top of the scroll area, for the jump bar highlight. */
-function useActiveSection(): SectionId {
-  const [active, setActive] = useState<SectionId>('pattern');
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      if (performance.now() - lastJump.at < 900) return;
-      const bar = document.querySelector('.jump-bar')?.getBoundingClientRect().bottom ?? 0;
-      // The lowest section top that has reached the bar; sections side by
-      // side in one row tie, and then the first of them wins.
-      let current: SectionId = 'pattern';
-      let best = -Infinity;
-      for (const x of SECTIONS) {
-        const top = document.getElementById(`sec-${x.id}`)?.getBoundingClientRect().top;
-        if (top !== undefined && top <= bar + 40 && top > best + 1) {
-          best = top;
-          current = x.id;
-        }
-      }
-      setActive(current);
-    };
-    const onJump = (e: Event) => setActive((e as CustomEvent<SectionId>).detail);
-    window.addEventListener('drift:section', onJump);
-    const onScroll = () => {
-      if (!frame) frame = requestAnimationFrame(update);
-    };
-    document.addEventListener('scroll', onScroll, true);
-    update();
-    return () => {
-      document.removeEventListener('scroll', onScroll, true);
-      window.removeEventListener('drift:section', onJump);
-      if (frame) cancelAnimationFrame(frame);
-    };
-  }, []);
-  return active;
 }
 
 /** Pick a device from "My devices"; without devices, set a port directly. */
@@ -407,6 +458,9 @@ function DrumVoices({ track, instrument }: { track: TrackState; instrument: Inst
         {params.voices.map((v, i) => (
           <div class="voice">
             <div class="row gap-s wrap">
+              <span class="voice-icon">
+                <Icon name={drumIcon(v.name, v.note)} size={22} />
+              </span>
               <input
                 class="voice-name mono"
                 aria-label="Voice name"
