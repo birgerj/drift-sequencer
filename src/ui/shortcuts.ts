@@ -7,8 +7,9 @@ export const SECTIONS = [
   { id: 'overview', label: 'Overview', icon: 'list', key: 'Q' },
   { id: 'pattern', label: 'Pattern', icon: 'grid', key: 'W' },
   { id: 'generator', label: 'Generator', icon: 'sliders', key: 'E' },
-  { id: 'modulation', label: 'Modulation', icon: 'wave', key: 'R' },
-  { id: 'output', label: 'Output', icon: 'output', key: 'T' },
+  { id: 'panel', label: 'Panel', icon: 'knob', key: 'R' },
+  { id: 'modulation', label: 'Modulation', icon: 'wave', key: 'T' },
+  { id: 'output', label: 'Output', icon: 'output', key: 'Y' },
 ] as const;
 
 export type SectionId = (typeof SECTIONS)[number]['id'];
@@ -18,7 +19,7 @@ export const SHORTCUT_HELP: { keys: string; action: string }[] = [
   { keys: 'Space', action: 'Play / stop' },
   { keys: '1 – 9', action: 'Select track 1–9' },
   { keys: '↑  ↓', action: 'Previous / next track' },
-  { keys: 'Q W E R T', action: 'Track tabs: Overview, Pattern, Generator, Modulation, Output' },
+  { keys: 'Q W E R T Y', action: 'Track tabs: Overview, Pattern, Generator, Panel, Modulation, Output' },
   { keys: 'M  S', action: 'Mute / solo the selected track' },
   { keys: 'N', action: 'New pattern' },
   { keys: 'F', action: 'Freeze / unfreeze' },
@@ -137,7 +138,7 @@ export function useShortcuts(): void {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (isTyping(e.target)) return;
       // Arrow keys on a focused slider move the slider.
-      if (e.key.startsWith('Arrow') && (e.target as HTMLElement | null)?.matches?.('input[type="range"]')) return;
+      if (e.key.startsWith('Arrow') && (e.target as HTMLElement | null)?.matches?.('input[type="range"], [role="slider"]')) return;
       if (handleShortcut(store, e)) {
         e.preventDefault();
         // A focused button would otherwise also react to Space / arrows.

@@ -74,6 +74,14 @@ export interface TrackState {
   /** Call-and-response role; the track only plays in its own phrases. */
   phrase?: PhraseSettings;
   modulations: CcModulation[];
+  /** Knob panel: last value sent per CC, and stored snapshots. */
+  panel?: PanelState;
+}
+
+export interface PanelState {
+  /** CC number (as string key) → 0..127. */
+  values: Record<string, number>;
+  snapshots?: Record<string, Record<string, number>>;
 }
 
 export interface ProjectState {

@@ -7,6 +7,7 @@ import { useState } from 'preact/hooks';
 import { Chord } from '../../core/theory/chord';
 import { DRUM_PRESETS, PRESET_GENRES, tr8sKey, TR8S_GROUP_COLORS, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS, drumIcon } from '../components/controls';
+import { KnobPanel } from '../components/KnobPanel';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
 import { TrackTiming } from '../components/TrackTiming';
@@ -67,11 +68,18 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           </button>
         ))}
         <div class="spacer" />
-        <button type="button" class="jump" onClick={() => s.regenerate(track.id)} title="N">
-          <Icon name="dice" size={16} /> New pattern
+        <button type="button" class="jump square-jump" onClick={() => s.regenerate(track.id)} title="New pattern (N)" aria-label="New pattern (N)">
+          <Icon name="dice" size={16} />
         </button>
-        <button type="button" class="jump" aria-pressed={track.frozen} onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })} title="F">
-          <Icon name="snow" size={16} /> {track.frozen ? 'Frozen' : 'Freeze'}
+        <button
+          type="button"
+          class="jump square-jump"
+          aria-pressed={track.frozen}
+          onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })}
+          title={track.frozen ? 'Frozen — unfreeze (F)' : 'Freeze (F)'}
+          aria-label={track.frozen ? 'Unfreeze (F)' : 'Freeze (F)'}
+        >
+          <Icon name="snow" size={16} />
         </button>
         <button
           type="button"
@@ -176,6 +184,12 @@ export function TrackEditor({ trackId }: { trackId: string }) {
         </div>
 
 )}
+
+        {tab === 'panel' && (
+          <div class="detail-section span-all">
+            <KnobPanel track={track} instrument={instrument} />
+          </div>
+        )}
 
         {tab === 'modulation' && (
         <div class="detail-section span-all tab-columns">

@@ -420,6 +420,65 @@ export class AppStore {
     this.showToast(`${preset.name} loaded (suggested ${preset.bpm} BPM). Frozen; unfreeze to let it evolve.`);
   }
 
+  /** Turn a knob on the panel: remember the value and send it to the synth. */
+  setPanelValue(id: string, cc: number, value: number): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (!t) return;
+    const v = Math.max(0, Math.min(127, Math.round(value)));
+    const panel = t.panel ?? { values: {} };
+    if (panel.values[cc] === v) return;
+    this.updateTrack(id, { panel: { ...panel, values: { ...panel.values, [cc]: v } } });
+    this.queueCc(t, cc, v);
+  }
+
+  /** Send every stored panel value, so the synth matches what Drift shows. */
+  sendPanel(id: string, values?: Record<string, number>): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (!t) return;
+    const all = values ?? t.panel?.values ?? {};
+    for (const [cc, v] of Object.entries(all)) this.queueCc(t, Number(cc), v);
+    if (!this.portForTrack(t)) this.showToast(`${t.name}: MIDI port not connected.`);
+  }
+
+  storePanelSnapshot(id: string, slot: string): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (!t) return;
+    const panel = t.panel ?? { values: {} };
+    this.updateTrack(id, { panel: { ...panel, snapshots: { ...panel.snapshots, [slot]: { ...panel.values } } } });
+    this.showToast(`Snapshot ${slot} stored.`);
+  }
+
+  recallPanelSnapshot(id: string, slot: string): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    const snap = t?.panel?.snapshots?.[slot];
+    if (!t || !snap) return;
+    this.updateTrack(id, { panel: { ...t.panel!, values: { ...t.panel!.values, ...snap } } });
+    this.sendPanel(id, snap);
+  }
+
+  private portForTrack(t: TrackState) {
+    return this.midi.connected ? this.midi.byName(this.trackOutput(t).portName) : undefined;
+  }
+
+  /** Knob moves are coalesced per CC and sent once per animation frame. */
+  private ccQueue = new Map<string, { trackId: string; cc: number; value: number }>();
+  private ccFrame = 0;
+  private queueCc(t: TrackState, cc: number, value: number): void {
+    this.ccQueue.set(`${t.id}:${cc}`, { trackId: t.id, cc, value });
+    if (this.ccFrame) return;
+    this.ccFrame = requestAnimationFrame(() => {
+      this.ccFrame = 0;
+      const batch = [...this.ccQueue.values()];
+      this.ccQueue.clear();
+      for (const m of batch) {
+        const track = this.project.tracks.find((x) => x.id === m.trackId);
+        const port = track && this.portForTrack(track);
+        if (!port || !track) continue;
+        port.send(Midi.cc(this.trackOutput(track).channel, m.cc, m.value));
+      }
+    });
+  }
+
   /** Mute or unmute one drum voice (by note); the pattern stays as it is. */
   toggleDrumVoiceMute(id: string, note: number): void {
     const t = this.project.tracks.find((x) => x.id === id);
