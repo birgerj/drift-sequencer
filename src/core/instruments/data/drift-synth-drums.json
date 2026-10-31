@@ -4,6 +4,46 @@
   "device": "Synth Drums",
   "params": [
     {
+      "id": "kit",
+      "name": "Kit",
+      "section": "Kit",
+      "msg": {
+        "type": "cc",
+        "cc": 14
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "bus-drive",
+      "name": "Bus drive",
+      "section": "Kit",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 32
+    },
+    {
+      "id": "bus-comp",
+      "name": "Bus comp",
+      "section": "Kit",
+      "msg": {
+        "type": "cc",
+        "cc": 18
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 51
+    },
+    {
       "id": "hat-tone",
       "name": "Hat tone",
       "section": "Kit",
@@ -15,21 +55,248 @@
       "max": 127,
       "bipolar": false,
       "target": "filterCutoff",
-      "default": 83
+      "default": 76
+    },
+    {
+      "id": "kick-tune",
+      "name": "Kick tune",
+      "section": "Kick",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "tune",
+      "default": 64
     },
     {
       "id": "kick-decay",
       "name": "Kick decay",
-      "section": "Kit",
+      "section": "Kick",
       "msg": {
         "type": "cc",
-        "cc": 75
+        "cc": 21
       },
       "min": 0,
       "max": 127,
       "bipolar": false,
       "target": "envDecay",
-      "default": 69
+      "default": 66
+    },
+    {
+      "id": "kick-level",
+      "name": "Kick level",
+      "section": "Kick",
+      "msg": {
+        "type": "cc",
+        "cc": 22
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 100
+    },
+    {
+      "id": "snare-tune",
+      "name": "Snare tune",
+      "section": "Snare",
+      "msg": {
+        "type": "cc",
+        "cc": 23
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "tune",
+      "default": 64
+    },
+    {
+      "id": "snare-decay",
+      "name": "Snare decay",
+      "section": "Snare",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 66
+    },
+    {
+      "id": "snare-level",
+      "name": "Snare level",
+      "section": "Snare",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "clap-tune",
+      "name": "Clap tune",
+      "section": "Clap",
+      "msg": {
+        "type": "cc",
+        "cc": 26
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "tune",
+      "default": 64
+    },
+    {
+      "id": "clap-decay",
+      "name": "Clap decay",
+      "section": "Clap",
+      "msg": {
+        "type": "cc",
+        "cc": 27
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 66
+    },
+    {
+      "id": "clap-level",
+      "name": "Clap level",
+      "section": "Clap",
+      "msg": {
+        "type": "cc",
+        "cc": 28
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "closed-hat-tune",
+      "name": "Closed hat tune",
+      "section": "Closed hat",
+      "msg": {
+        "type": "cc",
+        "cc": 29
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "tune",
+      "default": 64
+    },
+    {
+      "id": "closed-hat-decay",
+      "name": "Closed hat decay",
+      "section": "Closed hat",
+      "msg": {
+        "type": "cc",
+        "cc": 30
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 66
+    },
+    {
+      "id": "closed-hat-level",
+      "name": "Closed hat level",
+      "section": "Closed hat",
+      "msg": {
+        "type": "cc",
+        "cc": 31
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "open-hat-tune",
+      "name": "Open hat tune",
+      "section": "Open hat",
+      "msg": {
+        "type": "cc",
+        "cc": 32
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "tune",
+      "default": 64
+    },
+    {
+      "id": "open-hat-decay",
+      "name": "Open hat decay",
+      "section": "Open hat",
+      "msg": {
+        "type": "cc",
+        "cc": 33
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 66
+    },
+    {
+      "id": "open-hat-level",
+      "name": "Open hat level",
+      "section": "Open hat",
+      "msg": {
+        "type": "cc",
+        "cc": 34
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "toms-level",
+      "name": "Toms level",
+      "section": "Other",
+      "msg": {
+        "type": "cc",
+        "cc": 35
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "cymbals-level",
+      "name": "Cymbals level",
+      "section": "Other",
+      "msg": {
+        "type": "cc",
+        "cc": 36
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "perc-level",
+      "name": "Perc level",
+      "section": "Other",
+      "msg": {
+        "type": "cc",
+        "cc": 37
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
     },
     {
       "id": "volume",
@@ -118,6 +385,10 @@
     {
       "name": "Ride",
       "note": 51
+    },
+    {
+      "name": "Cowbell",
+      "note": 56
     }
   ],
   "source": "Built-in Drift Synth (Tone.js)"

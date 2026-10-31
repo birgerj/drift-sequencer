@@ -1,5 +1,9 @@
 import type * as ToneNS from 'tone';
 import type { MidiOutputPort } from '../midi/output';
+import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrument } from './common';
+import { DrumKit } from './drumKit';
+
+export { LOCAL_CC } from './common';
 
 /**
  * Built-in Web Audio instruments (Tone.js), exposed as MIDI output ports so
@@ -18,36 +22,6 @@ export const LOCAL_PORTS: Record<LocalKind, string> = {
 export function isLocalPort(name: string): boolean {
   return Object.values(LOCAL_PORTS).includes(name);
 }
-
-/** CC numbers the local instruments respond to; mirrored in their instrument definitions. */
-export const LOCAL_CC = {
-  volume: 7,
-  cutoff: 74,
-  resonance: 71,
-  attack: 73,
-  release: 72,
-  decay: 75,
-  envMod: 12,
-  accent: 16,
-  drive: 17,
-  waveform: 70,
-  reverb: 91,
-  delay: 94,
-  allSoundOff: 120,
-  allNotesOff: 123,
-} as const;
-
-interface Instrument {
-  noteOn(note: number, velocity: number, time: number): void;
-  noteOff(note: number, time: number): void;
-  cc(cc: number, value: number): void;
-  allOff(time: number): void;
-}
-
-const norm = (v: number) => Math.max(0, Math.min(127, v)) / 127;
-/** 0..127 → exponential range lo..hi. */
-const expRange = (v: number, lo: number, hi: number) => lo * Math.pow(hi / lo, norm(v));
-const midiHz = (n: number) => 440 * Math.pow(2, (n - 69) / 12);
 
 /** Shared audio graph: master bus with reverb and delay sends. */
 class LocalAudio {
@@ -113,21 +87,6 @@ class LocalAudio {
     out.connect(del);
     return { out, rev, del };
   }
-}
-
-interface Channel {
-  out: ToneNS.Gain;
-  rev: ToneNS.Gain;
-  del: ToneNS.Gain;
-}
-
-/** CCs every instrument understands: level and effect sends. */
-function channelCc(ch: Channel, cc: number, value: number): boolean {
-  if (cc === LOCAL_CC.volume) ch.out.gain.rampTo(norm(value) * norm(value), 0.02);
-  else if (cc === LOCAL_CC.reverb) ch.rev.gain.rampTo(norm(value), 0.05);
-  else if (cc === LOCAL_CC.delay) ch.del.gain.rampTo(norm(value) * 0.8, 0.05);
-  else return false;
-  return true;
 }
 
 /** Polyphonic saw lead with a resonant filter envelope. */
@@ -297,125 +256,6 @@ class PadSynth implements Instrument {
     else if (cc === LOCAL_CC.resonance) this.filter.Q.rampTo(0.5 + norm(v) * 10, 0.03);
     else if (cc === LOCAL_CC.attack) this.synth.set({ envelope: { attack: expRange(v, 0.005, 5) } });
     else if (cc === LOCAL_CC.release) this.synth.set({ envelope: { release: expRange(v, 0.05, 8) } });
-  }
-}
-
-/** 808/909-flavoured kit on the GM drum notes (as used by the TR-8S). */
-class DrumKit implements Instrument {
-  private kick: ToneNS.MembraneSynth;
-  private toms: ToneNS.MembraneSynth;
-  private snareBody: ToneNS.MembraneSynth;
-  private snare: ToneNS.NoiseSynth;
-  private clap: ToneNS.NoiseSynth;
-  private rim: ToneNS.Synth;
-  private closedHat: ToneNS.MetalSynth;
-  private openHat: ToneNS.MetalSynth;
-  private cymbal: ToneNS.MetalSynth;
-  private hatFilter: ToneNS.Filter;
-  private kickDecay = 0.45;
-
-  constructor(
-    T: typeof ToneNS,
-    private ch: Channel,
-  ) {
-    const out = ch.out;
-    this.kick = new T.MembraneSynth({
-      pitchDecay: 0.045,
-      octaves: 6,
-      envelope: { attack: 0.001, decay: this.kickDecay, sustain: 0, release: 0.05 },
-      volume: -2,
-    }).connect(out);
-    this.toms = new T.MembraneSynth({
-      pitchDecay: 0.03,
-      octaves: 2.2,
-      envelope: { attack: 0.001, decay: 0.32, sustain: 0, release: 0.05 },
-      volume: -8,
-    }).connect(out);
-    this.snareBody = new T.MembraneSynth({
-      pitchDecay: 0.02,
-      octaves: 1.5,
-      envelope: { attack: 0.001, decay: 0.09, sustain: 0, release: 0.02 },
-      volume: -12,
-    }).connect(out);
-    const snareHp = new T.Filter({ type: 'highpass', frequency: 1400 }).connect(out);
-    this.snare = new T.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.17, sustain: 0 }, volume: -10 }).connect(snareHp);
-    const clapBp = new T.Filter({ type: 'bandpass', frequency: 1150, Q: 1.2 }).connect(out);
-    this.clap = new T.NoiseSynth({ noise: { type: 'white' }, envelope: { attack: 0.001, decay: 0.12, sustain: 0 }, volume: -4 }).connect(clapBp);
-    this.rim = new T.Synth({ oscillator: { type: 'triangle' }, envelope: { attack: 0.001, decay: 0.035, sustain: 0, release: 0.01 }, volume: -10 }).connect(out);
-    this.hatFilter = new T.Filter({ type: 'highpass', frequency: 7000 }).connect(out);
-    const metal = (decay: number, volume: number) =>
-      new T.MetalSynth({
-        envelope: { attack: 0.001, decay, sustain: 0, release: 0.04 },
-        harmonicity: 5.1,
-        modulationIndex: 32,
-        resonance: 5000,
-        octaves: 1.5,
-        volume,
-      }).connect(this.hatFilter);
-    this.closedHat = metal(0.05, -20);
-    this.openHat = metal(0.45, -22);
-    this.cymbal = metal(1.4, -26);
-  }
-
-  noteOn(note: number, velocity: number, time: number) {
-    const v = norm(velocity);
-    switch (note) {
-      case 35:
-      case 36:
-        this.kick.triggerAttackRelease(46, this.kickDecay, time, v);
-        break;
-      case 37:
-        this.rim.triggerAttackRelease(1700, 0.03, time, v);
-        break;
-      case 38:
-      case 40:
-        this.snare.triggerAttackRelease(0.17, time, v);
-        this.snareBody.triggerAttackRelease(185, 0.09, time, v);
-        break;
-      case 39:
-        // A clap is a few quick bursts and a tail.
-        [0, 0.011, 0.023].forEach((d) => this.clap.triggerAttackRelease(0.008, time + d, v * 0.8));
-        this.clap.triggerAttackRelease(0.12, time + 0.034, v);
-        break;
-      case 42:
-      case 44:
-        this.openHat.triggerRelease(time); // closed hat chokes the open one
-        this.closedHat.triggerAttackRelease(250, 0.05, time, v);
-        break;
-      case 46:
-        this.openHat.triggerAttackRelease(250, 0.45, time, v);
-        break;
-      case 49:
-      case 57:
-      case 52:
-      case 55:
-        this.cymbal.triggerAttackRelease(300, 1.4, time, v);
-        break;
-      case 51:
-      case 59:
-      case 53:
-        this.cymbal.triggerAttackRelease(180, 0.8, time, v * 0.7);
-        break;
-      default: {
-        // Toms (41..50) and anything else: a pitched tom.
-        const pitch = note >= 41 && note <= 50 ? 70 * Math.pow(2, (note - 41) / 9) : midiHz(note);
-        this.toms.triggerAttackRelease(pitch, 0.3, time, v);
-      }
-    }
-  }
-  noteOff() {
-    /* one-shots */
-  }
-  allOff() {
-    /* one-shots ring out */
-  }
-  cc(cc: number, v: number) {
-    if (channelCc(this.ch, cc, v)) return;
-    if (cc === LOCAL_CC.cutoff) this.hatFilter.frequency.rampTo(expRange(v, 2500, 12000), 0.03);
-    else if (cc === LOCAL_CC.decay) {
-      this.kickDecay = expRange(v, 0.12, 1.4);
-      this.kick.envelope.decay = this.kickDecay;
-    }
   }
 }
 
