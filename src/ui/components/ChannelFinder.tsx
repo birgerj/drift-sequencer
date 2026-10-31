@@ -11,7 +11,7 @@ export function ChannelFinder({ device, onClose }: { device: RackDevice; onClose
   const s = useStore();
   const [channel, setChannel] = useState(0);
   const [running, setRunning] = useState(true);
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (!running) return;
