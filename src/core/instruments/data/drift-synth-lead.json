@@ -1,0 +1,147 @@
+{
+  "id": "drift-synth-lead",
+  "manufacturer": "Drift",
+  "device": "Synth Lead",
+  "params": [
+    {
+      "id": "cutoff",
+      "name": "Cutoff",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 48
+    },
+    {
+      "id": "resonance",
+      "name": "Resonance",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterResonance",
+      "default": 23
+    },
+    {
+      "id": "env-amount",
+      "name": "Env amount",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 74
+    },
+    {
+      "id": "attack",
+      "name": "Attack",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envAttack",
+      "default": 0
+    },
+    {
+      "id": "decay",
+      "name": "Decay",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envDecay",
+      "default": 70
+    },
+    {
+      "id": "release",
+      "name": "Release",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envRelease",
+      "default": 61
+    },
+    {
+      "id": "waveform",
+      "name": "Waveform",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 70
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "volume",
+      "name": "Volume",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 114
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 15
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 24
+    }
+  ],
+  "triggers": [],
+  "source": "Built-in Drift Synth (Tone.js)"
+}

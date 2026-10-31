@@ -1,0 +1,107 @@
+{
+  "id": "drift-synth-pad",
+  "manufacturer": "Drift",
+  "device": "Synth Pad",
+  "params": [
+    {
+      "id": "cutoff",
+      "name": "Cutoff",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 72
+    },
+    {
+      "id": "resonance",
+      "name": "Resonance",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterResonance",
+      "default": 6
+    },
+    {
+      "id": "attack",
+      "name": "Attack",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envAttack",
+      "default": 91
+    },
+    {
+      "id": "release",
+      "name": "Release",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envRelease",
+      "default": 90
+    },
+    {
+      "id": "volume",
+      "name": "Volume",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 114
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 44
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 0
+    }
+  ],
+  "triggers": [],
+  "source": "Built-in Drift Synth (Tone.js)"
+}

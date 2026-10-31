@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { DEVICE_ROLES, guessPorts, newDevice, suggestInstrument, type DeviceRole, type RackDevice } from '../../state/rack';
 import { Card, Icon, Select, Stepper, Toggle } from '../components/controls';
+import { isLocalPort } from '../../io/local/localSynths';
 import { useStore } from '../store';
 
 interface Row {
@@ -125,13 +126,14 @@ export function Setup() {
         <Card>
           <div class="empty">
             <p>First connect your synths over USB and allow MIDI access.</p>
+            <p class="small">No synths at hand? Pick a “Drift Synth” port below to play the built-in sounds.</p>
             <button type="button" class="primary" onClick={() => void s.connectMidi()}>
               Connect MIDI
             </button>
           </div>
         </Card>
       )}
-      {s.midi.connected && s.ports.length === 0 && (
+      {s.midi.connected && s.ports.every(isLocalPort) && (
         <Card>
           <p class="warn">No MIDI outputs found. Check the USB cable and that the device is switched on.</p>
         </Card>

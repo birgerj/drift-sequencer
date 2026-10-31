@@ -1,0 +1,124 @@
+{
+  "id": "drift-synth-drums",
+  "manufacturer": "Drift",
+  "device": "Synth Drums",
+  "params": [
+    {
+      "id": "hat-tone",
+      "name": "Hat tone",
+      "section": "Kit",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 83
+    },
+    {
+      "id": "kick-decay",
+      "name": "Kick decay",
+      "section": "Kit",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envDecay",
+      "default": 69
+    },
+    {
+      "id": "volume",
+      "name": "Volume",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 114
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 8
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "section": "Mix",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 0
+    }
+  ],
+  "triggers": [
+    {
+      "name": "Kick",
+      "note": 36
+    },
+    {
+      "name": "Rim",
+      "note": 37
+    },
+    {
+      "name": "Snare",
+      "note": 38
+    },
+    {
+      "name": "Clap",
+      "note": 39
+    },
+    {
+      "name": "Low tom",
+      "note": 43
+    },
+    {
+      "name": "Closed hat",
+      "note": 42
+    },
+    {
+      "name": "Open hat",
+      "note": 46
+    },
+    {
+      "name": "Mid tom",
+      "note": 47
+    },
+    {
+      "name": "Crash",
+      "note": 49
+    },
+    {
+      "name": "High tom",
+      "note": 50
+    },
+    {
+      "name": "Ride",
+      "note": 51
+    }
+  ],
+  "source": "Built-in Drift Synth (Tone.js)"
+}

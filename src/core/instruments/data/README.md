@@ -11,3 +11,6 @@ Regenerate or add a device:
 ```sh
 node scripts/import-midi-guide.mjs path/to/midi/Roland/TR-8S.csv
 ```
+
+The `drift-synth-*.json` files describe Drift's own built-in Web Audio
+instruments (the "Drift Synth" ports) and are not from midi.guide.

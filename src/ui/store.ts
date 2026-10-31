@@ -13,7 +13,8 @@ import { Rng } from '../core/random/rng';
 import { Chord } from '../core/theory/chord';
 import { generateProgression, varyProgression, type ProgressionStyle } from '../core/theory/progressionGenerator';
 import { Scale } from '../core/theory/scale';
-import { WebMidiService } from '../io/midi/webMidiService';
+import { isLocalPort } from '../io/local/localSynths';
+import { MidiHub } from '../io/midi/midiHub';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
 import { newId, type CcMotion, type MidiTarget, type ProjectState, type TrackState } from '../state/project';
@@ -108,7 +109,7 @@ type Pending =
  * change; it never touches the engine directly.
  */
 export class AppStore {
-  readonly midi = new WebMidiService();
+  readonly midi = new MidiHub();
   readonly midiGuide = new MidiGuideClient();
   readonly library = new InstrumentLibrary(new IndexedDbInstrumentStore());
   private repo = new IndexedDbProjectRepository();
@@ -179,6 +180,7 @@ export class AppStore {
     }
     this.midi.onChange(() => this.refreshPorts());
     this.midi.onMessage((port, data) => this.onMidiIn(port, data));
+    this.refreshPorts();
     document.addEventListener('visibilitychange', () => {
       this.sequencer.setBackground(document.hidden);
       if (document.hidden && this.saveTimer) this.flushSave();
@@ -477,7 +479,10 @@ export class AppStore {
     if (this.sequencer.playing) {
       this.sequencer.stop();
     } else {
-      if (!this.midi.connected) await this.connectMidi();
+      const ports = this.engineView().tracks.map((t) => t.output.portName);
+      // Only ask for MIDI access when a track actually plays hardware.
+      if (!this.midi.connected && !ports.every(isLocalPort)) await this.connectMidi();
+      await this.midi.wakeAudioFor(ports);
       this.sequencer.start();
     }
     this.notify();
@@ -700,7 +705,7 @@ export class AppStore {
   }
 
   private portForTrack(t: TrackState) {
-    return this.midi.connected ? this.midi.byName(this.trackOutput(t).portName) : undefined;
+    return this.midi.byName(this.trackOutput(t).portName);
   }
 
   /** Knob moves are coalesced per CC and sent once per animation frame. */
@@ -833,6 +838,7 @@ export class AppStore {
     const d = this.device(id);
     if (!d) return false;
     if (!this.midi.connected) await this.connectMidi();
+    await this.midi.wakeAudioFor([d.portName]);
     const port = this.midi.byName(d.portName);
     if (!port) {
       this.showToast(`${d.name}: port “${d.portName}” is not connected.`);
@@ -857,6 +863,7 @@ export class AppStore {
     const d = this.device(id);
     if (!d) return;
     if (!this.midi.connected) await this.connectMidi();
+    await this.midi.wakeAudioFor([d.portName]);
     const port = this.midi.byName(d.portName);
     if (!port) return this.showToast(`${d.name}: port “${d.portName}” is not connected.`);
     const ch = d.channel;

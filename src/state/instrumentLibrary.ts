@@ -3,6 +3,10 @@ import hydrasynth from '../core/instruments/data/asm-hydrasynth.json';
 import wavestate from '../core/instruments/data/korg-wavestate.json';
 import tb03 from '../core/instruments/data/roland-tb-03.json';
 import tr8s from '../core/instruments/data/roland-tr-8s.json';
+import driftLead from '../core/instruments/data/drift-synth-lead.json';
+import driftBass from '../core/instruments/data/drift-synth-bass.json';
+import driftPad from '../core/instruments/data/drift-synth-pad.json';
+import driftDrums from '../core/instruments/data/drift-synth-drums.json';
 import { openDriftDb, INSTRUMENTS_STORE } from './db';
 
 export interface InstalledInstrument {
@@ -12,7 +16,7 @@ export interface InstalledInstrument {
   importedAt?: string;
 }
 
-export const BUILT_IN_INSTRUMENTS: InstrumentDefinition[] = [hydrasynth, wavestate, tb03, tr8s] as InstrumentDefinition[];
+export const BUILT_IN_INSTRUMENTS: InstrumentDefinition[] = [hydrasynth, wavestate, tb03, tr8s, driftLead, driftBass, driftPad, driftDrums] as InstrumentDefinition[];
 
 export interface InstrumentStore {
   all(): Promise<InstrumentDefinition[]>;

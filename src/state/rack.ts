@@ -161,7 +161,7 @@ export function guessPorts(ports: string[]): Partial<Record<DeviceRole, string>>
   const drumLike = /tr-?\d|drum|rhythm|beat|rd-?\d|machinedrum|digitakt|syntakt|rytm|tr8|tr-8|\bdrm\b/i;
   const bassLike = /tb-?0?3|td-?3|303|bass|mono ?station|sh-?101/i;
   // Thru/virtual ports and secondary control ports (e.g. "TR-8S CTRL") aren't instruments.
-  const skip = /through|thru|midi \d$|virtual|iac|ctrl|control|\bdaw\b|remote/i;
+  const skip = /through|thru|midi \d$|virtual|iac|ctrl|control|\bdaw\b|remote|drift synth/i;
   const usable = ports.filter((p) => !skip.test(p));
   const drums = usable.find((p) => drumLike.test(p));
   const bassNamed = usable.find((p) => p !== drums && bassLike.test(p));
