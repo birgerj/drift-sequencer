@@ -2,7 +2,6 @@
   "id": "roland-tr-8s",
   "manufacturer": "Roland",
   "device": "TR-8S",
-  "defaultChannel": 10,
   "params": [
     {
       "id": "bd-tune",
@@ -744,5 +743,6 @@
       "map": "Alternate note map"
     }
   ],
-  "source": "midi.guide (github.com/pencilresearch/midi), CC BY-SA 4.0"
+  "source": "midi.guide (github.com/pencilresearch/midi), CC BY-SA 4.0",
+  "defaultChannel": 10
 }

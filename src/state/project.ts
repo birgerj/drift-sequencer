@@ -36,6 +36,8 @@ export interface TrackState {
   generator: GeneratorConfig;
   register: Register;
   output: MidiTarget;
+  /** Instrument definition id (CC map / drum notes) for this track's device. */
+  instrumentId?: string;
   muted: boolean;
   solo: boolean;
   /** Frozen tracks keep their pattern and skip mutation. */

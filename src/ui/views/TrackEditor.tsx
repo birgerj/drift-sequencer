@@ -1,0 +1,339 @@
+import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
+import type { InstrumentDefinition } from '../../core/instruments/instrument';
+import { noteName } from '../../core/theory/note';
+import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
+import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle } from '../components/controls';
+import { PatternView } from '../components/PatternView';
+import { PARAM_SCHEMA, TRACK_TYPES, type Control } from '../paramSchema';
+import { useStore } from '../store';
+
+export function TrackEditor({ trackId }: { trackId: string }) {
+  const s = useStore();
+  const track = s.project.tracks.find((t) => t.id === trackId);
+  if (!track) {
+    return (
+      <div class="page">
+        <p>Track not found.</p>
+        <button type="button" onClick={() => s.go({ name: 'performance' })}>Back</button>
+      </div>
+    );
+  }
+  const rt = s.sequencer.track(track.id);
+  const instrument = s.instrument(track.instrumentId);
+
+  return (
+    <div class="page track-editor" style={{ '--accent': track.color }}>
+      <div class="page-head">
+        <button type="button" class="ghost" onClick={() => s.go({ name: 'performance' })}>
+          <Icon name="back" /> Performance
+        </button>
+        <span class="swatch large" />
+        <input
+          class="title-input"
+          aria-label="Track name"
+          value={track.name}
+          onChange={(e) => s.updateTrack(track.id, { name: (e.target as HTMLInputElement).value || track.name })}
+        />
+        <div class="spacer" />
+        <button type="button" aria-pressed={track.frozen} onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })}>
+          <Icon name="snow" /> {track.frozen ? 'Frozen' : 'Freeze'}
+        </button>
+        <button type="button" class="primary" onClick={() => s.regenerate(track.id)}>
+          <Icon name="dice" /> New pattern
+        </button>
+      </div>
+
+      <section class="type-grid" aria-label="Track type">
+        {TRACK_TYPES.map((t) => (
+          <button
+            type="button"
+            class="type-card"
+            aria-pressed={track.generator.type === t.type}
+            onClick={() => s.setTrackType(track.id, t.type)}
+          >
+            <b>{t.label}</b>
+            <span class="hint">{t.description}</span>
+          </button>
+        ))}
+      </section>
+
+      <div class="editor-grid">
+        <div class="col">
+          <Card title="Output">
+            <Select
+              label="MIDI port"
+              value={track.output.portName}
+              options={[...new Set([track.output.portName, ...s.ports])].map((n) => ({
+                value: n,
+                label: s.portAvailable(n) ? n : `${n} (not connected)`,
+              }))}
+              onChange={(portName) => s.updateTrack(track.id, { output: { ...track.output, portName } })}
+            />
+            <div class="field">
+              <span class="field-label">Channel</span>
+              <Stepper
+                label="MIDI channel"
+                value={track.output.channel}
+                min={1}
+                max={16}
+                onChange={(channel) => s.updateTrack(track.id, { output: { ...track.output, channel } })}
+              />
+            </div>
+            <Select
+              label="Instrument"
+              value={track.instrumentId ?? ''}
+              options={[
+                { value: '', label: 'None' },
+                ...s.instruments.map((i) => ({ value: i.definition.id, label: `${i.definition.manufacturer} ${i.definition.device}` })),
+              ]}
+              onChange={(id) => s.updateTrack(track.id, { instrumentId: id || undefined })}
+            />
+            <button type="button" class="link" onClick={() => s.go({ name: 'instruments' })}>
+              Import instrument definitions…
+            </button>
+          </Card>
+
+          <Card title="Generator">
+            {PARAM_SCHEMA[track.generator.type].map((c) => (
+              <ParamControl control={c} track={track} />
+            ))}
+            <Segmented
+              label="Mutate every (bars)"
+              value={track.mutationIntervalBars}
+              options={[1, 2, 4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
+              onChange={(mutationIntervalBars) => s.updateTrack(track.id, { mutationIntervalBars })}
+            />
+          </Card>
+        </div>
+
+        <div class="col wide">
+          <Card title={`Pattern · ${rt ? rt.pattern.lengthSteps / s.project.stepsPerBar : 0} bar(s)`}>
+            {rt && <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={260} showLabels />}
+          </Card>
+
+          {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
+
+          <Card title="Variations">
+            <div class="chips">
+              {(rt?.history ?? []).slice(-10).map((pattern, i, list) => {
+                const index = (rt?.history.length ?? 0) - list.length + i;
+                const current = rt?.pattern === pattern;
+                return (
+                  <button type="button" class="chip" aria-pressed={current} onClick={() => s.restoreVariation(track.id, index)}>
+                    {variationName(index)}
+                  </button>
+                );
+              })}
+            </div>
+            <p class="hint">Every mutation stores a variation. Tap one to jump back to it.</p>
+          </Card>
+
+          <Modulations track={track} instrument={instrument} />
+
+          <Card title="Track">
+            <div class="row gap-s wrap">
+              <button type="button" aria-pressed={track.muted} onClick={() => s.updateTrack(track.id, { muted: !track.muted })}>
+                Mute
+              </button>
+              <button type="button" aria-pressed={track.solo} onClick={() => s.updateTrack(track.id, { solo: !track.solo })}>
+                Solo
+              </button>
+              <div class="spacer" />
+              <button
+                type="button"
+                class="danger"
+                onClick={() => {
+                  if (confirm(`Delete track “${track.name}”?`)) s.removeTrack(track.id);
+                }}
+              >
+                <Icon name="trash" /> Delete track
+              </button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function variationName(i: number): string {
+  if (i === 0) return 'A';
+  return `A${i}`;
+}
+
+function ParamControl({ control: c, track }: { control: Control; track: TrackState }) {
+  const s = useStore();
+  const params = track.generator.params as unknown as Record<string, unknown>;
+  const value = params[c.key];
+  switch (c.kind) {
+    case 'range':
+      return (
+        <Slider
+          label={c.label}
+          value={Number(value ?? c.min)}
+          min={c.min}
+          max={c.max}
+          step={c.step}
+          format={c.format}
+          color={track.color}
+          onInput={(v) => s.setTrackParam(track.id, c.key, v)}
+        />
+      );
+    case 'toggle':
+      return <Toggle label={c.label} description={c.description} checked={Boolean(value)} onChange={(v) => s.setTrackParam(track.id, c.key, v)} />;
+    case 'choice':
+      return (
+        <Segmented
+          label={c.label}
+          value={value as string | number}
+          options={c.options}
+          onChange={(v) => s.setTrackParam(track.id, c.key, v)}
+        />
+      );
+  }
+}
+
+function DrumVoices({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition | undefined }) {
+  const s = useStore();
+  const params = track.generator.params as DrumParams;
+  const setVoices = (voices: DrumVoice[]) => s.setTrackParam(track.id, 'voices', voices);
+  const update = (i: number, patch: Partial<DrumVoice>) => setVoices(params.voices.map((v, j) => (j === i ? { ...v, ...patch } : v)));
+  const triggers = (instrument?.triggers ?? []).filter((t, i, all) => all.findIndex((x) => x.note === t.note) === i);
+  const noteOptions = (current: number) => {
+    const opts = triggers.map((t) => ({ value: t.note, label: `${t.name} (${t.note})` }));
+    if (!opts.some((o) => o.value === current)) opts.unshift({ value: current, label: `${noteName(current)} (${current})` });
+    return opts;
+  };
+  return (
+    <Card
+      title="Drum voices"
+      actions={
+        <button
+          type="button"
+          onClick={() => setVoices([...params.voices, { name: 'NEW', note: 37, pulses: 3, rotate: 0, probability: 0.7, velocity: 90 }])}
+        >
+          <Icon name="plus" /> Voice
+        </button>
+      }
+    >
+      <div class="voices">
+        {params.voices.map((v, i) => (
+          <div class="voice">
+            <div class="row gap-s wrap">
+              <input
+                class="voice-name mono"
+                aria-label="Voice name"
+                value={v.name}
+                maxLength={6}
+                onChange={(e) => update(i, { name: (e.target as HTMLInputElement).value })}
+              />
+              <Select hideLabel label={`${v.name} note`} value={v.note} options={noteOptions(v.note)} onChange={(note) => update(i, { note })} />
+              <div class="spacer" />
+              <button type="button" class="square" aria-label={`Remove ${v.name}`} onClick={() => setVoices(params.voices.filter((_, j) => j !== i))}>
+                <Icon name="trash" />
+              </button>
+            </div>
+            <div class="voice-sliders">
+              <Slider compact label="Hits" value={v.pulses} min={0} max={params.lengthSteps} step={1} color={track.color} onInput={(pulses) => update(i, { pulses })} />
+              <Slider compact label="Rotate" value={v.rotate} min={0} max={params.lengthSteps - 1} step={1} color={track.color} onInput={(rotate) => update(i, { rotate })} />
+              <Slider
+                compact
+                label="Chance"
+                value={v.probability}
+                min={0}
+                max={1}
+                step={0.01}
+                format={(x) => `${Math.round(x * 100)}%`}
+                color={track.color}
+                onInput={(probability) => update(i, { probability })}
+              />
+              <Slider compact label="Velocity" value={v.velocity} min={1} max={127} step={1} color={track.color} onInput={(velocity) => update(i, { velocity })} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
+const SHAPES: { value: LfoShape; label: string }[] = [
+  { value: 'sine', label: 'Sine' },
+  { value: 'triangle', label: 'Tri' },
+  { value: 'saw', label: 'Saw' },
+  { value: 'square', label: 'Square' },
+  { value: 'random', label: 'S&H' },
+];
+
+function Modulations({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition | undefined }) {
+  const s = useStore();
+  const ccParams = (instrument?.params ?? []).filter((p) => p.msg.type === 'cc' && p.msg.lsb === undefined);
+  const set = (modulations: CcModulation[]) => s.updateTrack(track.id, { modulations });
+  const update = (id: string, patch: Partial<CcModulation>) =>
+    set(track.modulations.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+  const add = () => {
+    const cutoff = ccParams.find((p) => /cutoff|filter/i.test(p.name)) ?? ccParams[0];
+    const cc = cutoff?.msg.type === 'cc' ? cutoff.msg.cc : 74;
+    set([
+      ...track.modulations,
+      { id: newId(), enabled: true, cc, label: cutoff?.name ?? 'CC 74', shape: 'sine', periodBars: 4, min: 20, max: 110 },
+    ]);
+  };
+  return (
+    <Card
+      title="Modulation (MIDI CC)"
+      actions={
+        <button type="button" onClick={add}>
+          <Icon name="plus" /> LFO
+        </button>
+      }
+    >
+      {track.modulations.length === 0 && (
+        <p class="hint">
+          Add an LFO to sweep a synth parameter such as filter cutoff.
+          {!instrument && ' Pick an instrument above to choose parameters by name.'}
+        </p>
+      )}
+      {track.modulations.map((m) => (
+        <div class="modulation">
+          <div class="row gap-s wrap">
+            {ccParams.length > 0 ? (
+              <Select
+                label="Parameter"
+                value={m.cc}
+                options={[
+                  ...(ccParams.some((p) => p.msg.type === 'cc' && p.msg.cc === m.cc) ? [] : [{ value: m.cc, label: `CC ${m.cc}` }]),
+                  ...ccParams.map((p) => ({
+                    value: p.msg.type === 'cc' ? p.msg.cc : 0,
+                    label: `${p.section ? p.section + ' · ' : ''}${p.name} (CC ${p.msg.type === 'cc' ? p.msg.cc : ''})`,
+                  })),
+                ]}
+                onChange={(cc) => update(m.id, { cc, label: ccParams.find((p) => p.msg.type === 'cc' && p.msg.cc === cc)?.name ?? `CC ${cc}` })}
+              />
+            ) : (
+              <div class="field">
+                <span class="field-label">CC number</span>
+                <Stepper label="CC number" value={m.cc} min={0} max={127} onChange={(cc) => update(m.id, { cc, label: `CC ${cc}` })} />
+              </div>
+            )}
+            <div class="spacer" />
+            <Toggle label="On" checked={m.enabled} onChange={(enabled) => update(m.id, { enabled })} />
+            <button type="button" class="square" aria-label="Remove LFO" onClick={() => set(track.modulations.filter((x) => x.id !== m.id))}>
+              <Icon name="trash" />
+            </button>
+          </div>
+          <Segmented label="Shape" value={m.shape} options={SHAPES} onChange={(shape) => update(m.id, { shape })} />
+          <Segmented
+            label="Cycle (bars)"
+            value={m.periodBars}
+            options={[1, 2, 4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
+            onChange={(periodBars) => update(m.id, { periodBars })}
+          />
+          <div class="voice-sliders">
+            <Slider compact label="Min" value={m.min} min={0} max={127} step={1} color={track.color} onInput={(min) => update(m.id, { min })} />
+            <Slider compact label="Max" value={m.max} min={0} max={127} step={1} color={track.color} onInput={(max) => update(m.id, { max })} />
+          </div>
+        </div>
+      ))}
+    </Card>
+  );
+}

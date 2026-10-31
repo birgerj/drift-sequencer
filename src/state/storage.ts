@@ -1,3 +1,4 @@
+import { openDriftDb, PROJECTS_STORE } from './db';
 import { SCHEMA_VERSION, type ProjectState } from './project';
 
 export interface ProjectSummary {
@@ -86,25 +87,12 @@ export class MemoryProjectRepository implements ProjectRepository {
   }
 }
 
-const DB_NAME = 'drift';
-const STORE = 'projects';
+const STORE = PROJECTS_STORE;
 
 /** Browser storage; survives reloads, stays on this device. */
 export class IndexedDbProjectRepository implements ProjectRepository {
-  private db: Promise<IDBDatabase> | undefined;
-
-  private open(): Promise<IDBDatabase> {
-    this.db ??= new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = () => req.result.createObjectStore(STORE, { keyPath: 'id' });
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-    return this.db;
-  }
-
   private async tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBRequest<T>): Promise<T> {
-    const db = await this.open();
+    const db = await openDriftDb();
     return new Promise((resolve, reject) => {
       const req = fn(db.transaction(STORE, mode).objectStore(STORE));
       req.onsuccess = () => resolve(req.result);

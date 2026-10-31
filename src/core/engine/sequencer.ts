@@ -1,4 +1,5 @@
 import { Emitter } from '../events';
+import type { GeneratorConfig } from '../generators/registry';
 import { Harmony } from '../theory/harmony';
 import { Scale } from '../theory/scale';
 import type { Chord } from '../theory/chord';
@@ -55,6 +56,10 @@ export class Sequencer {
     return this.project;
   }
 
+  get currentHarmony(): Harmony {
+    return this.harmony;
+  }
+
   track(id: string): TrackRuntime | undefined {
     return this.tracks.get(id);
   }
@@ -72,9 +77,9 @@ export class Sequencer {
       const rt = this.tracks.get(t.id);
       if (!rt) this.tracks.set(t.id, new TrackRuntime(t, next.stepsPerBar));
       else {
-        const generatorChanged = rt.config.generator !== t.generator;
+        const prevGen = rt.config.generator;
         rt.config = t;
-        if (generatorChanged) rt.regenerate(t.seed);
+        if (prevGen !== t.generator && needsRegenerate(prevGen, t.generator)) rt.regenerate(t.seed);
       }
     }
   }
@@ -157,6 +162,17 @@ export class Sequencer {
       if (port) fn((d, ts) => port.send(d, ts));
     }
   }
+}
+
+/**
+ * Melodic generators (motif, bass) keep their pattern when knobs move — the
+ * new settings shape the next mutations, so the music keeps evolving rather
+ * than jumping. Structural changes regenerate right away.
+ */
+function needsRegenerate(prev: GeneratorConfig, next: GeneratorConfig): boolean {
+  if (prev.type !== next.type) return true;
+  if (prev.params.lengthSteps !== next.params.lengthSteps) return true;
+  return next.type !== 'motif' && next.type !== 'bass';
 }
 
 export function buildHarmony(project: ProjectState): Harmony {

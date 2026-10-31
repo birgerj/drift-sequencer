@@ -73,14 +73,29 @@ mutates engine internals: it produces a new `ProjectState` and calls
 ## Instrument data
 
 `src/core/instruments/data/` is generated from
-[midi.guide](https://midi.guide) by Pencil Research (CC BY-SA 4.0). Add a
-device with `node scripts/import-midi-guide.mjs path/to/Device.csv`.
+[midi.guide](https://midi.guide) by Pencil Research (CC BY-SA 4.0). Users
+import more devices from the Instruments page in the app; to bundle one as a
+built-in, run `node scripts/import-midi-guide.ts path/to/Device.csv`.
+
+## UI
+
+Preact, touch-first: every control is at least 44 px, sliders have large
+thumbs, there is no hover-only behaviour, and the layout collapses to one
+column on phones and tablets.
+
+- **Perform** — all tracks with live pattern views, quick knobs, mute/solo,
+  progression with the current chord, now playing, scale, evolution log.
+- **Track editor** — track type, MIDI port/channel, instrument, generator
+  knobs, drum voices, variations history, CC LFOs.
+- **Harmony** — key, mode and chord progression (with presets).
+- **Projects** — templates, saved projects, JSON import/export.
+- **Instruments** — browse and import midi.guide definitions straight from
+  GitHub, or import CSV files.
 
 ## Roadmap
 
-- UI from the mockups (performance view, track editor, templates)
 - Engine in a Web Worker
-- Knob panel + LFO targets from instrument definitions
+- Knob panel that sends CCs from instrument definitions
 - More templates and progression generators
 - External clock sync (follow the TR-8S)
 - PWA for offline use
