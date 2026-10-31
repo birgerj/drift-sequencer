@@ -50,6 +50,7 @@ export class TrackRuntime {
     this.resolveState = {};
     this.pattern = generatePattern(this.config.generator, this.ctx());
     this.history.push(this.pattern);
+    if (this.history.length > 64) this.history.shift();
   }
 
   /** Called at bar boundaries; returns true if the pattern changed. */

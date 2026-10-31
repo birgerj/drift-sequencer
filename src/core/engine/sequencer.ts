@@ -9,7 +9,8 @@ import { Midi } from '../../io/midi/messages';
 import type { MidiPortResolver } from '../../io/midi/output';
 import type { ProjectState, TrackState } from '../../state/project';
 import { lfoValue } from './lfo';
-import { LookaheadScheduler, type TimerHost } from './scheduler';
+import { browserTimerHost, LookaheadScheduler, type TimerHost } from './scheduler';
+import { MidiGuard } from '../../io/midi/guard';
 import { TrackRuntime, type ScheduledNote } from './trackRuntime';
 
 export interface SequencerEvents extends Record<string, unknown> {
@@ -23,6 +24,10 @@ export interface SequencerEvents extends Record<string, unknown> {
    * the bar is scheduled, so a listener can change the harmony in time.
    */
   loop: { loop: number; bar: number };
+  /** The browser paused playback; missed steps were skipped, not replayed. */
+  skipped: { steps: number; gapMs: number };
+  /** Playback was stopped because far too many MIDI messages were being sent. */
+  safetyStop: { perSecond: number };
 }
 
 /** MIDI clock is 24 pulses per quarter note. */
@@ -43,18 +48,26 @@ export class Sequencer {
   private harmonyStartBar = 0;
   private schedulingBar = 0;
   private inLoopEvent = false;
+  private readonly ports: MidiGuard;
 
-  constructor(
-    project: ProjectState,
-    private readonly ports: MidiPortResolver,
-    timer?: TimerHost,
-  ) {
+  constructor(project: ProjectState, ports: MidiPortResolver, timer: TimerHost = browserTimerHost) {
     this.project = project;
     this.harmony = buildHarmony(project);
     this.scheduler = new LookaheadScheduler(
       { bpm: project.bpm, swing: project.swing, stepsPerBeat: project.stepsPerBar / 4 },
       timer,
     );
+    this.scheduler.onSkip = (steps, gapMs) => this.events.emit('skipped', { steps, gapMs });
+    this.ports = new MidiGuard(ports, {
+      now: () => timer.now(),
+      onTrip: (perSecond) => {
+        // Defer: we're inside a send call in the middle of a step.
+        queueMicrotask(() => {
+          this.stop();
+          this.events.emit('safetyStop', { perSecond });
+        });
+      },
+    });
     for (const t of project.tracks) this.tracks.set(t.id, new TrackRuntime(t, project.stepsPerBar));
   }
 
@@ -115,6 +128,7 @@ export class Sequencer {
   start(): void {
     this.lastChordStep = -1;
     this.harmonyStartBar = 0;
+    this.ports.reset();
     this.forEachClockPort((send) => send(Midi.start()));
     this.scheduler.start((step, time, dur) => this.onStep(step, time, dur));
     this.events.emit('transport', { playing: true });

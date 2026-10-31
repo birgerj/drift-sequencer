@@ -294,7 +294,9 @@ button.device-chip { cursor: pointer; }
 
 .pattern-editor { display: flex; flex-direction: column; gap: 12px; }
 .grid-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; overscroll-behavior-x: contain; padding-bottom: 4px; }
-.step-grid { display: grid; gap: 3px; min-width: min-content; align-items: center; }
+.step-grid { display: grid; gap: 3px; min-width: min-content; align-items: center; position: relative; }
+/* Absolutely positioned grid child: spans its column without taking part in auto-placement. */
+.grid-playhead { position: absolute; inset: 0; pointer-events: none; border-radius: 6px; box-shadow: inset 0 0 0 2px var(--text); background: rgba(255, 255, 255, 0.05); }
 .step-grid.motif { gap: 2px; }
 .step-num { font-family: var(--mono); font-size: 10px; color: #6b7280; text-align: center; padding: 2px 0; border-radius: 4px; }
 .step-num.beat { color: var(--muted); }

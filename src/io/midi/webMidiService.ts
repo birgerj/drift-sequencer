@@ -28,23 +28,42 @@ export class WebMidiService implements MidiPortResolver {
     return typeof navigator !== 'undefined' && 'requestMIDIAccess' in navigator;
   }
 
+  /** Port wrappers by name; rebuilt only when devices change (lookups happen every step). */
+  private byNameCache = new Map<string, MidiOutputPort>();
+  private names = '';
+
   async connect(): Promise<void> {
     if (!WebMidiService.isSupported()) throw new Error('Web MIDI is not supported in this browser.');
+    if (this.access) return;
     this.access = await navigator.requestMIDIAccess({ sysex: false });
-    this.access.onstatechange = () => this.listeners.forEach((l) => l());
+    this.rebuild();
+    this.access.onstatechange = () => {
+      // Opening a port also fires statechange; only notify when the set of
+      // connected outputs really changed.
+      if (this.rebuild()) this.listeners.forEach((l) => l());
+    };
   }
 
   get connected(): boolean {
     return this.access !== undefined;
   }
 
+  /** Returns true if the list of connected outputs changed. */
+  private rebuild(): boolean {
+    const outs = this.access ? [...this.access.outputs.values()].filter((p) => p.state === 'connected') : [];
+    const names = outs.map((p) => `${p.id}:${p.name}`).join('|');
+    if (names === this.names) return false;
+    this.names = names;
+    this.byNameCache = new Map(outs.map((p) => [p.name ?? p.id, new WebMidiOutput(p)]));
+    return true;
+  }
+
   all(): MidiOutputPort[] {
-    if (!this.access) return [];
-    return [...this.access.outputs.values()].filter((p) => p.state === 'connected').map((p) => new WebMidiOutput(p));
+    return [...this.byNameCache.values()];
   }
 
   byName(name: string): MidiOutputPort | undefined {
-    return this.all().find((p) => p.name === name);
+    return this.byNameCache.get(name);
   }
 
   /** Fires when devices are plugged in or removed. */

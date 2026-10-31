@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { Sequencer } from '../core/engine/sequencer';
 import { createWorkerTimerHost } from '../core/engine/workerClock';
+import { keepAwake } from './keepAwake';
 import { defaultConfig, type GeneratorConfig } from '../core/generators/registry';
 import type { TrackType } from '../core/generators/types';
 import type { InstrumentDefinition } from '../core/instruments/instrument';
@@ -219,7 +220,16 @@ export class AppStore {
         const t = this.project.tracks.find((x) => x.id === trackId);
         if (t) this.addLog(bar, `${t.name} · pattern mutated`, t.color);
       }),
-      ev.on('transport', () => this.notify()),
+      ev.on('transport', ({ playing }) => {
+        void keepAwake(playing);
+        this.notify();
+      }),
+      ev.on('skipped', ({ gapMs }) => {
+        if (gapMs > 1000) this.showToast(`The browser paused Drift for ${(gapMs / 1000).toFixed(1)} s; playback skipped ahead.`);
+      }),
+      ev.on('safetyStop', ({ perSecond }) =>
+        this.showToast(`Stopped for safety: ${perSecond} MIDI messages per second is far more than normal.`),
+      ),
       ev.on('loop', ({ loop, bar }) => this.onProgressionLoop(loop, bar)),
     ];
     return seq;
@@ -496,24 +506,45 @@ export function useStore(): AppStore {
   return store;
 }
 
-/** Read a value from live state every animation frame; re-render only when it changes. */
+/**
+ * All live-state readers share ONE animation-frame loop (not one each), and
+ * compare values shallowly, so many widgets on screen stay cheap.
+ */
+const liveReaders = new Set<() => void>();
+let liveRaf = 0;
+function liveLoop() {
+  liveReaders.forEach((r) => r());
+  liveRaf = liveReaders.size ? requestAnimationFrame(liveLoop) : 0;
+}
+
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  return ka.every((k) => Object.is((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]));
+}
+
+/** Read a value from live state each frame; re-render only when it changes. */
 export function useLive<T>(select: (live: LiveState) => T): T {
   const [value, setValue] = useState(() => select(store.live));
   const ref = useRef(value);
   const selectRef = useRef(select);
   selectRef.current = select;
   useEffect(() => {
-    let raf = 0;
-    const loop = () => {
+    const reader = () => {
       const next = selectRef.current(store.live);
-      if (!Object.is(next, ref.current) && JSON.stringify(next) !== JSON.stringify(ref.current)) {
+      if (!sameValue(next, ref.current)) {
         ref.current = next;
         setValue(next);
       }
-      raf = requestAnimationFrame(loop);
     };
-    raf = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(raf);
+    liveReaders.add(reader);
+    if (!liveRaf) liveRaf = requestAnimationFrame(liveLoop);
+    return () => {
+      liveReaders.delete(reader);
+    };
   }, []);
   return value;
 }

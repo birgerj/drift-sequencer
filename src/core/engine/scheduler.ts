@@ -88,10 +88,25 @@ export class LookaheadScheduler {
     this.handle = undefined;
   }
 
+  /** Called with the number of steps skipped after the browser paused us. */
+  onSkip: ((steps: number, gapMs: number) => void) | undefined;
+
   /** Exposed for tests; normally driven by the interval. */
   tick(): void {
     if (!this.handler) return;
-    const horizon = this.timer.now() + this.lookaheadMs;
+    const now = this.timer.now();
+    // If the browser paused us (sleep, frozen tab, long task), don't replay
+    // every missed step at once — that floods the MIDI service. Skip ahead,
+    // keeping the musical position.
+    const dur = this.stepDurationMs;
+    const gap = now - this.nextStepTime;
+    if (gap > Math.max(250, dur * 2)) {
+      const missed = Math.ceil(gap / dur);
+      this.nextStep += missed;
+      this.nextStepTime += missed * dur;
+      this.onSkip?.(missed, gap);
+    }
+    const horizon = now + this.lookaheadMs;
     while (this.nextStepTime < horizon) {
       const dur = this.stepDurationMs;
       const swingOffset = this.nextStep % 2 === 1 ? this.swing * dur * 0.5 : 0;

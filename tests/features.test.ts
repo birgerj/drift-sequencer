@@ -18,7 +18,14 @@ class FakeTimer implements TimerHost {
   setInterval = () => 1;
   clearInterval = () => {};
 }
-const tick = (seq: Sequencer) => (seq as unknown as { scheduler: LookaheadScheduler }).scheduler.tick();
+/** Advance the fake clock in 25 ms ticks, like the real worker clock. */
+const runUntil = (seq: Sequencer, timer: FakeTimer, until: number) => {
+  const sched = (seq as unknown as { scheduler: LookaheadScheduler }).scheduler;
+  while (timer.time < until) {
+    timer.time = Math.min(until, timer.time + 25);
+    sched.tick();
+  }
+};
 
 describe('progression generator', () => {
   const scale = new Scale(parsePitchClass('A'), 'aeolian');
@@ -88,8 +95,7 @@ describe('step conditions and ratchets', () => {
       timer,
     );
     seq.start();
-    timer.time = 7800; // just under 4 bars at 120 bpm
-    tick(seq);
+    runUntil(seq, timer, 7800); // just under 4 bars at 120 bpm
     seq.stop();
     const ons = (note: number) => tr8s.sent.filter((m) => m.data[0] === 0x99 && m.data[1] === note).length;
     expect(ons(36)).toBe(2); // passes 1 and 3 of 4
@@ -133,8 +139,7 @@ describe('call and response', () => {
       (byBar[name] ??= new Set()).add(bar);
     });
     seq.start();
-    timer.time = 8 * 2034; // ~8 bars at 118 bpm
-    tick(seq);
+    runUntil(seq, timer, 8 * 2034); // ~8 bars at 118 bpm
     seq.stop();
     for (const b of byBar.Call ?? []) expect(b % 2).toBe(0);
     for (const b of byBar.Answer ?? []) expect(b % 2).toBe(1);
@@ -153,8 +158,7 @@ describe('evolving harmony', () => {
     });
     seq.events.on('chord', (c) => chords.push(c.chord.symbol()));
     seq.start();
-    timer.time = 9 * 1846; // ~9 bars at 130 bpm
-    tick(seq);
+    runUntil(seq, timer, 9 * 1846); // ~9 bars at 130 bpm
     seq.stop();
     // Bars 0–3: original (A phrygian: Am, Bb, Gm); bar 4: new progression starts on degree 5 (F)
     expect(chords.slice(0, 3)).toEqual(['Am', 'A#', 'Gm']);

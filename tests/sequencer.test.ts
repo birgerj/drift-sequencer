@@ -18,8 +18,10 @@ describe('LookaheadScheduler', () => {
     const s = new LookaheadScheduler({ bpm: 120, lookaheadMs: 100 }, timer);
     const steps: [number, number][] = [];
     s.start((step, t) => steps.push([step, t]), 0);
-    timer.time = 400;
-    s.tick();
+    for (let t = 25; t <= 400; t += 25) {
+      timer.time = t;
+      s.tick();
+    }
     // 120 bpm, 16ths = 125 ms per step; window ends at 500 ms.
     expect(steps).toEqual([
       [0, 0],
@@ -48,8 +50,10 @@ describe('Sequencer', () => {
     seq.events.on('note', (n) => notes.push(...n.notes));
 
     seq.start();
-    timer.time = 4000; // two bars at 122 bpm
-    (seq as unknown as { scheduler: LookaheadScheduler }).scheduler.tick();
+    for (let t = 25; t <= 4000; t += 25) {
+      timer.time = t; // two bars at 122 bpm, in worker-clock ticks
+      (seq as unknown as { scheduler: LookaheadScheduler }).scheduler.tick();
+    }
     seq.stop();
 
     const tr8s = ports[2]!.sent.map((m) => m.data[0]);

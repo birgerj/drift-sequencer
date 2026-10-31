@@ -1,4 +1,4 @@
-import { useState } from 'preact/hooks';
+import { useMemo, useState } from 'preact/hooks';
 import type { DrumParams } from '../../core/generators/drumGenerator';
 import type { MotifParams } from '../../core/generators/motifGenerator';
 import {
@@ -90,6 +90,15 @@ function StepHeader({ length, playStep }: { length: number; playStep: number }) 
 
 type EditMode = 'notes' | 'condition' | 'ratchet';
 
+/**
+ * The moving column highlight. Drawn as one overlay element so the grid of
+ * buttons doesn't re-render on every step.
+ */
+function Playhead({ step, rows }: { step: number; rows: number }) {
+  if (step < 0) return null;
+  return <div class="grid-playhead" aria-hidden="true" style={{ gridColumn: String(step + 2), gridRow: `1 / span ${rows}` }} />;
+}
+
 /** Short text shown inside a cell for its condition / ratchet. */
 function cellBadge(e: PatternEvent | undefined): string {
   if (!e) return '';
@@ -108,7 +117,7 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
       <div class="grid-scroll">
         <div class="step-grid" style={{ gridTemplateColumns: `64px repeat(${len}, minmax(38px, 1fr))` }}>
           <StepHeader length={len} playStep={playStep} />
-          {params.voices.map((v) => (
+          {useMemo(() => params.voices.map((v) => (
             <>
               <span class="row-label mono">{v.name}</span>
               {Array.from({ length: len }, (_, step) => {
@@ -123,7 +132,7 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
                 return (
                   <button
                     type="button"
-                    class={`cell ${state} ${step % 4 === 0 ? 'beat' : ''} ${step === playStep ? 'now' : ''}`}
+                    class={`cell ${state} ${step % 4 === 0 ? 'beat' : ''}`}
                     aria-label={`${v.name} step ${step + 1}: ${state}${badge ? ' ' + badge : ''}`}
                     aria-pressed={state !== 'off'}
                     onClick={onTap}
@@ -133,7 +142,8 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
                 );
               })}
             </>
-          ))}
+          )), [pattern, params.voices, mode, len, track.id])}
+          <Playhead step={playStep} rows={params.voices.length + 1} />
         </div>
       </div>
       {mode === 'notes' && <p class="hint">Tap a step: hit → 50% chance → off.</p>}
@@ -197,7 +207,7 @@ function MotifGrid({ track, pattern, playStep, mode }: { track: TrackState; patt
       <div class="grid-scroll">
         <div class="step-grid motif" style={{ gridTemplateColumns: `52px repeat(${len}, minmax(34px, 1fr))` }}>
           <StepHeader length={len} playStep={playStep} />
-          {degrees.map((d) => {
+          {useMemo(() => degrees.map((d) => {
             const chordTone = [0, 2, 4].includes(((d % 7) + 7) % 7);
             return (
               <>
@@ -210,7 +220,7 @@ function MotifGrid({ track, pattern, playStep, mode }: { track: TrackState; patt
                   return (
                     <button
                       type="button"
-                      class={`cell ${start ? 'hit' : on ? 'held' : 'off'} ${chordTone ? 'tone-row' : ''} ${step % 4 === 0 ? 'beat' : ''} ${step === playStep ? 'now' : ''}`}
+                      class={`cell ${start ? 'hit' : on ? 'held' : 'off'} ${chordTone ? 'tone-row' : ''} ${step % 4 === 0 ? 'beat' : ''}`}
                       aria-label={`${label(d)} step ${step + 1}${start ? ': note' : on ? ': held' : ''}${badge ? ' ' + badge : ''}`}
                       aria-pressed={on}
                       onClick={() => tap(step, d)}
@@ -221,7 +231,8 @@ function MotifGrid({ track, pattern, playStep, mode }: { track: TrackState; patt
                 })}
               </>
             );
-          })}
+          }), [pattern, mode, noteLength, len, range, moment.chord.degree, moment.scale, track.id])}
+          <Playhead step={playStep} rows={degrees.length + 1} />
         </div>
       </div>
       <p class="hint">
