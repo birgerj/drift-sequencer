@@ -1,6 +1,7 @@
 import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
+import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
@@ -150,6 +151,8 @@ export function TrackEditor({ trackId }: { trackId: string }) {
             <p class="hint">Every mutation stores a variation. Tap one to jump back to it.</p>
           </Card>
 
+          <CallResponse track={track} />
+
           <Modulations track={track} instrument={instrument} />
 
           <Card title="Track">
@@ -274,6 +277,74 @@ function DrumVoices({ track, instrument }: { track: TrackState; instrument: Inst
           </div>
         ))}
       </div>
+    </Card>
+  );
+}
+
+function CallResponse({ track }: { track: TrackState }) {
+  const s = useStore();
+  const phrase = track.phrase;
+  const role = phrase?.role ?? 'off';
+  const partners = s.project.tracks.filter((t) => t.id !== track.id && t.generator.type !== 'drums');
+  const set = (next: PhraseSettings | undefined) => s.updateTrack(track.id, { phrase: next });
+  const base: PhraseSettings = phrase ?? { role: 'call', bars: 1 };
+  const caller = phrase?.answer ? s.project.tracks.find((t) => t.id === phrase.answer!.from) : undefined;
+
+  return (
+    <Card title="Call and response">
+      <p class="hint">
+        Two tracks take turns: the call plays a phrase, the response answers in the gap after it. Give the other track the
+        opposite role{track.generator.type !== 'drums' ? ', or let this one answer with a transformed copy of the call' : ''}.
+      </p>
+      <Segmented
+        label="Role"
+        value={role}
+        options={[
+          { value: 'off', label: 'Always plays' },
+          { value: 'call', label: 'Call' },
+          { value: 'response', label: 'Response' },
+        ]}
+        onChange={(r) => (r === 'off' ? set(undefined) : set({ ...base, role: r as PhraseRole, answer: r === 'call' ? undefined : base.answer }))}
+      />
+      {phrase && (
+        <Segmented
+          label="Phrase length (bars)"
+          value={phrase.bars}
+          options={[1, 2, 4].map((b) => ({ value: b, label: String(b) }))}
+          onChange={(bars) => set({ ...phrase, bars })}
+        />
+      )}
+      {phrase?.role === 'response' && track.generator.type !== 'drums' && (
+        <>
+          <Select
+            label="Answer with"
+            value={phrase.answer?.from ?? ''}
+            options={[
+              { value: '', label: 'This track’s own pattern' },
+              ...partners.map((t) => ({ value: t.id, label: `${t.name}’s phrase` })),
+            ]}
+            onChange={(from) =>
+              set({ ...phrase, answer: from ? { from, transform: phrase.answer?.transform ?? 'upThird' } : undefined })
+            }
+          />
+          {phrase.answer && (
+            <Segmented
+              label="Transform"
+              value={phrase.answer.transform}
+              options={ANSWER_TRANSFORMS.map((x) => ({ value: x.id, label: x.label }))}
+              onChange={(transform) => set({ ...phrase, answer: { ...phrase.answer!, transform } })}
+            />
+          )}
+          {caller && !caller.phrase && (
+            <div class="row gap-s wrap">
+              <span class="hint">{caller.name} still plays all the time.</span>
+              <button type="button" onClick={() => s.updateTrack(caller.id, { phrase: { role: 'call', bars: phrase.bars } })}>
+                Make {caller.name} the call
+              </button>
+            </div>
+          )}
+        </>
+      )}
     </Card>
   );
 }

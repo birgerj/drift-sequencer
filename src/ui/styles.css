@@ -215,6 +215,9 @@ button.readout { padding: 0 0 0 14px; }
 .lane-pattern { padding: 10px; border-left: 1px solid #1e2128; border-right: 1px solid #1e2128; min-width: 0; display: flex; align-items: center; }
 .pattern-view { display: block; width: 100%; border-radius: 8px; }
 .lane-params { padding: 10px 14px; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
+.phrase-badge { align-self: flex-start; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--line-2); color: var(--text-2); }
+.lane .lane-pattern { transition: opacity 0.2s; }
+.lane.resting .lane-pattern { opacity: 0.3; }
 .add-track { min-height: 56px; border-style: dashed; color: var(--muted); background: transparent; }
 
 .now-list { display: flex; flex-direction: column; gap: 8px; }
@@ -292,6 +295,8 @@ button.readout { padding: 0 0 0 14px; }
 .cell.chance { background: color-mix(in srgb, var(--accent) 40%, #1c1f26) !important; border: 1px dashed var(--accent); }
 .cell.held { background: color-mix(in srgb, var(--accent) 45%, #1c1f26) !important; }
 .cell.now { box-shadow: inset 0 0 0 2px var(--text); }
+.cell { position: relative; overflow: hidden; }
+.cell-badge { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 10px; font-weight: 700; color: #0b0c0f; pointer-events: none; line-height: 1; text-align: center; }
 .cell:active { transform: scale(0.92); }
 
 /* ---------- responsive ---------- */

@@ -105,7 +105,12 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     velocity,
     length,
   ],
-  drums: [mutation, velVar],
+  drums: [
+    mutation,
+    { kind: 'range', key: 'ratchetChance', label: 'Ratchets', min: 0, max: 0.5, step: 0.01, format: pct },
+    { kind: 'range', key: 'conditionChance', label: 'Conditions', min: 0, max: 0.6, step: 0.01, format: pct },
+    velVar,
+  ],
 };
 
 export const TRACK_TYPES: { type: TrackType; label: string; description: string }[] = [

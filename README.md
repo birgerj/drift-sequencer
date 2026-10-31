@@ -107,7 +107,15 @@ column on phones and tablets.
   Draw your own patterns: a step grid for drums (hit / 50% chance) and a
   note grid for motifs in scale degrees, so drawn melodies still follow the
   chords. Edited patterns are saved with the project.
-- **Harmony** — key, mode and chord progression (with presets).
+- **Harmony** — key, mode and chord progression. Generate progressions in a
+  style (pop, house, techno, ambient, cinematic, jazzy), vary one chord, or
+  let the progression evolve by itself every few loops.
+- **Step conditions & ratchets** — Elektron-style trig conditions (1:2, 3:4…)
+  and 2–4× ratchets per step, drawn in the editor or added by the drum
+  generator.
+- **Call and response** — tracks take turns phrase by phrase; a responder
+  can answer with the caller's phrase echoed, inverted, a third up, a fourth
+  down or reversed. Try the *Conversation* template.
 - **Projects** — templates, saved projects, JSON import/export.
 - **Instruments** — browse and import midi.guide definitions straight from
   GitHub, or import CSV files.

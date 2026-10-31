@@ -1,4 +1,4 @@
-import type { Pattern, PatternEvent } from './pattern';
+import { STEP_CONDITIONS, type Pattern, type PatternEvent } from './pattern';
 
 /** Drum cell states, cycled by tapping: off → hit → chance → off. */
 export type DrumCell = 'off' | 'hit' | 'chance';
@@ -14,8 +14,13 @@ export function drumCell(pattern: Pattern, step: number, note: number): DrumCell
 /** Cycle one drum cell to its next state. Returns a new pattern. */
 export function cycleDrumCell(pattern: Pattern, step: number, note: number, velocity: number): Pattern {
   const state = drumCell(pattern, step, note);
-  const others = pattern.events.filter((x) => !(x.step === step && x.pitch.kind === 'fixed' && x.pitch.note === note));
-  const base: PatternEvent = { step, length: 0.5, velocity, pitch: { kind: 'fixed', note } };
+  const existing = pattern.events.find((x) => x.step === step && x.pitch.kind === 'fixed' && x.pitch.note === note);
+  const others = pattern.events.filter((x) => x !== existing);
+  // Keep a hit's condition and ratchet when it becomes a chance hit.
+  const base: PatternEvent = existing
+    ? { ...existing, probability: undefined }
+    : { step, length: 0.5, velocity, pitch: { kind: 'fixed', note } };
+  delete base.probability;
   const next =
     state === 'off' ? [...others, base] : state === 'hit' ? [...others, { ...base, probability: CHANCE_PROBABILITY }] : others;
   return { ...pattern, events: sortByStep(next) };
@@ -62,6 +67,41 @@ export function resizeMotifNote(pattern: Pattern, step: number, delta: number): 
   const e = events[i]!;
   events[i] = { ...e, length: Math.max(1, Math.min(limit, Math.round(e.length) + delta)) };
   return { ...pattern, events };
+}
+
+/** Find the event a grid cell refers to: a drum hit, or a motif note start. */
+export type EventMatcher = (e: PatternEvent) => boolean;
+
+export const drumAt = (step: number, note: number): EventMatcher => (e) =>
+  e.step === step && e.pitch.kind === 'fixed' && e.pitch.note === note;
+
+export const noteStartAt = (step: number): EventMatcher => (e) => e.step === step && e.pitch.kind === 'degree';
+
+/** Cycle the trig condition: always → 1:2 → 2:2 → 1:4 → 2:4 → 3:4 → 4:4 → always. */
+export function cycleCondition(pattern: Pattern, match: EventMatcher): Pattern {
+  return {
+    ...pattern,
+    events: pattern.events.map((e) => {
+      if (!match(e)) return e;
+      const i = e.condition ? STEP_CONDITIONS.findIndex((c) => c.on === e.condition!.on && c.every === e.condition!.every) : -1;
+      const next = STEP_CONDITIONS[i + 1];
+      const { condition: _old, ...rest } = e;
+      return next ? { ...rest, condition: { ...next } } : rest;
+    }),
+  };
+}
+
+/** Cycle ratchets: 1 → 2 → 3 → 4 → 1. */
+export function cycleRatchet(pattern: Pattern, match: EventMatcher): Pattern {
+  return {
+    ...pattern,
+    events: pattern.events.map((e) => {
+      if (!match(e)) return e;
+      const next = ((e.ratchet ?? 1) % 4) + 1;
+      const { ratchet: _old, ...rest } = e;
+      return next > 1 ? { ...rest, ratchet: next } : rest;
+    }),
+  };
 }
 
 export function clearPattern(pattern: Pattern): Pattern {

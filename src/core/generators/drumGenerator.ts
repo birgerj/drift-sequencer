@@ -19,6 +19,10 @@ export interface DrumParams {
   /** 0..1 chance a voice's rhythm shifts on mutation. */
   mutation: number;
   velocityVariation: number;
+  /** 0..1 chance a busy voice's hit becomes a ratchet (hats rolls). */
+  ratchetChance?: number;
+  /** 0..1 chance an off-beat hit only plays every other pass (1:2 / 2:2). */
+  conditionChance?: number;
 }
 
 /** Default note map of the Roland TR-8S (channel 10). */
@@ -44,6 +48,8 @@ export class DrumGenerator implements PatternGenerator<DrumParams> {
       lengthSteps: 16,
       mutation: 0.15,
       velocityVariation: 0.2,
+      ratchetChance: 0.06,
+      conditionChance: 0.1,
       voices: [
         { name: 'BD', note: TR8S_NOTES.BD, pulses: 4, rotate: 0, probability: 1, velocity: 110 },
         { name: 'SD', note: TR8S_NOTES.SD, pulses: 2, rotate: 4, probability: 1, velocity: 100 },
@@ -72,19 +78,26 @@ export class DrumGenerator implements PatternGenerator<DrumParams> {
 
   private voiceEvents(voice: DrumVoice, rotate: number, params: DrumParams, ctx: GeneratorContext): PatternEvent[] {
     const hits = euclid(voice.pulses, params.lengthSteps, rotate);
-    return hits.flatMap((hit, step) =>
-      hit
-        ? [
-            {
-              step,
-              length: 0.5,
-              velocity: humanizeVelocity(voice.velocity, params.velocityVariation, ctx.rng),
-              pitch: { kind: 'fixed', note: voice.note } as const,
-              probability: voice.probability,
-            },
-          ]
-        : [],
-    );
+    const busy = voice.pulses >= params.lengthSteps / 2;
+    return hits.flatMap((hit, step): PatternEvent[] => {
+      if (!hit) return [];
+      const ev: PatternEvent = {
+        step,
+        length: 0.5,
+        velocity: humanizeVelocity(voice.velocity, params.velocityVariation, ctx.rng),
+        pitch: { kind: 'fixed', note: voice.note },
+        probability: voice.probability,
+      };
+      if (busy && ctx.rng.chance(params.ratchetChance ?? 0)) ev.ratchet = ctx.rng.pick([2, 2, 3]);
+      if (step % 4 !== 0 && ctx.rng.chance(params.conditionChance ?? 0)) {
+        ev.condition = ctx.rng.pick([
+          { on: 1, every: 2 },
+          { on: 2, every: 2 },
+          { on: 4, every: 4 },
+        ]);
+      }
+      return [ev];
+    });
   }
 }
 

@@ -1,8 +1,8 @@
 import { generatePattern, mutatePattern } from '../generators/registry';
-import type { Pattern } from '../pattern/pattern';
+import { conditionMet, type Pattern, type PatternEvent } from '../pattern/pattern';
 import { resolvePitch, type ResolveState } from '../pattern/resolve';
 import { Rng } from '../random/rng';
-import type { Harmony } from '../theory/harmony';
+import type { HarmonicMoment } from '../theory/harmony';
 import type { MidiNote } from '../theory/note';
 import type { TrackState } from '../../state/project';
 
@@ -12,6 +12,8 @@ export interface ScheduledNote {
   velocity: number;
   /** Duration in steps. */
   length: number;
+  /** Number of repeats within the step (1 = a single note). */
+  ratchet: number;
 }
 
 /**
@@ -67,20 +69,34 @@ export class TrackRuntime {
     if (p) this.pattern = p;
   }
 
-  /** Notes to play at a global step, resolved against the current harmony. */
-  notesAt(globalStep: number, harmony: Harmony): ScheduledNote[] {
+  /** Events of this track's own pattern that start at a global step. */
+  eventsAt(globalStep: number): PatternEvent[] {
     const local = globalStep % this.pattern.lengthSteps;
-    const bar = Math.floor(globalStep / this.stepsPerBar);
-    const moment = harmony.at(bar);
+    return this.pattern.events.filter((e) => e.step === local);
+  }
+
+  /** Notes to play at a global step, resolved against the harmonic moment. */
+  notesAt(globalStep: number, moment: HarmonicMoment): ScheduledNote[] {
+    return this.resolveEvents(this.eventsAt(globalStep), globalStep, moment);
+  }
+
+  /**
+   * Resolve events (this track's, or ones borrowed from another track for a
+   * call-and-response answer) in this track's register, applying trig
+   * conditions and probability.
+   */
+  resolveEvents(events: readonly PatternEvent[], globalStep: number, moment: HarmonicMoment): ScheduledNote[] {
+    const pass = Math.floor(globalStep / this.pattern.lengthSteps);
     const out: ScheduledNote[] = [];
-    for (const ev of this.pattern.events) {
-      if (ev.step !== local) continue;
+    for (const ev of events) {
+      if (ev.condition && !conditionMet(ev.condition, pass)) continue;
       if (ev.probability !== undefined && !this.rng.chance(ev.probability)) continue;
       out.push({
         trackId: this.config.id,
         notes: resolvePitch(ev.pitch, moment, this.config.register, this.resolveState),
         velocity: ev.velocity,
         length: ev.length,
+        ratchet: Math.max(1, Math.min(4, Math.round(ev.ratchet ?? 1))),
       });
     }
     return out;

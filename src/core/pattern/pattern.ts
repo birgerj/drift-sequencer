@@ -27,6 +27,37 @@ export interface PatternEvent {
   pitch: PitchSpec;
   /** Chance (0..1) the event actually plays each pass. Defaults to 1. */
   probability?: number;
+  /** Elektron-style trig condition: play only on some passes of the pattern. */
+  condition?: StepCondition;
+  /** Repeat the note this many times within its step (2–4). */
+  ratchet?: number;
+}
+
+/**
+ * Plays on pass `on` out of every `every` passes (1-based): 1:2 plays on the
+ * 1st, 3rd, 5th… pass; 4:4 only on every 4th pass.
+ */
+export interface StepCondition {
+  on: number;
+  every: number;
+}
+
+export const STEP_CONDITIONS: StepCondition[] = [
+  { on: 1, every: 2 },
+  { on: 2, every: 2 },
+  { on: 1, every: 4 },
+  { on: 2, every: 4 },
+  { on: 3, every: 4 },
+  { on: 4, every: 4 },
+];
+
+export function conditionLabel(c: StepCondition): string {
+  return `${c.on}:${c.every}`;
+}
+
+/** `pass` is 0-based (the first pass is 0). */
+export function conditionMet(c: StepCondition, pass: number): boolean {
+  return ((pass % c.every) + c.every) % c.every === c.on - 1;
 }
 
 export interface Pattern {

@@ -6,6 +6,10 @@ import type { TrackType } from '../core/generators/types';
 import type { InstrumentDefinition } from '../core/instruments/instrument';
 import type { MidiNote } from '../core/theory/note';
 import type { Pattern } from '../core/pattern/pattern';
+import { Rng } from '../core/random/rng';
+import { Chord } from '../core/theory/chord';
+import { generateProgression, varyProgression, type ProgressionStyle } from '../core/theory/progressionGenerator';
+import { Scale } from '../core/theory/scale';
 import { WebMidiService } from '../io/midi/webMidiService';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
@@ -195,6 +199,7 @@ export class AppStore {
         if (t) this.addLog(bar, `${t.name} · pattern mutated`, t.color);
       }),
       ev.on('transport', () => this.notify()),
+      ev.on('loop', ({ loop, bar }) => this.onProgressionLoop(loop, bar)),
     ];
     return seq;
   }
@@ -327,6 +332,38 @@ export class AppStore {
     } catch (e) {
       this.showToast(e instanceof Error ? e.message : String(e));
     }
+  }
+
+  // ---------- harmony ----------
+
+  private harmonyRng = new Rng();
+
+  /** Write a new progression in the given style. */
+  generateProgression(style: ProgressionStyle, length?: number): void {
+    const scale = new Scale(this.project.key.root, this.project.key.mode);
+    const progression = generateProgression(scale, style, this.harmonyRng, length);
+    this.change((p) => ({ ...p, progression }));
+  }
+
+  /** Swap one chord for a functional substitute. */
+  varyProgression(style: ProgressionStyle): void {
+    const scale = new Scale(this.project.key.root, this.project.key.mode);
+    const progression = varyProgression(this.project.progression, scale, style, this.harmonyRng);
+    this.change((p) => ({ ...p, progression }));
+  }
+
+  progressionLabel(): string {
+    const scale = new Scale(this.project.key.root, this.project.key.mode);
+    return this.project.progression.map((s) => Chord.fromDegree(scale, s.degree, s.size ?? 3).symbol()).join(' – ');
+  }
+
+  /** Called by the engine right before the progression starts again. */
+  private onProgressionLoop(loop: number, bar: number): void {
+    const evolve = this.project.harmonyEvolve;
+    if (!evolve?.enabled || loop % Math.max(1, evolve.everyLoops) !== 0) return;
+    if (evolve.mode === 'new') this.generateProgression(evolve.style);
+    else this.varyProgression(evolve.style);
+    this.addLog(bar, `Progression · ${this.progressionLabel()}`, '#f2f4f7');
   }
 
   // ---------- instruments ----------

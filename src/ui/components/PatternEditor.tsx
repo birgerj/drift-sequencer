@@ -3,14 +3,18 @@ import type { DrumParams } from '../../core/generators/drumGenerator';
 import type { MotifParams } from '../../core/generators/motifGenerator';
 import {
   clearPattern,
+  cycleCondition,
   cycleDrumCell,
+  cycleRatchet,
+  drumAt,
   drumCell,
+  noteStartAt,
   motifNoteAt,
   motifNoteCovering,
   resizePattern,
   toggleMotifNote,
 } from '../../core/pattern/edit';
-import type { Pattern } from '../../core/pattern/pattern';
+import { conditionLabel, type Pattern, type PatternEvent } from '../../core/pattern/pattern';
 import { fold } from '../../core/pattern/resolve';
 import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
@@ -29,6 +33,7 @@ export function PatternEditor({ track }: { track: TrackState }) {
   const pattern = rt.pattern;
   const stepsPerBar = s.project.stepsPerBar;
 
+  const [mode, setMode] = useState<EditMode>('notes');
   const setLength = (lengthSteps: number) => {
     s.editPattern(track.id, (p) => resizePattern(p, lengthSteps));
     s.setTrackParam(track.id, 'lengthSteps', lengthSteps);
@@ -48,11 +53,26 @@ export function PatternEditor({ track }: { track: TrackState }) {
           <Icon name="trash" /> Clear
         </button>
       </div>
+      <Segmented
+        label="Tap edits"
+        value={mode}
+        options={[
+          { value: 'notes', label: track.generator.type === 'drums' ? 'Steps' : 'Notes' },
+          { value: 'condition', label: 'Condition' },
+          { value: 'ratchet', label: 'Ratchet' },
+        ]}
+        onChange={setMode}
+      />
       {track.generator.type === 'drums' ? (
-        <DrumGrid track={track} pattern={pattern} playStep={playStep} />
+        <DrumGrid track={track} pattern={pattern} playStep={playStep} mode={mode} />
       ) : (
-        <MotifGrid track={track} pattern={pattern} playStep={playStep} />
+        <MotifGrid track={track} pattern={pattern} playStep={playStep} mode={mode} />
       )}
+      <p class="hint">
+        {mode === 'condition' &&
+          'Tap a hit to cycle its condition: 1:2 plays on the 1st of every 2 passes, 3:4 on the 3rd of every 4, and so on.'}
+        {mode === 'ratchet' && 'Tap a hit to repeat it 2, 3 or 4 times within its step.'}
+      </p>
     </div>
   );
 }
@@ -68,7 +88,18 @@ function StepHeader({ length, playStep }: { length: number; playStep: number }) 
   );
 }
 
-function DrumGrid({ track, pattern, playStep }: { track: TrackState; pattern: Pattern; playStep: number }) {
+type EditMode = 'notes' | 'condition' | 'ratchet';
+
+/** Short text shown inside a cell for its condition / ratchet. */
+function cellBadge(e: PatternEvent | undefined): string {
+  if (!e) return '';
+  const parts: string[] = [];
+  if (e.condition) parts.push(conditionLabel(e.condition));
+  if ((e.ratchet ?? 1) > 1) parts.push(`×${e.ratchet}`);
+  return parts.join(' ');
+}
+
+function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; pattern: Pattern; playStep: number; mode: EditMode }) {
   const s = useStore();
   const params = track.generator.params as DrumParams;
   const len = pattern.lengthSteps;
@@ -82,32 +113,41 @@ function DrumGrid({ track, pattern, playStep }: { track: TrackState; pattern: Pa
               <span class="row-label mono">{v.name}</span>
               {Array.from({ length: len }, (_, step) => {
                 const state = drumCell(pattern, step, v.note);
+                const ev = pattern.events.find(drumAt(step, v.note));
+                const badge = cellBadge(ev);
+                const onTap = () => {
+                  if (mode === 'notes') s.editPattern(track.id, (p) => cycleDrumCell(p, step, v.note, v.velocity));
+                  else if (state !== 'off')
+                    s.editPattern(track.id, (p) => (mode === 'condition' ? cycleCondition : cycleRatchet)(p, drumAt(step, v.note)));
+                };
                 return (
                   <button
                     type="button"
                     class={`cell ${state} ${step % 4 === 0 ? 'beat' : ''} ${step === playStep ? 'now' : ''}`}
-                    aria-label={`${v.name} step ${step + 1}: ${state}`}
+                    aria-label={`${v.name} step ${step + 1}: ${state}${badge ? ' ' + badge : ''}`}
                     aria-pressed={state !== 'off'}
-                    onClick={() => s.editPattern(track.id, (p) => cycleDrumCell(p, step, v.note, v.velocity))}
-                  />
+                    onClick={onTap}
+                  >
+                    {badge && <span class="cell-badge">{badge}</span>}
+                  </button>
                 );
               })}
             </>
           ))}
         </div>
       </div>
-      <p class="hint">Tap a step: hit → 50% chance → off.</p>
+      {mode === 'notes' && <p class="hint">Tap a step: hit → 50% chance → off.</p>}
     </>
   );
 }
 
-function MotifGrid({ track, pattern, playStep }: { track: TrackState; pattern: Pattern; playStep: number }) {
+function MotifGrid({ track, pattern, playStep, mode }: { track: TrackState; pattern: Pattern; playStep: number; mode: EditMode }) {
   const s = useStore();
   const params = track.generator.params as MotifParams;
   const [noteLength, setNoteLength] = useState(1);
   const len = pattern.lengthSteps;
   const bar = useLive((l) => (s.sequencer.playing ? l.bar : 0));
-  const moment = s.sequencer.currentHarmony.at(bar);
+  const moment = s.sequencer.harmonyAt(bar);
   const range = Math.max(4, Math.min(14, params.rangeDegrees));
   const degrees = Array.from({ length: range * 2 + 1 }, (_, i) => range - i);
   const label = (d: number) =>
@@ -115,6 +155,13 @@ function MotifGrid({ track, pattern, playStep }: { track: TrackState; pattern: P
 
   const tap = (step: number, degree: number) => {
     const covering = motifNoteCovering(pattern, step);
+    if (mode !== 'notes') {
+      if (covering?.pitch.kind === 'degree' && covering.pitch.degree === degree) {
+        const start = covering.step;
+        s.editPattern(track.id, (p) => (mode === 'condition' ? cycleCondition : cycleRatchet)(p, noteStartAt(start)));
+      }
+      return;
+    }
     // Tapping the tail of a held note shortens it to end here.
     if (covering && covering.step !== step && covering.pitch.kind === 'degree' && covering.pitch.degree === degree) {
       s.editPattern(track.id, (p) => ({
@@ -159,14 +206,17 @@ function MotifGrid({ track, pattern, playStep }: { track: TrackState; pattern: P
                   const cover = motifNoteCovering(pattern, step);
                   const on = cover?.pitch.kind === 'degree' && cover.pitch.degree === d;
                   const start = on && cover?.step === step;
+                  const badge = start ? cellBadge(cover) : '';
                   return (
                     <button
                       type="button"
                       class={`cell ${start ? 'hit' : on ? 'held' : 'off'} ${chordTone ? 'tone-row' : ''} ${step % 4 === 0 ? 'beat' : ''} ${step === playStep ? 'now' : ''}`}
-                      aria-label={`${label(d)} step ${step + 1}${start ? ': note' : on ? ': held' : ''}`}
+                      aria-label={`${label(d)} step ${step + 1}${start ? ': note' : on ? ': held' : ''}${badge ? ' ' + badge : ''}`}
                       aria-pressed={on}
                       onClick={() => tap(step, d)}
-                    />
+                    >
+                      {badge && <span class="cell-badge">{badge}</span>}
+                    </button>
                   );
                 })}
               </>

@@ -1,6 +1,8 @@
+import type { PhraseSettings } from '../core/engine/phrasing';
 import type { GeneratorConfig } from '../core/generators/registry';
 import type { Pattern, Register } from '../core/pattern/pattern';
 import type { ProgressionStep } from '../core/theory/harmony';
+import type { ProgressionStyle } from '../core/theory/progressionGenerator';
 import type { PitchClass } from '../core/theory/note';
 import type { ModeName } from '../core/theory/scale';
 
@@ -51,6 +53,8 @@ export interface TrackState {
    * where the track starts from; unfreeze the track to let it evolve.
    */
   userPattern?: Pattern;
+  /** Call-and-response role; the track only plays in its own phrases. */
+  phrase?: PhraseSettings;
   modulations: CcModulation[];
 }
 
@@ -64,6 +68,15 @@ export interface ProjectState {
   stepsPerBar: number;
   key: { root: PitchClass; mode: ModeName };
   progression: ProgressionStep[];
+  /** Let the chord progression evolve on its own while playing. */
+  harmonyEvolve?: {
+    enabled: boolean;
+    style: ProgressionStyle;
+    /** Change after this many passes through the progression. */
+    everyLoops: number;
+    /** 'vary' swaps one chord; 'new' writes a whole new progression. */
+    mode: 'vary' | 'new';
+  };
   clock: {
     /** Port names that receive MIDI clock + start/stop (e.g. the TR-8S). */
     sendTo: string[];

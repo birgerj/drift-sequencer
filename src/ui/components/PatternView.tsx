@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'preact/hooks';
 import type { Pattern } from '../../core/pattern/pattern';
+import { answerPattern, type AnswerTransform } from '../../core/engine/phrasing';
 import { resolvePitch } from '../../core/pattern/resolve';
 import type { Harmony } from '../../core/theory/harmony';
 import type { DrumParams } from '../../core/generators/drumGenerator';
@@ -48,7 +49,11 @@ export function PatternView({ track, pattern, harmony, height, showLabels }: Pro
     const frame = () => {
       const { track: t, showLabels: labels } = propsRef.current;
       // Read live engine state so mutations show up the moment they happen.
-      const p = store.sequencer.track(t.id)?.pattern ?? propsRef.current.pattern;
+      const own = store.sequencer.track(t.id)?.pattern ?? propsRef.current.pattern;
+      // A responder that answers another track shows the answer it will play.
+      const answer = t.phrase?.role === 'response' ? t.phrase.answer : undefined;
+      const source = answer ? store.sequencer.track(answer.from)?.pattern : undefined;
+      const p = answer && source ? cachedAnswer(source, answer.transform, store.project.stepsPerBar, t.phrase!.bars) : own;
       const h = store.sequencer.currentHarmony ?? propsRef.current.harmony;
       const step = store.sequencer.playing ? store.live.step : -1;
       const key = `${step}|${width}`;
@@ -68,6 +73,15 @@ export function PatternView({ track, pattern, harmony, height, showLabels }: Pro
   }, [height]);
 
   return <canvas ref={canvasRef} class="pattern-view" style={{ height: `${height}px` }} aria-label={`${track.name} pattern`} role="img" />;
+}
+
+let answerCache: { key: unknown[]; pattern: Pattern } | undefined;
+function cachedAnswer(source: Pattern, transform: AnswerTransform, stepsPerBar: number, bars: number): Pattern {
+  const key = [source, transform, stepsPerBar, bars];
+  if (!answerCache || answerCache.key.some((k, i) => k !== key[i])) {
+    answerCache = { key, pattern: answerPattern(source, transform, stepsPerBar, bars) };
+  }
+  return answerCache.pattern;
 }
 
 function draw(
@@ -118,7 +132,21 @@ function draw(
         const cw = w / len - 3;
         ctx.globalAlpha = 0.35 + 0.65 * (e.probability ?? 1);
         ctx.fillStyle = e.step === local ? '#ffffff' : color;
-        roundRect(ctx, x, y + 2, cw, rowH - 4, 3);
+        const r = e.ratchet ?? 1;
+        if (r > 1) {
+          // Ratchets: split the cell into r slices.
+          const gap = 1.5;
+          const sw = (cw - gap * (r - 1)) / r;
+          for (let i = 0; i < r; i++) roundRect(ctx, x + i * (sw + gap), y + 2, sw, rowH - 4, 2);
+        } else roundRect(ctx, x, y + 2, cw, rowH - 4, 3);
+        if (e.condition && cw >= 16) {
+          ctx.globalAlpha = 1;
+          ctx.fillStyle = '#0b0c0f';
+          ctx.font = '600 9px "JetBrains Mono", monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`${e.condition.on}:${e.condition.every}`, x + cw / 2, y + rowH / 2);
+          ctx.textAlign = 'start';
+        }
       }
       ctx.globalAlpha = 1;
     });
@@ -127,7 +155,7 @@ function draw(
     const state = {};
     const resolved = pattern.events.map((e) => {
       const bar = blockStartBar + Math.floor(e.step / stepsPerBar);
-      return { e, notes: resolvePitch(e.pitch, harmony.at(bar), track.register, state) };
+      return { e, notes: resolvePitch(e.pitch, store.sequencer.harmonyAt(bar), track.register, state) };
     });
     const all = resolved.flatMap((r) => r.notes);
     if (all.length) {

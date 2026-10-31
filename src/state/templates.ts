@@ -1,3 +1,4 @@
+import type { AnswerTransform, PhraseRole } from '../core/engine/phrasing';
 import { defaultConfig, type GeneratorConfig } from '../core/generators/registry';
 import type { TrackType } from '../core/generators/types';
 import type { Register } from '../core/pattern/pattern';
@@ -30,6 +31,8 @@ export interface TrackSpec {
   /** Shallow overrides for the generator's default params. */
   params?: Record<string, unknown>;
   mutationIntervalBars?: number;
+  /** Call-and-response role; `answerFrom` names another track in the template. */
+  phrase?: { role: PhraseRole; bars: number; answerFrom?: string; transform?: AnswerTransform };
 }
 
 export function createTrack(spec: TrackSpec): TrackState {
@@ -59,6 +62,7 @@ export interface TemplateSpec {
   key: string;
   mode: ModeName;
   progression: ProgressionStep[];
+  harmonyEvolve?: ProjectState['harmonyEvolve'];
   tracks: TrackSpec[];
 }
 
@@ -109,6 +113,41 @@ export const TEMPLATES: TemplateSpec[] = [
     ],
   },
   {
+    id: 'conversation',
+    name: 'Conversation',
+    bpm: 118,
+    swing: 0.08,
+    key: 'E',
+    mode: 'dorian',
+    progression: [
+      { degree: 0, bars: 2, size: 4 },
+      { degree: 3, bars: 2, size: 4 },
+      { degree: 6, bars: 2 },
+      { degree: 4, bars: 2, size: 4 },
+    ],
+    harmonyEvolve: { enabled: true, style: 'house', everyLoops: 2, mode: 'vary' },
+    tracks: [
+      {
+        name: 'Call',
+        color: TRACK_COLORS.lead,
+        type: 'motif',
+        output: LEAD,
+        params: { density: 0.5, rangeDegrees: 6, mutation: 0.15 },
+        phrase: { role: 'call', bars: 1 },
+      },
+      {
+        // Same synth and channel: the two phrases never overlap.
+        name: 'Answer',
+        color: '#F472B6',
+        type: 'motif',
+        output: LEAD,
+        phrase: { role: 'response', bars: 1, answerFrom: 'Call', transform: 'upThird' },
+      },
+      { name: 'Bass', color: TRACK_COLORS.bass, type: 'bass', output: BASS, params: { offbeat: true } },
+      { name: 'Drums', color: TRACK_COLORS.drums, type: 'drums', output: DRUMS, params: { ratchetChance: 0.12, conditionChance: 0.15 } },
+    ],
+  },
+  {
     id: 'ambient',
     name: 'Ambient',
     bpm: 70,
@@ -140,8 +179,23 @@ export function createProject(templateId: string): ProjectState {
     stepsPerBar: 16,
     key: { root: parsePitchClass(t.key), mode: t.mode },
     progression: t.progression.map((p) => ({ ...p })),
+    ...(t.harmonyEvolve ? { harmonyEvolve: { ...t.harmonyEvolve } } : {}),
     clock: { sendTo: [DRUMS.portName] },
-    tracks: t.tracks.map(createTrack),
+    tracks: withPhrases(t.tracks),
     updatedAt: new Date().toISOString(),
   };
+}
+
+/** Create tracks and resolve `answerFrom` track names to ids. */
+function withPhrases(specs: TrackSpec[]): TrackState[] {
+  const tracks = specs.map(createTrack);
+  return tracks.map((track, i) => {
+    const p = specs[i]!.phrase;
+    if (!p) return track;
+    const from = p.answerFrom ? tracks.find((t) => t.name === p.answerFrom)?.id : undefined;
+    return {
+      ...track,
+      phrase: { role: p.role, bars: p.bars, ...(from ? { answer: { from, transform: p.transform ?? 'echo' } } : {}) },
+    };
+  });
 }

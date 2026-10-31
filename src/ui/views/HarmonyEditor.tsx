@@ -3,7 +3,9 @@ import { Chord } from '../../core/theory/chord';
 import type { ProgressionStep } from '../../core/theory/harmony';
 import { NOTE_NAMES } from '../../core/theory/note';
 import { MODES, Scale, type ModeName } from '../../core/theory/scale';
-import { Card, Icon, Segmented, Select, Stepper } from '../components/controls';
+import { useState } from 'preact/hooks';
+import { PROGRESSION_STYLES, type ProgressionStyle } from '../../core/theory/progressionGenerator';
+import { Card, Icon, Segmented, Select, Stepper, Toggle } from '../components/controls';
 import { useStore } from '../store';
 
 const MODE_LABELS: Record<ModeName, string> = {
@@ -29,6 +31,62 @@ const PRESETS: { name: string; degrees: number[] }[] = [
   { name: 'i – VII – VI – VII', degrees: [0, 6, 5, 6] },
   { name: 'I – IV', degrees: [0, 3] },
 ];
+
+function ProgressionGenerator() {
+  const s = useStore();
+  const evolve = s.project.harmonyEvolve ?? { enabled: false, style: 'pop' as ProgressionStyle, everyLoops: 2, mode: 'vary' as const };
+  const [length, setLength] = useState(0);
+  const setEvolve = (patch: Partial<typeof evolve>) => s.change((p) => ({ ...p, harmonyEvolve: { ...evolve, ...patch } }));
+  return (
+    <Card title="Generate">
+      <Segmented label="Style" value={evolve.style} options={PROGRESSION_STYLES.map((x) => ({ value: x.id, label: x.label }))} onChange={(style) => setEvolve({ style })} />
+      <Segmented
+        label="Chords"
+        value={length}
+        options={[
+          { value: 0, label: 'Auto' },
+          { value: 2, label: '2' },
+          { value: 4, label: '4' },
+          { value: 8, label: '8' },
+        ]}
+        onChange={setLength}
+      />
+      <div class="row gap-s wrap">
+        <button type="button" class="primary" onClick={() => s.generateProgression(evolve.style, length || undefined)}>
+          <Icon name="dice" /> New progression
+        </button>
+        <button type="button" onClick={() => s.varyProgression(evolve.style)}>
+          <Icon name="refresh" /> Vary one chord
+        </button>
+      </div>
+      <Toggle
+        label="Evolve while playing"
+        description="Changes the progression by itself at the end of a loop"
+        checked={evolve.enabled}
+        onChange={(enabled) => setEvolve({ enabled })}
+      />
+      {evolve.enabled && (
+        <>
+          <Segmented
+            label="How"
+            value={evolve.mode}
+            options={[
+              { value: 'vary', label: 'Vary one chord' },
+              { value: 'new', label: 'New progression' },
+            ]}
+            onChange={(mode) => setEvolve({ mode })}
+          />
+          <Segmented
+            label="Every (loops)"
+            value={evolve.everyLoops}
+            options={[1, 2, 4, 8].map((n) => ({ value: n, label: String(n) }))}
+            onChange={(everyLoops) => setEvolve({ everyLoops })}
+          />
+        </>
+      )}
+    </Card>
+  );
+}
 
 export function HarmonyEditor() {
   const s = useStore();
@@ -64,6 +122,7 @@ export function HarmonyEditor() {
             />
             {pentatonic && <p class="hint">Pentatonic scales build chords from five notes, so some chords are unusual.</p>}
           </Card>
+          <ProgressionGenerator />
           <Card title="Presets">
             <div class="chips">
               {PRESETS.map((preset) => (

@@ -1,3 +1,4 @@
+import { phraseActive } from '../../core/engine/phrasing';
 import { Chord } from '../../core/theory/chord';
 import { NOTE_NAMES, noteName, pitchClassOf } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
@@ -36,7 +37,7 @@ function HarmonyStrip() {
   const p = s.project;
   const harmony = s.sequencer.currentHarmony;
   const bar = useLive((l) => (s.sequencer.playing ? l.bar : -1));
-  const currentIndex = bar >= 0 ? harmony.at(bar).stepIndex : -1;
+  const currentIndex = bar >= 0 ? s.sequencer.harmonyAt(bar).stepIndex : -1;
   const nextMutation = (() => {
     if (bar < 0) return undefined;
     const intervals = p.tracks.filter((t) => !t.frozen).map((t) => t.mutationIntervalBars);
@@ -85,8 +86,10 @@ function Lane({ track }: { track: TrackState }) {
   const quick = PARAM_SCHEMA[track.generator.type].filter((c) => c.kind === 'range').slice(0, 3);
   const params = track.generator.params as unknown as Record<string, number>;
   const portOk = s.portAvailable(track.output.portName);
+  const resting = useLive((l) => !!track.phrase && s.sequencer.playing && l.step >= 0 && !phraseActive(track.phrase, l.bar));
+  const answering = track.phrase?.answer ? s.project.tracks.find((t) => t.id === track.phrase!.answer!.from) : undefined;
   return (
-    <article class="lane" style={{ '--accent': track.color }}>
+    <article class={`lane ${resting ? 'resting' : ''}`} style={{ '--accent': track.color }}>
       <div class="lane-head">
         <div class="row gap-s">
           <span class="swatch" />
@@ -98,6 +101,12 @@ function Lane({ track }: { track: TrackState }) {
         <span class={`small ${portOk ? 'muted' : 'warn'}`} title={portOk ? '' : 'Port not connected'}>
           {track.output.portName} · ch {track.output.channel}
         </span>
+        {track.phrase && (
+          <span class="phrase-badge small">
+            {track.phrase.role === 'call' ? 'Call' : answering ? `Answers ${answering.name}` : 'Response'} · {track.phrase.bars} bar
+            {track.phrase.bars > 1 ? 's' : ''}
+          </span>
+        )}
         <div class="row gap-s lane-buttons">
           <button type="button" class="square" aria-pressed={track.muted} aria-label={`Mute ${track.name}`} onClick={() => s.updateTrack(track.id, { muted: !track.muted })}>
             M
