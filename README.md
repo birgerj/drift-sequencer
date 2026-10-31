@@ -14,13 +14,22 @@ can keep your hands on the synths.
   so JavaScript timer jitter never reaches the music. Drift can send MIDI
   clock + start/stop to e.g. a Roland TR-8S.
 
-## Getting started
+## Run it
+
+**No install needed:** download [`docs/index.html`](docs/index.html) and
+open it in Chrome or Edge (double-click). The whole app — code, styles and
+icon — is inside that one file. Projects are saved in the browser.
+
+**Publish on GitHub Pages:** Settings → Pages → *Deploy from a branch* →
+`main` / `/docs`. (Pages needs a public repository or a paid plan.)
+
+## Develop
 
 ```sh
 npm install
-npm run dev      # http://localhost:5173
-npm test         # unit tests (theory, generators, scheduler, storage)
-npm run build    # static site in dist/
+npm run dev               # http://localhost:5173 with hot reload
+npm test                  # unit tests
+npm run build:standalone  # rebuild docs/index.html — commit it with your change
 ```
 
 ## Architecture

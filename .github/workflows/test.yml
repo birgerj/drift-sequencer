@@ -1,0 +1,29 @@
+name: Test
+
+# The app is published from docs/index.html (a single self-contained file,
+# built with `npm run build:standalone`). GitHub Pages can serve it with
+# "Deploy from a branch" → main → /docs, so no deploy workflow is needed.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:standalone
+      - name: docs/index.html is up to date
+        run: git diff --exit-code -- docs/index.html || (echo "Run npm run build:standalone and commit docs/index.html" && exit 1)
