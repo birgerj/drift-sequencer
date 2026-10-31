@@ -1,3 +1,4 @@
+import { themeVar } from '../theme/theme';
 import { useEffect, useRef } from 'preact/hooks';
 import { lfoValue } from '../../core/engine/lfo';
 import type { CcModulation } from '../../state/project';
@@ -73,7 +74,7 @@ function draw(canvas: HTMLCanvasElement, width: number, height: number, m: CcMod
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, width, height);
-  ctx.fillStyle = '#0f1115';
+  ctx.fillStyle = themeVar('--canvas-bg');
   ctx.fillRect(0, 0, width, height);
 
   const pad = 6;
@@ -81,9 +82,9 @@ function draw(canvas: HTMLCanvasElement, width: number, height: number, m: CcMod
   const value = (p: number) => m.min + (m.max - m.min) * lfoValue(m.shape, p, cycle);
 
   // Range band and bar divisions
-  ctx.fillStyle = 'rgba(255,255,255,0.04)';
+  ctx.fillStyle = themeVar('--playhead-fill');
   ctx.fillRect(0, y(Math.max(m.min, m.max)), width, Math.abs(y(m.min) - y(m.max)));
-  ctx.fillStyle = '#252932';
+  ctx.fillStyle = themeVar('--canvas-beat');
   for (let b = 1; b < m.periodBars; b++) ctx.fillRect(Math.round((b / m.periodBars) * width), 0, 1, height);
 
   // Waveform
@@ -104,10 +105,10 @@ function draw(canvas: HTMLCanvasElement, width: number, height: number, m: CcMod
   // Live position
   if (phase >= 0 && m.enabled) {
     const px = phase * width;
-    ctx.fillStyle = 'rgba(242,244,247,0.5)';
+    ctx.fillStyle = themeVar('--canvas-label');
     ctx.fillRect(Math.round(px), 0, 1, height);
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#f2f4f7';
+    ctx.fillStyle = themeVar('--text');
     ctx.beginPath();
     ctx.arc(px, y(value(phase)), 6, 0, Math.PI * 2);
     ctx.fill();

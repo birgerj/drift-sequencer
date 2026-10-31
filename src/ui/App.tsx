@@ -1,3 +1,4 @@
+import { useTheme } from './theme/theme';
 import { useEffect, useState } from 'preact/hooks';
 import { pwa } from './pwa';
 import { Icon } from './components/controls';
@@ -22,6 +23,8 @@ export function App() {
   const v = s.view;
   const pwaState = usePwa();
   useShortcuts();
+  // Re-render everything when the theme changes (slots, canvases).
+  useTheme();
   return (
     <div class="shell">
       <Rail canInstall={pwaState.canInstall} />

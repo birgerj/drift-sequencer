@@ -1,3 +1,5 @@
+import { hasSlot } from '../theme/theme';
+import { LedLadder } from '../theme/hifi/HifiParts';
 import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
@@ -235,7 +237,12 @@ function TrackOverview({ track }: { track: TrackState }) {
     <>
       <div class="detail-section span-2">
         <Card title="Pattern" actions={<button type="button" class="ghost" onClick={go('pattern')}>Edit <Icon name="grid" size={16} /></button>}>
-          {rt && <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? 200 : 160} showLabels />}
+          {rt &&
+            (hasSlot('overviewPattern') && track.generator.type !== 'drums' ? (
+              <LedLadder track={track} pattern={rt.pattern} />
+            ) : (
+              <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? 200 : 160} showLabels />
+            ))}
           <div class="timing-row">
             <TrackTiming track={track} />
             {track.generator.type !== 'drums' && (

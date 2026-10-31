@@ -1,6 +1,7 @@
 import { useEffect } from 'preact/hooks';
 import { normalizeRate, TRACK_RATES } from '../core/engine/trackRuntime';
 import { store, type AppStore } from './store';
+import { cycleTheme } from './theme/theme';
 
 /** Tabs of the track detail pane, in order, with their shortcut keys. */
 export const SECTIONS = [
@@ -28,6 +29,7 @@ export const SHORTCUT_HELP: { keys: string; action: string }[] = [
   { keys: 'Shift + ←  →', action: 'Speed slower / faster' },
   { keys: ',  .', action: 'Tempo −1 / +1 (Shift: ±5)' },
   { keys: 'O', action: 'All tracks (Overview page)' },
+  { keys: 'Shift + T', action: 'Next theme' },
   { keys: '?', action: 'Show this list' },
   { keys: 'Esc', action: 'Close' },
 ];
@@ -52,6 +54,10 @@ export function handleShortcut(s: AppStore, e: Pick<KeyboardEvent, 'key' | 'code
   if (key === 'Escape') {
     if (!s.shortcutsOpen) return false;
     s.setShortcutsOpen(false);
+    return true;
+  }
+  if (key === 'T' && e.shiftKey) {
+    cycleTheme();
     return true;
   }
   if (key === '?') {

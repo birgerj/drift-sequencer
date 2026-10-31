@@ -1,0 +1,385 @@
+/*
+ * Hi-Fi theme: a retro stereo tower. Panels are brushed aluminium "units"
+ * mounted in a dark rack between walnut cheeks; readouts are VFD glass.
+ * Only token values and material styling live here; layout and behaviour
+ * are the same as Studio.
+ */
+[data-theme='hifi'] {
+  --bg: #121212;
+  --surface: #d7dbdf;
+  --surface-2: #e7eaed;
+  --well: #060b0d;
+  --line: #9aa0a6;
+  --line-2: #6c7177;
+  --text: #f0f2f4;
+  --text-2: #c9ced3;
+  --muted: #9aa1ac;
+  --faint: #7a828c;
+  --accent: #ffb547;
+  --on-accent: #23262a;
+  --warn: #ff9a3c;
+  --danger: #ff5a4a;
+  --ok: #39ff6a;
+  --lfo: #ff6fb5;
+  --motion: #7ff6ff;
+  --press: #c3c8cd;
+  --track: #1b1d20;
+  --sunken: #0b0d0f;
+  --rail-bg: #121212;
+  --scrim: rgba(10, 8, 6, 0.75);
+  --shadow-pop: 0 10px 30px rgba(0, 0, 0, 0.6);
+  --cell: #2a2d31;
+  --cell-beat: #34373c;
+  --cell-tone: #2e3135;
+  --cell-tone-beat: #383b40;
+  --playhead-fill: rgba(127, 246, 255, 0.08);
+  --module: #c9ced3;
+  --module-line: #8f959b;
+  --screen: #060b0d;
+  --screen-text: #7ff6ff;
+  --screen-dim: #2f6e76;
+  --screen-glow: 0 0 6px rgba(127, 246, 255, 0.75);
+  --led-off: #4a3d24;
+  --knob-body: #1f2226;
+  --knob-ring: #0d0e10;
+  --knob-cap: #c9ced3;
+  --knob-pointer: #c0392b;
+  --canvas-bg: #060b0d;
+  --canvas-grid: #0c171a;
+  --canvas-beat: #123037;
+  --canvas-bar: #1f4f57;
+  --canvas-label: #3aa7b3;
+  --canvas-hot: #ffffff;
+  --radius: 4px;
+  --radius-control: 3px;
+  --font-ui: 'Archivo Narrow', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --mono: 'Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: 'Share Tech Mono', ui-monospace, monospace;
+  --label-transform: uppercase;
+  --label-spacing: 0.16em;
+
+  /* materials (theme-only) */
+  --metal: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.06) 0 1px, rgba(0, 0, 0, 0.035) 1px 2px),
+    linear-gradient(180deg, #e6e9ec 0%, #c8cdd2 55%, #b3b9bf 100%);
+  --metal-edge: inset 0 1px 0 #fff, inset 0 -2px 0 rgba(0, 0, 0, 0.22), 0 2px 0 #000;
+  --key: linear-gradient(180deg, #f6f7f8, #cdd2d7);
+  --key-shadow: 0 2px 0 #6c7177, inset 0 1px 0 #fff;
+  --key-down: linear-gradient(180deg, #bcc2c7, #dfe3e6);
+  --key-down-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+  --glass: linear-gradient(180deg, #0a1216, #050a0c);
+  --glass-edge: inset 0 2px 8px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.55);
+  --wood: repeating-linear-gradient(90deg, #5a3a22 0 3px, #6b4529 3px 7px, #4e321d 7px 11px, #634026 11px 14px);
+  --amber-glow: 0 0 8px rgba(255, 181, 71, 0.85);
+  color-scheme: dark;
+}
+
+/* ---------- rack: walnut cheeks around the units ---------- */
+
+[data-theme='hifi'] body { background: #1b1410; }
+[data-theme='hifi'] .shell {
+  padding: 6px 18px;
+  gap: 6px;
+  background: var(--wood);
+  box-shadow: inset 18px 0 12px -10px rgba(0, 0, 0, 0.5), inset -18px 0 12px -10px rgba(0, 0, 0, 0.5);
+}
+[data-theme='hifi'] .detail { background: #121212; padding: 0 8px 12px; border-radius: 2px; }
+
+/* ---------- metal zones: dark engraved text on aluminium ---------- */
+
+[data-theme='hifi'] .rail,
+[data-theme='hifi'] .card,
+[data-theme='hifi'] .detail-head,
+[data-theme='hifi'] .jump-bar,
+[data-theme='hifi'] .lane,
+[data-theme='hifi'] .fact,
+[data-theme='hifi'] .panel-bar,
+[data-theme='hifi'] .encoder,
+[data-theme='hifi'] .page-head,
+[data-theme='hifi'] .overlay .card {
+  --text: #23262a;
+  --text-2: #33373c;
+  --muted: #4a4f55;
+  --faint: #5f656b;
+  --line: rgba(0, 0, 0, 0.22);
+  --line-2: #7d838a;
+  --surface-2: #e7eaed;
+  background: var(--metal);
+  color: var(--text);
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: var(--metal-edge);
+}
+[data-theme='hifi'] .rail { border-right: 0; }
+[data-theme='hifi'] .detail-head { padding: 10px 14px; margin-top: 6px; }
+[data-theme='hifi'] .jump-bar { position: sticky; padding: 8px 12px; margin: 6px 0 10px; border-bottom: 0; }
+[data-theme='hifi'] .page-head { padding: 10px 14px; margin-top: 6px; }
+[data-theme='hifi'] .panel-bar,
+[data-theme='hifi'] .fact { box-shadow: var(--metal-edge); }
+
+/* Engraved labels */
+[data-theme='hifi'] .eyebrow,
+[data-theme='hifi'] .field-label,
+[data-theme='hifi'] .slider label,
+[data-theme='hifi'] .fact small,
+[data-theme='hifi'] .rail-readout small,
+[data-theme='hifi'] .rail-clock span,
+[data-theme='hifi'] .theme-picker > span {
+  text-transform: uppercase;
+  letter-spacing: var(--label-spacing);
+  font-weight: 600;
+  color: var(--muted);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+[data-theme='hifi'] .field-label,
+[data-theme='hifi'] .slider label { font-size: 11px; }
+[data-theme='hifi'] .slider output { font-family: var(--font-display); color: var(--text); text-shadow: none; }
+[data-theme='hifi'] h1,
+[data-theme='hifi'] .title-input,
+[data-theme='hifi'] .rail-project { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
+
+/* ---------- keys (buttons) ---------- */
+
+[data-theme='hifi'] button,
+[data-theme='hifi'] .button {
+  background: var(--key);
+  border: 1px solid #6c7177;
+  box-shadow: var(--key-shadow);
+  color: #23262a;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+[data-theme='hifi'] button:active,
+[data-theme='hifi'] button[aria-pressed='true']:not(.cell):not(.drum-label),
+[data-theme='hifi'] button[aria-checked='true'],
+[data-theme='hifi'] button[aria-current='true'] {
+  background: var(--key-down);
+  box-shadow: var(--key-down-shadow);
+  color: #23262a;
+  border-color: #6c7177;
+  transform: none;
+}
+/* Lamp in pressed keys */
+[data-theme='hifi'] .jump[aria-current='true']::before,
+[data-theme='hifi'] .rail-nav button[aria-current='true']::before,
+[data-theme='hifi'] .type-chip[aria-checked='true']::before,
+[data-theme='hifi'] .theme-picker button[aria-checked='true']::before,
+[data-theme='hifi'] .panel-pages button[aria-current='true']::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4a3a;
+  box-shadow: 0 0 6px #ff4a3a;
+  flex: 0 0 auto;
+}
+[data-theme='hifi'] button.primary,
+[data-theme='hifi'] .rail-play {
+  background: linear-gradient(180deg, #ffd48a, #f0a73a);
+  border-color: #8a5c14;
+  color: #23262a;
+  box-shadow: 0 2px 0 #8a5c14, inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+[data-theme='hifi'] .rail-play.on { background: var(--key-down); box-shadow: var(--key-down-shadow); }
+[data-theme='hifi'] .rail-play.on::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+[data-theme='hifi'] button.ghost,
+[data-theme='hifi'] button.link { background: transparent; box-shadow: none; border-color: transparent; }
+[data-theme='hifi'] button.danger { color: #a3261c; }
+[data-theme='hifi'] .jump,
+[data-theme='hifi'] .rail-nav button,
+[data-theme='hifi'] .type-chip,
+[data-theme='hifi'] .preset-chip,
+[data-theme='hifi'] .chip,
+[data-theme='hifi'] .theme-picker button,
+[data-theme='hifi'] .snap { text-transform: uppercase; letter-spacing: 0.12em; font-size: 11px; }
+[data-theme='hifi'] .snap.filled { background: var(--key); }
+[data-theme='hifi'] .snap.filled::after { content: ''; width: 6px; height: 6px; margin-left: 4px; border-radius: 50%; background: var(--accent); box-shadow: var(--amber-glow); }
+[data-theme='hifi'] .rail-add { background: transparent; box-shadow: none; border: 1px dashed #7d838a; }
+
+/* Track selector keys in the rail */
+[data-theme='hifi'] .rail-track { background: var(--key); border: 1px solid #6c7177; box-shadow: var(--key-shadow); }
+[data-theme='hifi'] .rail-track.selected { background: var(--key-down); box-shadow: var(--key-down-shadow); border-color: #6c7177; }
+[data-theme='hifi'] .rail-icon { background: #1f2226; color: var(--accent); box-shadow: inset 0 1px 3px #000; }
+[data-theme='hifi'] .rail-track.selected .rail-icon { box-shadow: inset 0 1px 3px #000, 0 0 8px color-mix(in srgb, var(--accent) 70%, transparent); }
+[data-theme='hifi'] .rail-name b { text-transform: uppercase; letter-spacing: 0.12em; }
+[data-theme='hifi'] .rail-now {
+  font-family: var(--font-display);
+  color: #ffb547;
+  background: var(--screen);
+  padding: 1px 6px;
+  border-radius: 2px;
+  text-shadow: var(--amber-glow);
+  min-width: 30px;
+  display: inline-block;
+  text-align: center;
+}
+[data-theme='hifi'] .rail-icon,
+[data-theme='hifi'] .detail-icon,
+[data-theme='hifi'] .voice-icon { color: var(--accent); }
+[data-theme='hifi'] .detail-icon { background: #1f2226; box-shadow: inset 0 1px 3px #000; }
+
+/* ---------- VFD glass: readouts, displays, inputs ---------- */
+
+[data-theme='hifi'] .rail-readout,
+[data-theme='hifi'] .detail-chord,
+[data-theme='hifi'] .oled,
+[data-theme='hifi'] select,
+[data-theme='hifi'] input:not([type='range']):not(.title-input):not(.device-name),
+[data-theme='hifi'] .toast,
+[data-theme='hifi'] kbd,
+[data-theme='hifi'] .monitor li,
+[data-theme='hifi'] .modulation,
+[data-theme='hifi'] .voice,
+[data-theme='hifi'] .prog-step,
+[data-theme='hifi'] .device-card {
+  background: var(--glass);
+  color: var(--screen-text);
+  border: 0;
+  box-shadow: var(--glass-edge);
+  font-family: var(--font-display);
+}
+[data-theme='hifi'] .rail-readout b,
+[data-theme='hifi'] .rail-readout .mono,
+[data-theme='hifi'] .detail-chord,
+[data-theme='hifi'] .oled-value,
+[data-theme='hifi'] .oled-label,
+[data-theme='hifi'] select,
+[data-theme='hifi'] input:not([type='range']):not(.title-input):not(.device-name) { text-shadow: var(--screen-glow); color: var(--screen-text); }
+[data-theme='hifi'] .rail-readout small { color: #3aa7b3; text-shadow: none; }
+[data-theme='hifi'] .rail-readout.bpm button { background: transparent; box-shadow: none; border: 0; color: #3aa7b3; }
+[data-theme='hifi'] .rail-readout b { font-size: 16px; font-weight: 400; }
+[data-theme='hifi'] .rail-readout .muted { color: #3aa7b3; }
+[data-theme='hifi'] .rail-chord { color: #ffb547; text-shadow: var(--amber-glow); }
+[data-theme='hifi'] .detail-chord { min-height: 32px; font-size: 14px; color: rgba(127, 246, 255, 0.45); text-shadow: none; }
+[data-theme='hifi'] .detail-chord[aria-current='true'] { color: var(--screen-text); text-shadow: var(--screen-glow); background: var(--glass); box-shadow: var(--glass-edge), inset 0 0 0 1px rgba(127, 246, 255, 0.6); }
+[data-theme='hifi'] select { background-image: linear-gradient(45deg, transparent 50%, #3aa7b3 50%), linear-gradient(135deg, #3aa7b3 50%, transparent 50%), var(--glass); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%, 0 0; background-size: 5px 5px, 5px 5px, 100% 100%; background-repeat: no-repeat; }
+[data-theme='hifi'] select option { background: #060b0d; color: #7ff6ff; }
+[data-theme='hifi'] .title-input,
+[data-theme='hifi'] .device-name { background: transparent; color: var(--text); box-shadow: none; }
+[data-theme='hifi'] .toast { font-size: 15px; text-shadow: var(--screen-glow); }
+[data-theme='hifi'] kbd { color: #3aa7b3; padding: 1px 5px; }
+[data-theme='hifi'] .modulation,
+[data-theme='hifi'] .voice,
+[data-theme='hifi'] .prog-step,
+[data-theme='hifi'] .device-card { font-family: var(--font-ui); --text: #d9f9fc; --text-2: #9fdde3; --muted: #3aa7b3; --faint: #2f6e76; color: var(--text); }
+[data-theme='hifi'] .modulation .eyebrow,
+[data-theme='hifi'] .voice .field-label,
+[data-theme='hifi'] .modulation .field-label,
+[data-theme='hifi'] .prog-step .field-label,
+[data-theme='hifi'] .device-card .field-label,
+[data-theme='hifi'] .modulation .slider label,
+[data-theme='hifi'] .voice .slider label { color: #3aa7b3; text-shadow: none; }
+[data-theme='hifi'] .hint { color: var(--muted); }
+
+/* Segmented controls: a row of keys */
+[data-theme='hifi'] .segmented { background: rgba(0, 0, 0, 0.18); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35); border-radius: 3px; gap: 3px; padding: 3px; }
+[data-theme='hifi'] .segmented button { background: var(--key); box-shadow: 0 1px 0 #6c7177; border: 1px solid #8f959b; color: #33373c; text-transform: uppercase; letter-spacing: 0.08em; font-size: 12px; }
+[data-theme='hifi'] .segmented button[aria-checked='true'] { background: var(--key-down); box-shadow: var(--key-down-shadow); color: #23262a; }
+
+/* Sliders: groove + silver cap */
+[data-theme='hifi'] .slider input[type='range']::-webkit-slider-runnable-track { height: 6px; background: linear-gradient(to right, var(--accent) var(--fill), #1b1d20 var(--fill)); box-shadow: inset 0 1px 2px #000, 0 1px 0 rgba(255, 255, 255, 0.6); }
+[data-theme='hifi'] .slider input[type='range']::-webkit-slider-thumb { background: radial-gradient(circle at 40% 35%, #fff, #c9ced3 55%, #8f959b); border: 2px solid #4a4f55; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.5); border-radius: 4px; width: 22px; height: 28px; margin-top: -11px; }
+[data-theme='hifi'] .switch { background: #1b1d20 !important; box-shadow: inset 0 1px 3px #000; }
+[data-theme='hifi'] .switch span { background: radial-gradient(circle at 40% 35%, #fff, #c9ced3 55%, #8f959b); }
+[data-theme='hifi'] .switch[aria-checked='true'] { box-shadow: inset 0 1px 3px #000, 0 0 8px rgba(255, 181, 71, 0.6); }
+
+/* ---------- step grids: rubber pads that light up ---------- */
+
+[data-theme='hifi'] .step-grid { background: #1b1d20; padding: 8px; border-radius: 4px; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7); }
+[data-theme='hifi'] .cell { border: 1px solid #0d0e10; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+[data-theme='hifi'] .cell.hit { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+[data-theme='hifi'] .step-num { color: #7a828c; }
+[data-theme='hifi'] .step-num.now { background: var(--accent); color: #23262a; }
+[data-theme='hifi'] .row-label,
+[data-theme='hifi'] .drum-label { color: #c9ced3; text-transform: uppercase; letter-spacing: 0.1em; }
+[data-theme='hifi'] button.drum-label { background: transparent; box-shadow: none; border: 0; }
+[data-theme='hifi'] .pattern-view { box-shadow: var(--glass-edge); border-radius: 4px; }
+
+/* ---------- knob panel ---------- */
+
+[data-theme='hifi'] .encoder { padding: 10px; }
+[data-theme='hifi'] .encoder-meta { color: #4a4f55; letter-spacing: 0.12em; }
+[data-theme='hifi'] .led.on { fill: #ffb547; filter: drop-shadow(0 0 3px #ffb547); }
+[data-theme='hifi'] .knob-cap { fill: #d9dde1; stroke: #8f959b; stroke-width: 1; }
+[data-theme='hifi'] .oled { padding: 8px 4px; }
+[data-theme='hifi'] .oled-line { background: #2f6e76; }
+
+/* ---------- misc ---------- */
+
+[data-theme='hifi'] .fact { color: var(--accent); }
+[data-theme='hifi'] .fact > span { color: var(--text); }
+[data-theme='hifi'] .fact b { text-transform: uppercase; letter-spacing: 0.08em; }
+[data-theme='hifi'] .in-dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+[data-theme='hifi'] .rail-flag { border-radius: 2px; }
+[data-theme='hifi'] .monitor li { font-size: 13px; color: #ffb547; text-shadow: var(--amber-glow); background: #0d0a04; }
+[data-theme='hifi'] .monitor .ok-text { color: #ffd27a; }
+[data-theme='hifi'] .monitor .muted { color: #a8843e; text-shadow: none; }
+[data-theme='hifi'] .theme-picker button { min-height: 32px !important; }
+
+@media (max-width: 820px) {
+  [data-theme='hifi'] .shell { padding: 4px 8px; }
+}
+
+/* Grid cells are pads, not keys. */
+[data-theme='hifi'] button.cell { background: var(--cell); border: 1px solid #0d0e10; box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); color: inherit; }
+[data-theme='hifi'] button.cell.beat { background: var(--cell-beat); }
+[data-theme='hifi'] button.cell.tone-row { background: var(--cell-tone); }
+[data-theme='hifi'] button.cell.tone-row.beat { background: var(--cell-tone-beat); }
+[data-theme='hifi'] button.cell.hit { box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 70%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.5); }
+
+/* Tighter keys where space is short */
+[data-theme='hifi'] .rail-nav button { font-size: 9px; letter-spacing: 0.04em; padding: 0; }
+[data-theme='hifi'] .rail-nav button[aria-current='true']::before { display: none; }
+[data-theme='hifi'] .jump { font-size: 11px; letter-spacing: 0.08em; padding: 0 10px; gap: 6px; }
+[data-theme='hifi'] .jump kbd { font-size: 9px; padding: 0 4px; }
+[data-theme='hifi'] .theme-picker { display: grid; grid-template-columns: 1fr 1fr; }
+[data-theme='hifi'] .theme-picker > span { grid-column: 1 / -1; }
+[data-theme='hifi'] .theme-picker button { letter-spacing: 0.06em; padding: 0 6px; }
+
+/* ---------- Hi-Fi slot components ---------- */
+
+.hifi-vu { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.vu-face { width: 100%; height: auto; border-radius: 3px; background: linear-gradient(180deg, #ffe7b0, #f2c770); box-shadow: inset 0 0 0 2px #2a2d31, inset 0 4px 10px rgba(0, 0, 0, 0.35); font-family: var(--font-ui); }
+
+.led-ladder { display: grid; gap: 3px; height: 180px; align-items: end; padding: 10px; border-radius: 4px; background: var(--glass); box-shadow: var(--glass-edge); }
+.led-col { display: flex; flex-direction: column-reverse; gap: 2px; height: 100%; justify-content: flex-start; position: relative; }
+.led-col .seg { flex: 1 1 0; min-height: 3px; background: rgba(127, 246, 255, 0.06); border-radius: 1px; }
+.led-col .seg.on.cool { background: #7ff6ff; box-shadow: 0 0 4px rgba(127, 246, 255, 0.8); }
+.led-col .seg.on.warm { background: #ffb547; box-shadow: 0 0 4px rgba(255, 181, 71, 0.8); }
+.led-col .seg.on.hot { background: #ff4a3a; box-shadow: 0 0 4px rgba(255, 74, 58, 0.8); }
+.led-col .seg.held { opacity: 0.45; box-shadow: none; }
+.led-col.now .seg.on { filter: brightness(1.35); box-shadow: 0 0 10px currentColor; }
+.led-col.now::after { content: ''; position: absolute; left: 0; right: 0; bottom: -7px; height: 3px; background: #ffb547; box-shadow: var(--amber-glow); }
+
+.hifi-tuner { --text: #23262a; background: var(--metal); box-shadow: var(--metal-edge); border-radius: var(--radius); padding: 14px; }
+.tuner-glass { position: relative; height: 170px; border-radius: 6px; overflow: hidden; background: radial-gradient(ellipse at 50% 130%, rgba(255, 181, 71, 0.28), transparent 70%), linear-gradient(180deg, #1a1408, #0d0a04); box-shadow: inset 0 3px 10px rgba(0, 0, 0, 0.9), 0 1px 0 rgba(255, 255, 255, 0.6); padding: 12px 24px; display: flex; flex-direction: column; gap: 6px; font-family: var(--font-display); }
+.tuner-keys { display: flex; justify-content: space-between; }
+.tuner-keys button { all: unset; cursor: pointer; padding: 4px 6px; min-width: 28px; text-align: center; color: #8a6c36; font-size: 15px; border-radius: 3px; }
+.tuner-keys button[aria-checked='true'] { color: #ffd27a; text-shadow: 0 0 8px #ffb547; }
+.tuner-keys button:focus-visible { outline: 2px solid #ffd27a; }
+.tuner-scale { display: flex; justify-content: space-between; height: 14px; }
+.tuner-scale i { width: 1px; height: 7px; background: #c9a25a; }
+.tuner-scale i.major { height: 14px; }
+.tuner-stations { display: flex; margin-top: 6px; }
+.station { border-left: 1px solid rgba(201, 162, 90, 0.5); padding: 4px 10px; display: flex; flex-direction: column; color: #a8843e; min-width: 0; }
+.station b { font-size: 28px; font-weight: 400; line-height: 1; }
+.station span { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.station.on { color: #ffd27a; text-shadow: 0 0 10px #ffb547; }
+.tuner-needle { position: absolute; top: 8px; bottom: 8px; width: 3px; margin-left: -1px; background: #ff3b2f; box-shadow: 0 0 10px #ff3b2f; transition: left 0.12s linear; }
+.tuner-band { position: absolute; right: 16px; bottom: 10px; color: #6b5326; font-size: 12px; letter-spacing: 0.2em; }
+
+.hifi-jacks { display: flex; gap: 18px; padding: 4px 0; }
+.hifi-jacks .jack { display: flex; flex-direction: column; align-items: center; gap: 4px; font-family: var(--font-ui); font-size: 10px; font-weight: 700; letter-spacing: 0.18em; color: #9fdde3; }
+.hifi-jacks svg { width: 46px; height: 46px; }
+.jack-lamp { width: 8px; height: 8px; border-radius: 50%; background: #3a3020; }
+.jack-lamp.out { background: #39ff6a; box-shadow: 0 0 6px #39ff6a; }
+.jack-lamp.in { background: #ffb547; box-shadow: var(--amber-glow); }
+[data-theme='hifi'] .tuner-keys button,
+[data-theme='hifi'] .tuner-keys button[aria-checked='true'] { all: unset; cursor: pointer; padding: 4px 6px; min-width: 28px; text-align: center; color: #8a6c36; font-size: 15px; border-radius: 3px; font-family: var(--font-display); }
+[data-theme='hifi'] .tuner-keys button[aria-checked='true'] { color: #ffd27a; text-shadow: 0 0 8px #ffb547; }
+[data-theme='hifi'] .harmony-strip { --text: #23262a; background: var(--metal); box-shadow: var(--metal-edge); border: 0; }
+[data-theme='hifi'] .chord-chip { font-family: var(--font-display); }
+[data-theme='hifi'] .chord-chip.active { background: var(--glass); box-shadow: var(--glass-edge), inset 0 0 0 1px rgba(127, 246, 255, 0.6); color: var(--screen-text); text-shadow: var(--screen-glow); border-color: transparent; }
+[data-theme='hifi'] .chord-chip.active .muted { color: #3aa7b3; }
+[data-theme='hifi'] .meter { background: #1b1d20; box-shadow: inset 0 1px 2px #000; }
+[data-theme='hifi'] .meter div { background: var(--accent); box-shadow: var(--amber-glow); }
+[data-theme='hifi'] .lane-name { background: transparent; box-shadow: none; border: 0; text-transform: uppercase; letter-spacing: 0.12em; }

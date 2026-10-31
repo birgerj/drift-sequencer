@@ -1,3 +1,5 @@
+import { hasSlot } from '../theme/theme';
+import { DeviceJacks } from '../theme/hifi/HifiParts';
 import { inputForDevice } from '../../state/rack';
 import { useState } from 'preact/hooks';
 import { DEVICE_ROLES, newDevice, suggestInstrument } from '../../state/rack';
@@ -71,6 +73,7 @@ export function MyDevices() {
                   <Icon name="trash" /> Remove
                 </button>
               </div>
+              {hasSlot('deviceDecor') && <DeviceJacks device={d} />}
               <div class="device-fields">
                 <Select
                   label="MIDI port"

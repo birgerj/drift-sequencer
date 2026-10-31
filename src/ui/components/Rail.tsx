@@ -1,6 +1,10 @@
+import { hasSlot } from '../theme/theme';
+import { VuMeters } from '../theme/hifi/HifiParts';
 import { NOTE_NAMES, noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { pwa } from '../pwa';
+import { applyTheme, useTheme } from '../theme/theme';
+import { THEMES } from '../theme/themes';
 import { typeLabel } from '../paramSchema';
 import { store, useLive, useStore, type View } from '../store';
 import { Icon, TYPE_ICONS } from './controls';
@@ -21,7 +25,7 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
       <div class="rail-top">
         <button type="button" class="rail-project" onClick={() => s.go({ name: 'templates' })} aria-label="Projects and templates">
           <svg width="20" height="20" viewBox="0 0 26 26" aria-hidden="true">
-            <path d="M2 17 C6 5, 10 5, 13 13 S20 21, 24 9" fill="none" stroke="#F5A524" stroke-width="2.8" stroke-linecap="round" />
+            <path d="M2 17 C6 5, 10 5, 13 13 S20 21, 24 9" fill="none" stroke="var(--accent)" stroke-width="2.8" stroke-linecap="round" />
           </svg>
           <span>{p.name}</span>
         </button>
@@ -56,6 +60,8 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
         </button>
       </div>
 
+      {hasSlot('railMeters') && <VuMeters />}
+
       {!s.midi.connected && (
         <button type="button" class="primary rail-connect" onClick={() => void s.connectMidi()}>
           Connect MIDI
@@ -84,6 +90,7 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
           <NavButton view={{ name: 'templates' }} icon="folder" label="Projects" />
           <NavButton view={{ name: 'instruments' }} icon="devices" label="Devices" also={['setup']} />
         </nav>
+        <ThemePicker />
         <button type="button" class="rail-help" onClick={() => s.openVisuals()}>
           <Icon name="eye" size={16} /> Visuals
         </button>
@@ -190,5 +197,31 @@ function ClockSelect() {
         ))}
       </select>
     </label>
+  );
+}
+
+/** Theme switcher: one chip per theme, with a colour preview. */
+function ThemePicker() {
+  const theme = useTheme();
+  return (
+    <div class="theme-picker" role="radiogroup" aria-label="Theme">
+      <span>Theme</span>
+      {THEMES.map((t) => (
+        <button
+          type="button"
+          role="radio"
+          aria-checked={t.id === theme.id}
+          title={`${t.name}: ${t.description} (Shift+T)`}
+          onClick={() => applyTheme(t.id)}
+        >
+          <span class="theme-swatch" aria-hidden="true">
+            {t.swatch.map((c) => (
+              <i style={{ background: c }} />
+            ))}
+          </span>
+          {t.name}
+        </button>
+      ))}
+    </div>
   );
 }

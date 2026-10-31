@@ -1,5 +1,9 @@
 import './ui/styles.css';
+import './ui/theme/hifi.css';
 import { VISUALS_HASH } from './visuals/protocol';
+import { initTheme } from './ui/theme/theme';
+
+initTheme();
 
 const root = document.getElementById('app');
 if (root && location.hash === VISUALS_HASH) {

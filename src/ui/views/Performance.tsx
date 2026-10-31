@@ -225,7 +225,7 @@ function ScaleStrip() {
           return (
             <div
               class={`key ${inScale ? 'in' : ''} ${pc === scale.root ? 'root' : ''}`}
-              style={color ? { background: color, color: '#0b0c0f' } : undefined}
+              style={color ? { background: color, color: 'var(--on-accent)' } : undefined}
             >
               {name}
             </div>

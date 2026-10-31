@@ -8,6 +8,7 @@ import type { DrumParams } from '../../core/generators/drumGenerator';
 import { noteName } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { store } from '../store';
+import { currentTheme, themeVar } from '../theme/theme';
 
 interface Props {
   track: TrackState;
@@ -17,11 +18,13 @@ interface Props {
   showLabels?: boolean;
 }
 
-const BG = '#0f1115';
-const GRID = '#171a20';
-const BEAT = '#252932';
-const BAR = '#3a3f4a';
-const LABEL = '#9aa1ac';
+// Colours come from the active theme (see theme/themes.ts).
+const BG = () => themeVar('--canvas-bg');
+const GRID = () => themeVar('--canvas-grid');
+const BEAT = () => themeVar('--canvas-beat');
+const BAR = () => themeVar('--canvas-bar');
+const LABEL = () => themeVar('--canvas-label');
+const HOT = () => themeVar('--canvas-hot', '#fff');
 
 /**
  * Canvas piano roll (melodic tracks) or step grid (drums) with a live
@@ -57,7 +60,7 @@ export function PatternView({ track, pattern, harmony, height, showLabels }: Pro
       const p = answer && source ? cachedAnswer(source, answer.transform, store.project.stepsPerBar, t.phrase!.bars) : own;
       const h = store.sequencer.currentHarmony ?? propsRef.current.harmony;
       const step = store.sequencer.playing ? store.live.step : -1;
-      const key = `${step}|${width}`;
+      const key = `${step}|${width}|${currentTheme().id}`;
       const inputs = [p, t, h];
       if (key !== lastKey || inputs.some((x, i) => x !== lastInputs[i])) {
         lastKey = key;
@@ -99,7 +102,7 @@ function draw(
   if (!ctx || width === 0) return;
   const dpr = window.devicePixelRatio || 1;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = BG;
+  ctx.fillStyle = BG();
   ctx.fillRect(0, 0, width, height);
 
   const len = pattern.lengthSteps;
@@ -115,7 +118,7 @@ function draw(
 
   // Grid
   for (let s = 0; s <= len; s++) {
-    ctx.fillStyle = s % stepsPerBar === 0 ? BAR : s % 4 === 0 ? BEAT : GRID;
+    ctx.fillStyle = s % stepsPerBar === 0 ? BAR() : s % 4 === 0 ? BEAT() : GRID();
     ctx.fillRect(Math.round(sx(s)), 0, 1, height);
   }
 
@@ -125,7 +128,7 @@ function draw(
     voices.forEach((v, row) => {
       const y = row * rowH;
       if (labels) {
-        ctx.fillStyle = LABEL;
+        ctx.fillStyle = LABEL();
         ctx.font = '11px "JetBrains Mono", monospace';
         ctx.textBaseline = 'middle';
         ctx.fillText(v.name, 4, y + rowH / 2);
@@ -135,7 +138,7 @@ function draw(
         const x = sx(e.step) + 1.5;
         const cw = w / len - 3;
         ctx.globalAlpha = 0.35 + 0.65 * (e.probability ?? 1);
-        ctx.fillStyle = e.step === local ? '#ffffff' : color;
+        ctx.fillStyle = e.step === local ? HOT() : color;
         const r = e.ratchet ?? 1;
         if (r > 1) {
           // Ratchets: split the cell into r slices.
@@ -145,7 +148,7 @@ function draw(
         } else roundRect(ctx, x, y + 2, cw, rowH - 4, 3);
         if (e.condition && cw >= 16) {
           ctx.globalAlpha = 1;
-          ctx.fillStyle = '#0b0c0f';
+          ctx.fillStyle = themeVar('--on-accent');
           ctx.font = '600 9px "JetBrains Mono", monospace';
           ctx.textAlign = 'center';
           ctx.fillText(`${e.condition.on}:${e.condition.every}`, x + cw / 2, y + rowH / 2);
@@ -172,7 +175,7 @@ function draw(
       const rowH = height / span;
       const y = (n: number) => height - (n - bottom + 1) * rowH;
       if (labels) {
-        ctx.fillStyle = LABEL;
+        ctx.fillStyle = LABEL();
         ctx.font = '10px "JetBrains Mono", monospace';
         ctx.textBaseline = 'middle';
         for (let n = bottom; n < bottom + span; n++) {
@@ -195,7 +198,7 @@ function draw(
           ctx.stroke();
         }
         ctx.globalAlpha = acid && !e.accent ? 0.55 : 1;
-        ctx.fillStyle = active ? '#ffffff' : color;
+        ctx.fillStyle = active ? HOT() : color;
         for (const n of notes) {
           roundRect(ctx, sx(e.step) + 1, y(n) + 1, Math.max(3, (e.length / len) * w - 2), Math.max(2, rowH - 2), 2);
         }
@@ -206,7 +209,7 @@ function draw(
   }
 
   if (local >= 0) {
-    ctx.fillStyle = '#f2f4f7';
+    ctx.fillStyle = themeVar('--text');
     ctx.fillRect(Math.round(sx(local)), 0, 2, height);
   }
 }
