@@ -82,6 +82,7 @@ export function startVisuals(root: HTMLElement): void {
   let showNotes = settings.notes;
   let strobe = settings.strobe;
   let auto = settings.auto;
+  let speed = settings.speed;
   let lastAutoBar = 0;
 
   const receive = (msg: VisualsMessage) => {
@@ -258,6 +259,10 @@ export function startVisuals(root: HTMLElement): void {
   const ctx = overlay.getContext('2d')!;
   const start = performance.now();
   let last = start;
+  /** Scene clock and distance, both scaled by the Speed setting. */
+  let sceneTime = 0;
+  let travel = 0;
+  let travelSpeed = 0.4;
 
   function frame(now: number) {
     const dt = Math.min(0.1, (now - last) / 1000);
@@ -295,6 +300,13 @@ export function startVisuals(root: HTMLElement): void {
       setScene(list[(list.indexOf(scene as (typeof list)[number]) + 1) % list.length]!);
     }
 
+    // Speed eases towards its target, and distance is integrated, so the
+    // camera never jerks when the music gets busier.
+    const targetSpeed = (playing ? 1 : 0.3) * (bpm / 120) * (1 + energy * 0.25) * speed;
+    travelSpeed += (targetSpeed - travelSpeed) * (1 - Math.exp(-dt * 0.8));
+    travel += dt * travelSpeed;
+    sceneTime += dt * (0.35 + 0.65 * speed);
+
     resize();
     const p = program(scene);
     if (gl && p) {
@@ -303,7 +315,7 @@ export function startVisuals(root: HTMLElement): void {
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
       const u = (name: string) => gl.getUniformLocation(p, name);
-      gl.uniform1f(u('uTime'), (now - start) / 1000);
+      gl.uniform1f(u('uTime'), sceneTime);
       gl.uniform2f(u('uRes'), gl3.width, gl3.height);
       gl.uniform1f(u('uKick'), kick);
       gl.uniform1f(u('uSnare'), snare);
@@ -311,7 +323,7 @@ export function startVisuals(root: HTMLElement): void {
       gl.uniform1f(u('uEnergy'), energy);
       gl.uniform1f(u('uBeat'), beat);
       gl.uniform1f(u('uBar'), barF);
-      gl.uniform1f(u('uSpeed'), (playing ? 1.2 : 0.4) * (bpm / 120) * (1 + energy * 0.6));
+      gl.uniform1f(u('uTravel'), travel);
       gl.uniform1f(u('uBass'), env.bass);
       gl.uniform1f(u('uLead'), env.lead);
       gl.uniform1f(u('uPad'), env.pad);
@@ -422,7 +434,24 @@ export function startVisuals(root: HTMLElement): void {
     sync();
   });
   const fullBtn = button('Fullscreen', 'Fullscreen (F)', () => toggleFullscreen());
-  hud.append(...sceneButtons, spacer(), notesBtn, strobeBtn, autoBtn, fullBtn);
+  const speedWrap = document.createElement('label');
+  speedWrap.className = 'vis-speed';
+  speedWrap.title = 'Speed ( [ and ] )';
+  const speedText = document.createElement('span');
+  const speedInput = document.createElement('input');
+  speedInput.type = 'range';
+  speedInput.min = '0.05';
+  speedInput.max = '1.5';
+  speedInput.step = '0.05';
+  speedInput.value = String(speed);
+  speedInput.oninput = () => setSpeed(Number(speedInput.value));
+  speedWrap.append(speedText, speedInput);
+  hud.append(...sceneButtons, spacer(), speedWrap, spacer(), notesBtn, strobeBtn, autoBtn, fullBtn);
+  function setSpeed(v: number) {
+    speed = Math.max(0.05, Math.min(1.5, Math.round(v * 100) / 100));
+    speedInput.value = String(speed);
+    sync();
+  }
 
   function spacer() {
     const s = document.createElement('span');
@@ -439,7 +468,8 @@ export function startVisuals(root: HTMLElement): void {
     notesBtn.setAttribute('aria-pressed', String(showNotes));
     strobeBtn.setAttribute('aria-pressed', String(strobe));
     autoBtn.setAttribute('aria-pressed', String(auto));
-    save({ scene, notes: showNotes, strobe, auto });
+    speedText.textContent = `Speed ${Math.round(speed * 100)}%`;
+    save({ scene, notes: showNotes, strobe, auto, speed });
   }
   sync();
 
@@ -464,6 +494,8 @@ export function startVisuals(root: HTMLElement): void {
     else if (e.key === 'n' || e.key === 'N') notesBtn.click();
     else if (e.key === 's' || e.key === 'S') strobeBtn.click();
     else if (e.key === 'a' || e.key === 'A') autoBtn.click();
+    else if (e.key === '[') setSpeed(speed - 0.05);
+    else if (e.key === ']') setSpeed(speed + 0.05);
     else return;
     wake();
   });
@@ -474,10 +506,12 @@ interface Settings {
   notes: boolean;
   strobe: boolean;
   auto: boolean;
+  /** 0.05 (very slow) .. 1.5; scales travel and scene animation. */
+  speed: number;
 }
 
 function load(): Settings {
-  const fallback: Settings = { scene: 'flyover', notes: true, strobe: false, auto: false };
+  const fallback: Settings = { scene: 'flyover', notes: true, strobe: false, auto: false, speed: 0.4 };
   try {
     return { ...fallback, ...(JSON.parse(localStorage.getItem('drift.visuals') ?? '{}') as Partial<Settings>) };
   } catch {

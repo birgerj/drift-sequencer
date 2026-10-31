@@ -4,7 +4,7 @@
  *   uKick    0..1 envelope    uSnare  0..1    uHat 0..1
  *   uEnergy  0..1 smoothed note density
  *   uBeat    0..1 phase within the beat      uBar  bar count (float)
- *   uCol0..2 chord colours (rgb)             uSpeed travel speed
+ *   uCol0..2 chord colours (rgb)             uTravel distance travelled (integrated, so it never jumps)
  * Per musical role (from the track type):
  *   uBass / uLead / uPad          note envelopes 0..1 (bass+acid, motif+arp, chords+drone)
  *   uBassPitch / uLeadPitch       last note, 0 (low) .. 1 (high)
@@ -17,7 +17,7 @@ void main() { gl_Position = vec4(p, 0.0, 1.0); }
 
 const HEADER = `#version 300 es
 precision highp float;
-uniform float uTime, uKick, uSnare, uHat, uEnergy, uBeat, uBar, uSpeed;
+uniform float uTime, uKick, uSnare, uHat, uEnergy, uBeat, uBar, uTravel;
 uniform float uBass, uLead, uPad, uBassPitch, uLeadPitch, uModBass, uModLead, uModPad;
 uniform vec2 uRes;
 uniform vec3 uCol0, uCol1, uCol2;
@@ -54,9 +54,11 @@ float height(vec2 p) {
 }
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
-  float z = uTime * uSpeed;
+  float z = uTravel;
   vec3 ro = vec3(sin(z * 0.07) * 3.0, 0.0, z);
-  ro.y = height(ro.xz) + 1.1 + 0.3 * sin(z * 0.11);
+  // Follow the ground smoothly: average a few points ahead, never dip into a hill.
+  float g0 = height(ro.xz), g1 = height(ro.xz + vec2(0.0, 2.0)), g2 = height(ro.xz + vec2(0.0, 4.0));
+  ro.y = max(g0, (g0 + g1 + g2) / 3.0) + 1.2 + 0.2 * sin(z * 0.11);
   vec3 ta = ro + vec3(sin(z * 0.07 + 0.6) * 1.5, -0.25, 3.0);
   vec3 ww = normalize(ta - ro), uu = normalize(cross(vec3(0, 1, 0), ww)), vv = cross(ww, uu);
   float roll = 0.08 * sin(z * 0.05);
@@ -105,7 +107,7 @@ void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
   float a = atan(uv.y, uv.x);
   float r = length(uv);
-  float z = uTime * uSpeed * 0.6 + 0.35 / max(r, 0.02);
+  float z = uTravel * 0.6 + 0.35 / max(r, 0.02);
   float twist = a + (0.1 + uModLead * 0.6) * sin(uTime * 0.3) + 0.6 / max(r, 0.05) * 0.1 * sin(uBar * 0.2);
   vec2 tuv = vec2(twist * 3.0 / 3.14159, z);
   float tex = fbm(tuv * vec2(2.0, 1.0));
@@ -165,7 +167,7 @@ vec4 city(vec3 p) {
 }
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
-  float z = uTime * uSpeed * 2.0;
+  float z = uTravel * 2.0;
   vec3 ro = vec3(sin(z * 0.05) * 0.8, 1.1 + uModBass * 1.6 + uBass * 0.15, z);
   vec3 ww = normalize(vec3(sin(z * 0.05 + 0.4) * 0.15, 0.03 + uModLead * 0.08, 1.0));
   vec3 uu = normalize(cross(vec3(0, 1, 0), ww)), vv = cross(ww, uu);
@@ -235,7 +237,7 @@ float waves(vec2 p) {
 }
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
-  float z = uTime * uSpeed * 1.5;
+  float z = uTravel * 1.5;
   vec3 ro = vec3(0.0, 1.4 + uModBass * 0.6, z);
   vec3 rd = normalize(vec3(uv.x, uv.y - 0.12, 1.3));
   vec3 moonDir = normalize(vec3(0.0, 0.18 + uModLead * 0.1, 1.0));
@@ -275,7 +277,7 @@ void main() {
 export const WARP = HEADER + `
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
-  float t = uTime * uSpeed * (0.25 + uKick * 0.25);
+  float t = uTravel * 0.3;
   vec3 col = vec3(0.0);
   // Nebula behind the stars, drifting with the pad LFO.
   float neb = fbm(uv * 2.0 + vec2(uTime * 0.02, uModPad * 2.0));
@@ -325,7 +327,7 @@ void main() {
   // Grid floor.
   if (uv.y < horizon) {
     float depth = 0.3 / (horizon - uv.y);
-    vec2 g = vec2(uv.x * depth, depth + uTime * uSpeed * 2.0);
+    vec2 g = vec2(uv.x * depth, depth + uTravel * 2.0);
     vec2 gl = abs(fract(g) - 0.5);
     float line = smoothstep(0.03 * depth, 0.0, min(gl.x, gl.y) - 0.005);
     vec3 floorCol = uCol0 * 0.04;
