@@ -40,6 +40,8 @@ import {
 } from '../state/storage';
 import { createProject, createTrack, TRACK_COLORS } from '../state/templates';
 
+import { DRUM_PRESETS, presetPattern, presetVoices, tr8sVoices } from '../core/generators/drumPresets';
+
 export type View =
   | { name: 'performance' }
   | { name: 'track'; trackId: string }
@@ -376,6 +378,27 @@ export class AppStore {
     const userPattern = edit(rt.pattern);
     if (!t.frozen) this.showToast(`${t.name} is frozen so your edit stays. Unfreeze it to let it evolve.`);
     this.updateTrack(id, { userPattern, frozen: true });
+  }
+
+  /** Load a ready-made groove into a drum track (keeps its length). */
+  loadDrumPreset(id: string, presetId: string): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    const preset = DRUM_PRESETS.find((p) => p.id === presetId);
+    if (!t || t.generator.type !== 'drums' || !preset) return;
+    const lengthSteps = t.generator.params.lengthSteps;
+    const generator = { ...t.generator, params: { ...t.generator.params, voices: presetVoices(preset) } };
+    this.updateTrack(id, { generator, userPattern: presetPattern(preset, lengthSteps), frozen: true });
+    this.addLog(Math.max(0, this.live.bar), `${t.name} · ${preset.name}`, t.color);
+    this.showToast(`${preset.name} loaded (suggested ${preset.bpm} BPM). Frozen; unfreeze to let it evolve.`);
+  }
+
+  /** Give a drum track a lane for every TR-8S instrument it doesn't have yet. */
+  addAllTr8sVoices(id: string): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    if (!t || t.generator.type !== 'drums') return;
+    const have = new Set(t.generator.params.voices.map((v) => v.note));
+    const voices = [...t.generator.params.voices, ...tr8sVoices().filter((v) => !have.has(v.note))];
+    this.setTrackParam(id, 'voices', voices);
   }
 
   regenerate(id: string): void {

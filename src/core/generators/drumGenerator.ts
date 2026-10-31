@@ -50,12 +50,19 @@ export class DrumGenerator implements PatternGenerator<DrumParams> {
       velocityVariation: 0.2,
       ratchetChance: 0.06,
       conditionChance: 0.1,
+      // All 11 TR-8S instruments get a lane; toms and cymbals start empty.
       voices: [
         { name: 'BD', note: TR8S_NOTES.BD, pulses: 4, rotate: 0, probability: 1, velocity: 110 },
         { name: 'SD', note: TR8S_NOTES.SD, pulses: 2, rotate: 4, probability: 1, velocity: 100 },
+        { name: 'LT', note: TR8S_NOTES.LT, pulses: 0, rotate: 0, probability: 1, velocity: 95 },
+        { name: 'MT', note: TR8S_NOTES.MT, pulses: 0, rotate: 0, probability: 1, velocity: 95 },
+        { name: 'HT', note: TR8S_NOTES.HT, pulses: 0, rotate: 0, probability: 1, velocity: 95 },
+        { name: 'RS', note: TR8S_NOTES.RS, pulses: 0, rotate: 3, probability: 0.6, velocity: 90 },
+        { name: 'CP', note: TR8S_NOTES.CP, pulses: 1, rotate: 12, probability: 0.4, velocity: 95 },
         { name: 'CH', note: TR8S_NOTES.CH, pulses: 8, rotate: 0, probability: 0.85, velocity: 80 },
         { name: 'OH', note: TR8S_NOTES.OH, pulses: 4, rotate: 2, probability: 0.6, velocity: 85 },
-        { name: 'CP', note: TR8S_NOTES.CP, pulses: 1, rotate: 12, probability: 0.4, velocity: 95 },
+        { name: 'CC', note: TR8S_NOTES.CC, pulses: 0, rotate: 0, probability: 1, velocity: 100 },
+        { name: 'RC', note: TR8S_NOTES.RC, pulses: 0, rotate: 0, probability: 1, velocity: 80 },
       ],
     };
   }

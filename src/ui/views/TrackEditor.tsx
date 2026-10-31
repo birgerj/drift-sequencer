@@ -5,6 +5,7 @@ import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../c
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { useEffect, useState } from 'preact/hooks';
 import { Chord } from '../../core/theory/chord';
+import { DRUM_PRESETS, PRESET_GENRES, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS } from '../components/controls';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
@@ -113,6 +114,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
                 </div>
               )}
             </div>
+            {track.generator.type === 'drums' && <DrumPresets track={track} />}
             {editable ? (
               <PatternEditor track={track} />
             ) : (
@@ -184,6 +186,34 @@ export function TrackEditor({ trackId }: { trackId: string }) {
             </button>
           </Card>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** One-tap grooves for the TR-8S, grouped by genre. */
+function DrumPresets({ track }: { track: TrackState }) {
+  const s = useStore();
+  const [genre, setGenre] = useState(PRESET_GENRES[0]!);
+  return (
+    <div class="presets">
+      <div class="presets-head">
+        <span class="eyebrow">Presets</span>
+        <div class="segmented" role="radiogroup" aria-label="Preset genre">
+          {PRESET_GENRES.map((g) => (
+            <button type="button" role="radio" aria-checked={g === genre} onClick={() => setGenre(g)}>
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div class="chips">
+        {DRUM_PRESETS.filter((p) => p.genre === genre).map((p) => (
+          <button type="button" class="preset-chip" onClick={() => s.loadDrumPreset(track.id, p.id)}>
+            <b>{p.name}</b>
+            <span class="mono">{p.bpm}</span>
+          </button>
+        ))}
       </div>
     </div>
   );
@@ -358,12 +388,19 @@ function DrumVoices({ track, instrument }: { track: TrackState; instrument: Inst
     <Card
       title="Drum voices"
       actions={
-        <button
-          type="button"
-          onClick={() => setVoices([...params.voices, { name: 'NEW', note: 37, pulses: 3, rotate: 0, probability: 0.7, velocity: 90 }])}
-        >
-          <Icon name="plus" /> Voice
-        </button>
+        <>
+          {params.voices.length < TR8S_VOICE_ORDER.length && (
+            <button type="button" onClick={() => s.addAllTr8sVoices(track.id)}>
+              <Icon name="plus" /> All TR-8S lanes
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => setVoices([...params.voices, { name: 'NEW', note: 37, pulses: 3, rotate: 0, probability: 0.7, velocity: 90 }])}
+          >
+            <Icon name="plus" /> Voice
+          </button>
+        </>
       }
     >
       <div class="voices">

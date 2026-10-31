@@ -112,7 +112,7 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
   return (
     <>
       <div class="grid-scroll">
-        <div class="step-grid" style={{ gridTemplateColumns: `64px repeat(${len}, minmax(38px, 1fr))` }}>
+        <div class={`step-grid drums ${params.voices.length > 7 ? 'dense' : ''}`} style={{ gridTemplateColumns: `64px repeat(${len}, minmax(38px, 1fr))` }}>
           <StepHeader length={len} playStep={playStep} />
           {useMemo(() => params.voices.map((v) => (
             <>
@@ -129,7 +129,7 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
                 return (
                   <button
                     type="button"
-                    class={`cell ${state} ${step % 4 === 0 ? 'beat' : ''}`}
+                    class={`cell ${state} ${step % 4 === 0 ? 'beat' : ''} ${ev && ev.velocity < 75 ? 'soft' : ev && ev.velocity >= 115 ? 'loud' : ''}`}
                     aria-label={`${v.name} step ${step + 1}: ${state}${badge ? ' ' + badge : ''}`}
                     aria-pressed={state !== 'off'}
                     onClick={onTap}

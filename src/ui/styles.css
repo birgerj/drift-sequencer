@@ -463,3 +463,12 @@ kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border-radius
   .jump { flex: 0 0 auto; }
   .detail-head .title-input { max-width: 160px; }
 }
+.step-grid.drums.dense .cell { height: 30px; min-height: 30px; }
+@media (pointer: coarse) { .step-grid.drums.dense .cell { height: 36px; min-height: 36px; } }
+.presets { display: flex; flex-direction: column; gap: 8px; }
+.presets-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.preset-chip { min-height: 40px; padding: 0 12px; gap: 8px; font-size: 13px; background: var(--well); border-color: var(--line); }
+.preset-chip .mono { font-size: 11px; color: var(--muted); }
+@media (pointer: coarse) { .preset-chip { min-height: 44px; } }
+.step-grid.drums .cell.hit.soft { opacity: 0.55; }
+.step-grid.drums .cell.hit.loud { box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55); }

@@ -1,0 +1,39 @@
+import { describe, expect, it } from 'vitest';
+import { DrumGenerator, TR8S_NOTES } from '../src/core/generators/drumGenerator';
+import { DRUM_PRESETS, presetPattern, presetVoices, TR8S_VOICE_ORDER } from '../src/core/generators/drumPresets';
+
+describe('drum presets', () => {
+  it('every row is 16 valid steps and ids are unique', () => {
+    expect(new Set(DRUM_PRESETS.map((p) => p.id)).size).toBe(DRUM_PRESETS.length);
+    for (const p of DRUM_PRESETS) {
+      for (const [key, row] of Object.entries(p.rows)) {
+        expect(row, `${p.id} ${key}`).toMatch(/^[Xxo23.]{16}$/);
+      }
+    }
+  });
+
+  it('builds a pattern on the TR-8S notes and repeats it over 32 steps', () => {
+    const house = DRUM_PRESETS.find((p) => p.id === 'house')!;
+    const pattern = presetPattern(house, 32);
+    const kicks = pattern.events.filter((e) => e.pitch.kind === 'fixed' && e.pitch.note === TR8S_NOTES.BD);
+    expect(kicks.map((e) => e.step)).toEqual([0, 4, 8, 12, 16, 20, 24, 28]);
+    expect(kicks[0]!.velocity).toBeGreaterThan(110);
+  });
+
+  it('turns ratchet marks into ratchets', () => {
+    const trap = DRUM_PRESETS.find((p) => p.id === 'trap')!;
+    const ratchets = presetPattern(trap).events.filter((e) => e.ratchet);
+    expect(ratchets.map((e) => [e.step, e.ratchet])).toEqual([[11, 3], [15, 2]]);
+  });
+
+  it('gives generator voices for all 11 instruments that follow the groove', () => {
+    const voices = presetVoices(DRUM_PRESETS.find((p) => p.id === 'house')!);
+    expect(voices.map((v) => v.name)).toEqual(TR8S_VOICE_ORDER);
+    expect(voices.find((v) => v.name === 'BD')).toMatchObject({ pulses: 4, rotate: 0 });
+    expect(voices.find((v) => v.name === 'LT')!.pulses).toBe(0);
+  });
+
+  it('the default drum track has a lane for each TR-8S instrument', () => {
+    expect(new DrumGenerator().defaults().voices.map((v) => v.name)).toEqual(TR8S_VOICE_ORDER);
+  });
+});
