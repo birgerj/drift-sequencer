@@ -1,5 +1,4 @@
-import { hasSlot } from '../theme/theme';
-import { LedLadder } from '../theme/hifi/HifiParts';
+import { slotComponent } from '../theme/slots';
 import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
@@ -231,6 +230,7 @@ function TrackOverview({ track }: { track: TrackState }) {
   const out = s.trackOutput(track);
   const device = s.device(track.deviceId);
   const quick = PARAM_SCHEMA[track.generator.type].filter((c) => c.kind === 'range').slice(0, 4);
+  const OverviewPattern = slotComponent('overviewPattern');
   const go = (tab: SectionId) => () => s.setTrackTab(tab);
   const caller = track.phrase?.answer ? s.project.tracks.find((t) => t.id === track.phrase!.answer!.from) : undefined;
   return (
@@ -238,8 +238,8 @@ function TrackOverview({ track }: { track: TrackState }) {
       <div class="detail-section span-2">
         <Card title="Pattern" actions={<button type="button" class="ghost" onClick={go('pattern')}>Edit <Icon name="grid" size={16} /></button>}>
           {rt &&
-            (hasSlot('overviewPattern') && track.generator.type !== 'drums' ? (
-              <LedLadder track={track} pattern={rt.pattern} />
+            (OverviewPattern && track.generator.type !== 'drums' ? (
+              <OverviewPattern track={track} pattern={rt.pattern} />
             ) : (
               <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? 200 : 160} showLabels />
             ))}

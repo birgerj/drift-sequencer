@@ -1,0 +1,149 @@
+/*
+ * Tide theme: deep night blue, frosted glass panels, pill-shaped controls.
+ * Drum steps are bubbles and melodies flow as waves. Calm, for ambient and
+ * deep house. Layout and behaviour as Studio.
+ */
+[data-theme='tide'] {
+  --bg: #061428;
+  --surface: rgba(255, 255, 255, 0.055);
+  --surface-2: rgba(255, 255, 255, 0.09);
+  --well: rgba(4, 16, 31, 0.55);
+  --line: rgba(255, 255, 255, 0.1);
+  --line-2: rgba(255, 255, 255, 0.18);
+  --text: #e6f1ff;
+  --text-2: #c2d6ee;
+  --muted: #8fb3d9;
+  --faint: #5d7a99;
+  --accent: #5eead4;
+  --on-accent: #04101f;
+  --warn: #fdba74;
+  --danger: #fb7185;
+  --ok: #5eead4;
+  --lfo: #fb7185;
+  --motion: #fcd34d;
+  --press: rgba(255, 255, 255, 0.14);
+  --track: rgba(255, 255, 255, 0.12);
+  --sunken: rgba(255, 255, 255, 0.06);
+  --rail-bg: rgba(255, 255, 255, 0.04);
+  --scrim: rgba(2, 8, 18, 0.65);
+  --shadow-pop: 0 20px 50px rgba(0, 0, 0, 0.45);
+  --cell: rgba(255, 255, 255, 0.06);
+  --cell-beat: rgba(255, 255, 255, 0.1);
+  --cell-tone: rgba(255, 255, 255, 0.075);
+  --cell-tone-beat: rgba(255, 255, 255, 0.12);
+  --playhead-fill: rgba(184, 255, 245, 0.12);
+  --module: rgba(255, 255, 255, 0.05);
+  --module-line: rgba(255, 255, 255, 0.1);
+  --screen: rgba(4, 16, 31, 0.6);
+  --screen-text: #e6f1ff;
+  --screen-dim: rgba(143, 179, 217, 0.4);
+  --screen-glow: none;
+  --led-off: rgba(255, 255, 255, 0.1);
+  --knob-body: rgba(255, 255, 255, 0.06);
+  --knob-ring: rgba(255, 255, 255, 0.15);
+  --knob-cap: rgba(255, 255, 255, 0.08);
+  --knob-pointer: #ffffff;
+  --canvas-bg: rgba(4, 16, 31, 0.5);
+  --canvas-grid: rgba(255, 255, 255, 0.03);
+  --canvas-beat: rgba(255, 255, 255, 0.07);
+  --canvas-bar: rgba(255, 255, 255, 0.16);
+  --canvas-label: #8fb3d9;
+  --canvas-hot: #ffffff;
+  --radius: 24px;
+  --radius-control: 999px;
+  --font-ui: 'Manrope', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: var(--font-ui);
+  color-scheme: dark;
+}
+
+[data-theme='tide'] body { background: #04101f; }
+[data-theme='tide'] .shell {
+  background: radial-gradient(ellipse at 15% 0%, #13406b 0%, transparent 55%), radial-gradient(ellipse at 95% 100%, #0f5a66 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 60%, #2a1f4a 0%, transparent 45%), linear-gradient(180deg, #071a33, #04101f);
+  background-size: 140% 140%, 140% 140%, 160% 160%, 100% 100%;
+  animation: tide-drift 40s ease-in-out infinite alternate;
+  padding: 12px;
+  gap: 12px;
+}
+@keyframes tide-drift {
+  from { background-position: 0% 0%, 100% 100%, 50% 50%, 0 0; }
+  to { background-position: 30% 20%, 70% 80%, 20% 70%, 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-theme='tide'] .shell { animation: none; }
+}
+[data-theme='tide'] .detail { background: transparent; }
+
+/* Frosted glass panels */
+[data-theme='tide'] .rail,
+[data-theme='tide'] .card,
+[data-theme='tide'] .lane,
+[data-theme='tide'] .fact,
+[data-theme='tide'] .panel-bar,
+[data-theme='tide'] .encoder,
+[data-theme='tide'] .harmony-strip {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+[data-theme='tide'] .rail { border-right: 1px solid var(--line); padding: 14px; }
+[data-theme='tide'] .jump-bar { background: transparent; border-bottom: 0; backdrop-filter: blur(12px); }
+[data-theme='tide'] h1,
+[data-theme='tide'] .title-input { font-weight: 300; font-size: 30px; letter-spacing: -0.02em; }
+[data-theme='tide'] .eyebrow { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; color: var(--muted); }
+[data-theme='tide'] .rail-project { font-weight: 600; text-transform: lowercase; }
+
+/* Pills */
+[data-theme='tide'] button,
+[data-theme='tide'] .button { background: transparent; border: 1px solid var(--line); color: var(--text-2); }
+[data-theme='tide'] button[aria-pressed='true']:not(.cell):not(.drum-label),
+[data-theme='tide'] button[aria-checked='true'],
+[data-theme='tide'] button[aria-current='true'] { background: rgba(255, 255, 255, 0.12); color: var(--text); border-color: rgba(255, 255, 255, 0.3); }
+[data-theme='tide'] button.primary,
+[data-theme='tide'] .rail-play { background: linear-gradient(90deg, #5eead4, #38bdf8); color: #04101f; border: 0; box-shadow: 0 8px 24px rgba(56, 189, 248, 0.25); }
+[data-theme='tide'] .rail-play.on { background: linear-gradient(90deg, #fb7185, #f472b6); }
+[data-theme='tide'] .rail-track { border-radius: 18px; }
+[data-theme='tide'] .rail-track.selected { background: color-mix(in srgb, var(--accent) 14%, transparent); border-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+[data-theme='tide'] .rail-icon,
+[data-theme='tide'] .detail-icon { border-radius: 50%; }
+[data-theme='tide'] .rail-readout { border-radius: 16px; background: rgba(255, 255, 255, 0.05); border-color: transparent; }
+[data-theme='tide'] .rail-readout b { font-weight: 300; font-size: 17px; }
+[data-theme='tide'] .detail-chord { border-radius: 16px; }
+[data-theme='tide'] .segmented { background: rgba(255, 255, 255, 0.04); border-radius: 999px; }
+[data-theme='tide'] .segmented button { border: 0; }
+[data-theme='tide'] select,
+[data-theme='tide'] input:not([type='range']) { background: rgba(255, 255, 255, 0.05); border-color: var(--line); border-radius: 14px; }
+[data-theme='tide'] .title-input { background: transparent; border-color: transparent; }
+[data-theme='tide'] .modulation,
+[data-theme='tide'] .voice,
+[data-theme='tide'] .prog-step,
+[data-theme='tide'] .device-card { background: rgba(4, 16, 31, 0.35); border-radius: 18px; }
+
+/* Thin sliders with a glowing pearl */
+[data-theme='tide'] .slider input[type='range']::-webkit-slider-runnable-track { height: 4px; border-radius: 2px; background: linear-gradient(to right, var(--accent) var(--fill), rgba(255, 255, 255, 0.12) var(--fill)); }
+[data-theme='tide'] .slider input[type='range']::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; background: #ffffff; border: 0; box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 25%, transparent), 0 0 14px var(--accent); }
+
+/* Steps are bubbles */
+[data-theme='tide'] button.cell { border-radius: 999px; border: 0; background: var(--cell); }
+[data-theme='tide'] button.cell.hit { box-shadow: 0 0 14px color-mix(in srgb, var(--accent) 70%, transparent); background: radial-gradient(circle at 35% 30%, #ffffff, var(--accent) 60%) !important; }
+[data-theme='tide'] button.cell.chance { border: 0; background: color-mix(in srgb, var(--accent) 35%, transparent) !important; }
+[data-theme='tide'] .step-grid.drums .cell.hit.soft { opacity: 0.6; }
+[data-theme='tide'] .grid-playhead { border-radius: 999px; box-shadow: none; background: linear-gradient(90deg, transparent, rgba(184, 255, 245, 0.18), transparent); }
+[data-theme='tide'] .step-num.now { background: var(--accent); color: var(--on-accent); border-radius: 999px; }
+
+/* Knob panel: rings */
+[data-theme='tide'] .knob-body { fill: rgba(255, 255, 255, 0.04); stroke: rgba(255, 255, 255, 0.12); }
+[data-theme='tide'] .knob-cap { fill: rgba(255, 255, 255, 0.06); }
+[data-theme='tide'] .led { fill: rgba(255, 255, 255, 0.12); }
+[data-theme='tide'] .led.on { fill: var(--accent); filter: drop-shadow(0 0 3px var(--accent)); }
+[data-theme='tide'] .oled { background: transparent; border: 0; }
+[data-theme='tide'] .oled-label { font-weight: 500; }
+[data-theme='tide'] .oled-value { font-weight: 300; font-size: 26px; }
+
+/* Slot: wave */
+.tide-wave { display: block; width: 100%; height: 190px; border-radius: 18px; background: rgba(4, 16, 31, 0.45); }
+.tide-dot { filter: drop-shadow(0 0 6px var(--accent)); }
+[data-theme='tide'] button.drum-label { border: 0; background: transparent; }

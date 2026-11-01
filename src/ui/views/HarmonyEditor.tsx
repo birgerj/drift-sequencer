@@ -1,5 +1,4 @@
-import { hasSlot } from '../theme/theme';
-import { HarmonyTuner } from '../theme/hifi/HifiParts';
+import { slotComponent } from '../theme/slots';
 import type { ChordSize } from '../../core/theory/chord';
 import { Chord } from '../../core/theory/chord';
 import type { ProgressionStep } from '../../core/theory/harmony';
@@ -107,7 +106,10 @@ export function HarmonyEditor() {
         </button>
         <h1>Harmony</h1>
       </div>
-      {hasSlot('harmonyHero') && <HarmonyTuner />}
+      {(() => {
+        const Hero = slotComponent('harmonyHero');
+        return Hero ? <Hero /> : null;
+      })()}
       <div class="editor-grid">
         <div class="col">
           <Card title="Key">

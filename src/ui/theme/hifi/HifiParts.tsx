@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef } from 'preact/hooks';
-import { normalizeRate, shiftRegister } from '../../../core/engine/trackRuntime';
+import { patternShape, usePlayStep } from '../patternShape';
 import type { Pattern } from '../../../core/pattern/pattern';
-import { resolvePitch } from '../../../core/pattern/resolve';
 import { Chord } from '../../../core/theory/chord';
 import { NOTE_NAMES } from '../../../core/theory/note';
 import type { TrackState } from '../../../state/project';
@@ -89,39 +88,11 @@ const SEGMENTS = 14;
 
 /** The pattern as an LED ladder (graphic-equaliser style), one column per step. */
 export function LedLadder({ track, pattern }: { track: TrackState; pattern: Pattern }) {
-  const columns = useMemo(() => {
-    const len = pattern.lengthSteps;
-    const reg = shiftRegister(track.register, track.octave ?? 0);
-    const state = {};
-    const rate = normalizeRate(track.rate);
-    const spb = store.project.stepsPerBar;
-    const notes = pattern.events.map((e) => ({
-      e,
-      n: Math.max(...resolvePitch(e.pitch, store.sequencer.harmonyAt(Math.floor(e.step / rate / spb)), reg, state)),
-    }));
-    const all = notes.map((x) => x.n).filter(Number.isFinite);
-    const lo = Math.min(...all, 127);
-    const hi = Math.max(...all, 0);
-    const level = new Array<number>(len).fill(0);
-    const held = new Array<boolean>(len).fill(false);
-    for (const { e, n } of notes) {
-      if (!Number.isFinite(n)) continue;
-      const h = hi > lo ? 3 + Math.round(((n - lo) / (hi - lo)) * (SEGMENTS - 4)) : 8;
-      level[e.step] = Math.max(level[e.step]!, h);
-      for (let k = 1; k < Math.min(len, Math.round(e.length)); k++) {
-        const s = (e.step + k) % len;
-        if (!level[s]) {
-          level[s] = Math.max(1, h - 2);
-          held[s] = true;
-        }
-      }
-    }
-    return level.map((h, i) => ({ h, held: held[i]! }));
-  }, [pattern, track.register, track.octave, track.rate]);
-  const now = useLive((l) => {
-    const rt = store.sequencer.track(track.id);
-    return store.sequencer.playing && l.step >= 0 && rt ? rt.patternStepAt(l.step) : -1;
-  });
+  const columns = useMemo(
+    () => patternShape(track, pattern).map((x) => ({ h: x.level ? Math.max(1, Math.round(x.level * SEGMENTS) - (x.held ? 2 : 0)) : 0, held: x.held })),
+    [pattern, track.register, track.octave, track.rate],
+  );
+  const now = usePlayStep(track.id);
   return (
     <div class="led-ladder" style={{ gridTemplateColumns: `repeat(${columns.length}, minmax(0, 1fr))` }} role="img" aria-label={`${track.name} pattern`}>
       {columns.map((c, i) => (

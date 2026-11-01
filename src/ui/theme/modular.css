@@ -1,0 +1,187 @@
+/*
+ * Modular theme: Eurorack. Every panel is a black module with screws, hung
+ * between rails; knobs are small coloured caps (the track colour), keys are
+ * rubber buttons with a lit ring. Layout and behaviour as Studio.
+ */
+[data-theme='modular'] {
+  --bg: #0c0c0d;
+  --surface: #1c1d1f;
+  --surface-2: #26272a;
+  --well: #111213;
+  --line: #2c2d30;
+  --line-2: #3d3e42;
+  --text: #e9e6dc;
+  --text-2: #c9c5b9;
+  --muted: #9a978d;
+  --faint: #6f6d66;
+  --accent: #f5a524;
+  --on-accent: #0c0c0d;
+  --warn: #ff9a3c;
+  --danger: #ff5a4a;
+  --ok: #7cff6a;
+  --lfo: #ff6fb5;
+  --motion: #2dd4bf;
+  --press: #2c2d30;
+  --track: #0a0a0b;
+  --sunken: #0a0a0b;
+  --rail-bg: #0c0c0d;
+  --scrim: rgba(0, 0, 0, 0.7);
+  --cell: #26272a;
+  --cell-beat: #303135;
+  --cell-tone: #2a2b2e;
+  --cell-tone-beat: #333438;
+  --playhead-fill: rgba(233, 230, 220, 0.06);
+  --module: #1c1d1f;
+  --module-line: #2c2d30;
+  --screen: #0a0a0b;
+  --screen-text: #e9e6dc;
+  --screen-dim: #4a4b4f;
+  --screen-glow: none;
+  --led-off: #2a2620;
+  --knob-body: #111111;
+  --knob-ring: #2c2d30;
+  --knob-cap: var(--accent);
+  --knob-pointer: #ffffff;
+  --canvas-bg: #111213;
+  --canvas-grid: #1a1b1d;
+  --canvas-beat: #26272a;
+  --canvas-bar: #3d3e42;
+  --canvas-label: #9a978d;
+  --canvas-hot: #ffffff;
+  --radius: 2px;
+  --radius-control: 4px;
+  --font-ui: 'Barlow Condensed', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --mono: 'Share Tech Mono', 'JetBrains Mono', ui-monospace, monospace;
+  --font-display: var(--mono);
+  --label-spacing: 0.18em;
+
+  --rail-strip: repeating-linear-gradient(90deg, #8d9196 0 14px, #2a2c2f 14px 16px, #8d9196 16px 30px);
+  --screws: radial-gradient(circle at 9px 9px, #d9dcdf 0 2px, #6c6f73 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 9px) 9px, #d9dcdf 0 2px, #6c6f73 3px, transparent 4px),
+    radial-gradient(circle at 9px calc(100% - 9px), #d9dcdf 0 2px, #6c6f73 3px, transparent 4px),
+    radial-gradient(circle at calc(100% - 9px) calc(100% - 9px), #d9dcdf 0 2px, #6c6f73 3px, transparent 4px);
+  color-scheme: dark;
+}
+
+/* Rails top and bottom of the case; modules hang in between. */
+[data-theme='modular'] .shell { background: var(--bg); }
+[data-theme='modular'] .rail,
+[data-theme='modular'] .detail { border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-image: var(--rail-strip) 10 0 / 10px 0 stretch; }
+[data-theme='modular'] .rail { border-right: 2px solid #000; }
+
+/* Modules */
+[data-theme='modular'] .card,
+[data-theme='modular'] .rail,
+[data-theme='modular'] .lane,
+[data-theme='modular'] .fact,
+[data-theme='modular'] .panel-bar,
+[data-theme='modular'] .encoder,
+[data-theme='modular'] .detail-head,
+[data-theme='modular'] .jump-bar,
+[data-theme='modular'] .page-head,
+[data-theme='modular'] .harmony-strip {
+  background: var(--screws), var(--surface);
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), inset 0 -2px 0 rgba(0, 0, 0, 0.35);
+}
+[data-theme='modular'] .card { padding: 18px 18px 16px; }
+[data-theme='modular'] .detail-head,
+[data-theme='modular'] .page-head { padding: 10px 18px; margin-top: 6px; }
+[data-theme='modular'] .jump-bar { padding: 8px 18px; margin: 4px 0 8px; border-bottom: 0; }
+/* Alternate a few module colours, like a mixed case. */
+[data-theme='modular'] .detail-body > .detail-section:nth-child(3n + 2) .card { background: var(--screws), #24272c; }
+[data-theme='modular'] .overview-facts .fact:nth-child(2) { background: var(--screws), #3a1f33; }
+[data-theme='modular'] .overview-facts .fact:nth-child(3) { background: var(--screws), #1f2f3a; }
+
+/* Silk-screen labels */
+[data-theme='modular'] .eyebrow,
+[data-theme='modular'] .field-label,
+[data-theme='modular'] .slider label,
+[data-theme='modular'] .fact small,
+[data-theme='modular'] .rail-readout small,
+[data-theme='modular'] .rail-clock span,
+[data-theme='modular'] .theme-picker > span { text-transform: uppercase; letter-spacing: var(--label-spacing); font-weight: 600; color: var(--muted); font-size: 11px; }
+[data-theme='modular'] h1,
+[data-theme='modular'] .title-input,
+[data-theme='modular'] .rail-project,
+[data-theme='modular'] .rail-name b,
+[data-theme='modular'] .fact b,
+[data-theme='modular'] .lane-name { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
+[data-theme='modular'] body { font-size: 16px; }
+
+/* Rubber buttons with a lit ring when active */
+[data-theme='modular'] button,
+[data-theme='modular'] .button { background: #141516; border: 0; box-shadow: inset 0 0 0 1px #3d3e42, 0 2px 0 #000; color: var(--text); text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; }
+[data-theme='modular'] button[aria-pressed='true']:not(.cell):not(.drum-label),
+[data-theme='modular'] button[aria-checked='true'],
+[data-theme='modular'] button[aria-current='true'] { background: #141516; color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent), 0 0 10px color-mix(in srgb, var(--accent) 45%, transparent); border: 0; }
+[data-theme='modular'] button.primary,
+[data-theme='modular'] .rail-play { background: #141516; color: #7cff6a; box-shadow: inset 0 0 0 2px #7cff6a, 0 0 12px rgba(124, 255, 106, 0.45); }
+[data-theme='modular'] .rail-play.on { color: #ff5a4a; box-shadow: inset 0 0 0 2px #ff5a4a, 0 0 12px rgba(255, 90, 74, 0.45); }
+[data-theme='modular'] .rail-play kbd { color: inherit; border-color: currentColor; }
+[data-theme='modular'] button.ghost,
+[data-theme='modular'] button.link { background: transparent; box-shadow: none; }
+[data-theme='modular'] .rail-add { box-shadow: inset 0 0 0 1px #3d3e42; background: transparent; border: 1px dashed #3d3e42; }
+[data-theme='modular'] .rail-track { box-shadow: inset 0 0 0 1px #2c2d30; }
+[data-theme='modular'] .rail-track.selected { background: #141516; box-shadow: inset 0 0 0 2px var(--accent), 0 0 12px color-mix(in srgb, var(--accent) 40%, transparent); }
+[data-theme='modular'] .rail-icon,
+[data-theme='modular'] .detail-icon { border-radius: 50%; background: #111; box-shadow: inset 0 0 0 3px var(--accent); color: var(--accent); }
+[data-theme='modular'] .rail-now { color: var(--accent); }
+[data-theme='modular'] .jump kbd,
+[data-theme='modular'] kbd { border-color: #3d3e42; color: var(--muted); }
+
+/* Displays: LED digits */
+[data-theme='modular'] .rail-readout,
+[data-theme='modular'] .detail-chord,
+[data-theme='modular'] select,
+[data-theme='modular'] input:not([type='range']):not(.title-input):not(.device-name) { background: #0a0a0b; border: 0; box-shadow: inset 0 2px 5px #000; color: var(--text); font-family: var(--mono); }
+[data-theme='modular'] .rail-readout b { color: #ff3b2f; text-shadow: 0 0 8px rgba(255, 59, 47, 0.7); font-family: var(--mono); font-weight: 400; font-size: 16px; }
+[data-theme='modular'] .rail-readout .muted { color: #ff8a80; }
+[data-theme='modular'] .detail-chord[aria-current='true'] { color: var(--accent); box-shadow: inset 0 0 0 2px var(--accent); }
+[data-theme='modular'] .title-input { background: transparent; }
+
+/* Faders and switches */
+[data-theme='modular'] .slider input[type='range']::-webkit-slider-runnable-track { height: 8px; border-radius: 4px; background: linear-gradient(to right, var(--accent) var(--fill), #0a0a0b var(--fill)); box-shadow: inset 0 1px 2px #000; }
+[data-theme='modular'] .slider input[type='range']::-webkit-slider-thumb { width: 18px; height: 30px; margin-top: -11px; border-radius: 3px; background: linear-gradient(#e9e6dc, #a7a49a); border: 1px solid #000; box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6); }
+[data-theme='modular'] .segmented { background: #0a0a0b; gap: 4px; padding: 4px; border-radius: 4px; }
+[data-theme='modular'] .segmented button { box-shadow: inset 0 0 0 1px #3d3e42; }
+[data-theme='modular'] .switch { background: #0a0a0b !important; box-shadow: inset 0 0 0 1px #3d3e42; }
+[data-theme='modular'] .switch span { background: linear-gradient(#e9e6dc, #a7a49a); border-radius: 4px; }
+[data-theme='modular'] .switch[aria-checked='true'] { box-shadow: inset 0 0 0 2px var(--accent), 0 0 10px color-mix(in srgb, var(--accent) 40%, transparent); }
+
+/* Step grids: rubber pads with an LED in the middle */
+[data-theme='modular'] button.cell { background: var(--cell); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 1px 0 #000; border: 0; position: relative; }
+[data-theme='modular'] button.cell.beat { background: var(--cell-beat); }
+[data-theme='modular'] button.cell::after { content: ''; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: #121314; }
+[data-theme='modular'] button.cell.hit,
+[data-theme='modular'] button.cell.chance,
+[data-theme='modular'] button.cell.held { background: var(--cell) !important; }
+[data-theme='modular'] button.cell.hit::after { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+[data-theme='modular'] button.cell.chance::after { background: color-mix(in srgb, var(--accent) 55%, #121314); }
+[data-theme='modular'] button.cell.held::after { background: color-mix(in srgb, var(--accent) 40%, #121314); width: 70%; left: 15%; margin-left: 0; border-radius: 3px; height: 4px; margin-top: -2px; }
+[data-theme='modular'] button.cell.now { box-shadow: inset 0 0 0 1px #e9e6dc; }
+[data-theme='modular'] .step-grid { background: transparent; }
+[data-theme='modular'] .cell-badge { color: var(--text); top: auto; bottom: 1px; }
+[data-theme='modular'] button.drum-label { background: transparent; box-shadow: none; }
+
+/* Knob panel: coloured caps on black */
+[data-theme='modular'] .oled { background: #0a0a0b; box-shadow: inset 0 2px 5px #000; border: 0; }
+[data-theme='modular'] .led.on { fill: var(--accent); }
+[data-theme='modular'] .knob-cap { fill: var(--accent); }
+
+/* Slot: fader step sequencer */
+.slider-seq { display: grid; gap: 4px; height: 190px; padding: 10px 6px 4px; background: #141516; border-radius: 4px; box-shadow: inset 0 0 0 1px #2c2d30; }
+.seq-step { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; }
+.seq-slot { position: relative; flex: 1 1 auto; width: 6px; border-radius: 3px; background: #050505; box-shadow: inset 0 1px 2px #000; }
+.seq-cap { position: absolute; left: -7px; width: 20px; height: 10px; margin-bottom: -5px; border-radius: 2px; background: linear-gradient(#e9e6dc, #a7a49a); box-shadow: 0 1px 2px #000; }
+.seq-step:not(.on):not(.held) .seq-cap { opacity: 0.25; }
+.seq-led { width: 8px; height: 8px; border-radius: 50%; background: #2a2620; flex: 0 0 auto; }
+.seq-step.on .seq-led { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+.seq-step.held .seq-led { background: color-mix(in srgb, var(--accent) 40%, #2a2620); }
+.seq-step.now .seq-led { background: #fff; box-shadow: 0 0 10px #fff; }
+
+/* Jacks (shared with Hi-Fi) read well on black too */
+[data-theme='modular'] .device-card { background: var(--screws), #24272c; }
+[data-theme='modular'] .rail-nav button { font-size: 10px; letter-spacing: 0.02em; }
+[data-theme='modular'] .jump { letter-spacing: 0.06em; padding: 0 10px; }

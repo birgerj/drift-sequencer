@@ -1,5 +1,8 @@
 import './ui/styles.css';
 import './ui/theme/hifi.css';
+import './ui/theme/modular.css';
+import './ui/theme/tide.css';
+import './ui/theme/phosphor.css';
 import { VISUALS_HASH } from './visuals/protocol';
 import { initTheme } from './ui/theme/theme';
 

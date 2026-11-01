@@ -611,3 +611,5 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .theme-swatch { display: inline-flex; border-radius: 4px; overflow: hidden; border: 1px solid var(--line-2); }
 .theme-swatch i { width: 6px; height: 14px; display: block; }
 .theme-picker { flex-wrap: wrap; }
+.theme-picker { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+.theme-picker > span { grid-column: 1 / -1; }

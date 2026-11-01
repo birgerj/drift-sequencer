@@ -1,0 +1,166 @@
+/*
+ * Phosphor theme: an oscilloscope. Green phosphor on black, scanlines and a
+ * slight glow; selected items are inverted. Deliberately monochrome: track
+ * colours are replaced by phosphor green. Layout and behaviour as Studio.
+ */
+[data-theme='phosphor'] {
+  --bg: #020403;
+  --surface: rgba(57, 255, 122, 0.03);
+  --surface-2: rgba(57, 255, 122, 0.08);
+  --well: #020403;
+  --line: #0f5a2c;
+  --line-2: #1d9c4c;
+  --text: #39ff7a;
+  --text-2: #7dffaa;
+  --muted: #1fb555;
+  --faint: #148a3f;
+  --on-accent: #020403;
+  --warn: #ffb000;
+  --danger: #ff5a4a;
+  --ok: #39ff7a;
+  --lfo: #ffb000;
+  --motion: #b6ffcf;
+  --press: rgba(57, 255, 122, 0.15);
+  --track: #0a2a15;
+  --sunken: #0a2a15;
+  --rail-bg: transparent;
+  --scrim: rgba(0, 0, 0, 0.8);
+  --shadow-pop: 0 0 30px rgba(57, 255, 122, 0.15);
+  --cell: transparent;
+  --cell-beat: rgba(57, 255, 122, 0.04);
+  --cell-tone: transparent;
+  --cell-tone-beat: rgba(57, 255, 122, 0.04);
+  --playhead-fill: rgba(57, 255, 122, 0.1);
+  --module: transparent;
+  --module-line: #0f5a2c;
+  --screen: transparent;
+  --screen-text: #39ff7a;
+  --screen-dim: #0f5a2c;
+  --screen-glow: 0 0 6px rgba(57, 255, 122, 0.7);
+  --led-off: #0a2a15;
+  --knob-body: transparent;
+  --knob-ring: #1d9c4c;
+  --knob-cap: transparent;
+  --knob-pointer: #b6ffcf;
+  --canvas-bg: #020403;
+  --canvas-grid: #06200f;
+  --canvas-beat: #0b3a1c;
+  --canvas-bar: #146b34;
+  --canvas-label: #1fb555;
+  --canvas-hot: #ffffff;
+  --radius: 6px;
+  --radius-control: 2px;
+  --font-ui: 'VT323', 'Share Tech Mono', ui-monospace, monospace;
+  --mono: 'VT323', ui-monospace, monospace;
+  --font-display: 'VT323', ui-monospace, monospace;
+  color-scheme: dark;
+}
+/* Monochrome: every track colour becomes phosphor green. */
+[data-theme='phosphor'],
+[data-theme='phosphor'] * { --accent: #39ff7a !important; }
+
+[data-theme='phosphor'] body { background: #020403; font-size: 19px; text-shadow: 0 0 5px rgba(57, 255, 122, 0.55); }
+[data-theme='phosphor'] .shell { background: radial-gradient(ellipse at 50% 40%, #06140b 0%, #020403 75%); }
+[data-theme='phosphor'] .shell::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.25) 0 1px, transparent 1px 3px), radial-gradient(ellipse at center, transparent 60%, rgba(0, 0, 0, 0.55) 100%);
+}
+[data-theme='phosphor'] .detail { background: transparent; }
+
+/* Outlined boxes */
+[data-theme='phosphor'] .rail { border-right: 1px solid var(--line); background: transparent; }
+[data-theme='phosphor'] .card,
+[data-theme='phosphor'] .lane,
+[data-theme='phosphor'] .fact,
+[data-theme='phosphor'] .panel-bar,
+[data-theme='phosphor'] .encoder,
+[data-theme='phosphor'] .harmony-strip { background: transparent; border: 1px solid var(--line-2); box-shadow: inset 0 0 30px rgba(57, 255, 122, 0.05); }
+[data-theme='phosphor'] .jump-bar { background: var(--bg); border-bottom: 1px solid var(--line); }
+[data-theme='phosphor'] .eyebrow,
+[data-theme='phosphor'] .field-label,
+[data-theme='phosphor'] .slider label { text-transform: uppercase; letter-spacing: 0.06em; font-size: 17px; color: var(--muted); }
+[data-theme='phosphor'] h1,
+[data-theme='phosphor'] .title-input,
+[data-theme='phosphor'] .rail-project,
+[data-theme='phosphor'] .rail-name b,
+[data-theme='phosphor'] .fact b { text-transform: uppercase; font-weight: 400; }
+[data-theme='phosphor'] h1,
+[data-theme='phosphor'] .title-input { font-size: 34px; }
+[data-theme='phosphor'] .hint { font-size: 17px; }
+
+/* Buttons: outlined; active = inverted */
+[data-theme='phosphor'] button,
+[data-theme='phosphor'] .button { background: transparent; border: 1px solid var(--line-2); color: var(--text); text-transform: uppercase; font-size: 19px; }
+[data-theme='phosphor'] button[aria-pressed='true']:not(.cell):not(.drum-label),
+[data-theme='phosphor'] button[aria-checked='true'],
+[data-theme='phosphor'] button[aria-current='true'],
+[data-theme='phosphor'] button.primary,
+[data-theme='phosphor'] .rail-play { background: #39ff7a; color: #020403; border-color: #39ff7a; text-shadow: none; box-shadow: 0 0 12px rgba(57, 255, 122, 0.5); }
+[data-theme='phosphor'] button.ghost,
+[data-theme='phosphor'] button.link { border-color: transparent; }
+[data-theme='phosphor'] .rail-track { border: 1px solid transparent; }
+[data-theme='phosphor'] .rail-track.selected { background: #39ff7a; color: #020403; text-shadow: none; }
+[data-theme='phosphor'] .rail-track.selected * { color: #020403 !important; }
+[data-theme='phosphor'] .rail-icon,
+[data-theme='phosphor'] .detail-icon { background: transparent; border: 1px solid currentColor; border-radius: 2px; }
+[data-theme='phosphor'] .rail-readout,
+[data-theme='phosphor'] .detail-chord,
+[data-theme='phosphor'] select,
+[data-theme='phosphor'] input:not([type='range']) { background: transparent; border: 1px solid var(--line-2); color: var(--text); font-family: var(--mono); font-size: 19px; }
+[data-theme='phosphor'] .title-input { border-color: transparent; }
+[data-theme='phosphor'] select option { background: #020403; }
+[data-theme='phosphor'] kbd { border-color: var(--line-2); color: var(--muted); font-size: 15px; }
+[data-theme='phosphor'] .segmented { background: transparent; border: 1px solid var(--line); }
+[data-theme='phosphor'] .modulation,
+[data-theme='phosphor'] .voice,
+[data-theme='phosphor'] .prog-step,
+[data-theme='phosphor'] .device-card { background: transparent; border: 1px dashed var(--line); }
+
+/* Sliders: a bar of light */
+[data-theme='phosphor'] .slider input[type='range']::-webkit-slider-runnable-track { height: 10px; border-radius: 0; background: linear-gradient(to right, #39ff7a var(--fill), #0a2a15 var(--fill)); box-shadow: 0 0 8px rgba(57, 255, 122, 0.35); }
+[data-theme='phosphor'] .slider input[type='range']::-webkit-slider-thumb { width: 10px; height: 26px; margin-top: -8px; border-radius: 0; background: #b6ffcf; border: 0; box-shadow: 0 0 10px #39ff7a; }
+[data-theme='phosphor'] .switch { background: #0a2a15 !important; border-radius: 2px; }
+[data-theme='phosphor'] .switch span { border-radius: 0; background: #39ff7a; }
+
+/* Grids: boxes that light up */
+[data-theme='phosphor'] button.cell { border: 1px solid var(--line); border-radius: 0; background: transparent; }
+[data-theme='phosphor'] button.cell.beat { border-color: var(--line-2); }
+[data-theme='phosphor'] button.cell.hit { background: #39ff7a !important; box-shadow: 0 0 10px rgba(57, 255, 122, 0.8); }
+[data-theme='phosphor'] button.cell.chance { background: rgba(57, 255, 122, 0.4) !important; border-style: dashed; }
+[data-theme='phosphor'] button.cell.held { background: rgba(57, 255, 122, 0.3) !important; }
+[data-theme='phosphor'] .grid-playhead { border-radius: 0; box-shadow: inset 0 0 0 1px #b6ffcf; }
+[data-theme='phosphor'] .step-num.now { background: #39ff7a; color: #020403; border-radius: 0; text-shadow: none; }
+[data-theme='phosphor'] button.drum-label { border: 0; }
+[data-theme='phosphor'] .drum-label svg,
+[data-theme='phosphor'] .voice-icon { color: #39ff7a; }
+
+/* Knob panel: vector circles */
+[data-theme='phosphor'] .knob-body { fill: transparent; stroke: #1d9c4c; stroke-width: 1.5; }
+[data-theme='phosphor'] .knob-cap { fill: transparent; }
+[data-theme='phosphor'] .led { fill: #0a2a15; }
+[data-theme='phosphor'] .led.on { fill: #39ff7a; filter: drop-shadow(0 0 3px #39ff7a); }
+[data-theme='phosphor'] .led.lfo,
+[data-theme='phosphor'] .led.motion { fill: #ffb000; }
+[data-theme='phosphor'] .oled { border: 1px solid var(--line); }
+[data-theme='phosphor'] .oled-value { font-size: 30px; }
+
+/* Slot: scope trace */
+.scope { position: relative; height: 200px; border: 1px solid #1d9c4c; border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 40px rgba(57, 255, 122, 0.08); }
+.scope svg { display: block; width: 100%; height: 100%; }
+.scope .grat { stroke: #0b3a1c; stroke-width: 1; stroke-dasharray: 3 5; }
+.scope .grat.major { stroke: #146b34; stroke-dasharray: none; }
+.scope .trace { fill: none; stroke: #b6ffcf; stroke-width: 2; }
+.scope .trace-glow { fill: none; stroke: #39ff7a; stroke-width: 7; opacity: 0.22; }
+.scope .scope-head { stroke: #ffb000; stroke-width: 1.5; }
+.scope-label { position: absolute; left: 10px; top: 4px; font-family: 'VT323', monospace; font-size: 18px; color: #39ff7a; }
+[data-theme='phosphor'] .rail-nav button { font-size: 13px; padding: 0; }
+[data-theme='phosphor'] .rail-nav button span,
+[data-theme='phosphor'] .panel-pages button,
+[data-theme='phosphor'] .jump { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+[data-theme='phosphor'] .panel-pages button { font-size: 17px; }
+[data-theme='phosphor'] .jump { font-size: 17px; padding: 0 10px; }
+[data-theme='phosphor'] .theme-picker button { font-size: 16px; }

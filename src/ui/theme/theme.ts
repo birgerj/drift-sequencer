@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { DEFAULT_THEME, themeById, THEMES, type ThemeDef, type ThemeSlot } from './themes';
+import { DEFAULT_THEME, themeById, THEMES, type ThemeDef } from './themes';
 
 const KEY = 'drift.theme';
 const listeners = new Set<() => void>();
@@ -78,6 +78,3 @@ export function useTheme(): ThemeDef {
   return current;
 }
 
-export function hasSlot(slot: ThemeSlot): boolean {
-  return current.slots.includes(slot);
-}
