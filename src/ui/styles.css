@@ -613,3 +613,9 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .theme-picker { flex-wrap: wrap; }
 .theme-picker { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 .theme-picker > span { grid-column: 1 / -1; }
+
+/* Ensemble (MusicVAE trio) */
+.ensemble-parts { display: flex; flex-direction: column; gap: 6px; }
+.ensemble-parts .field { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
+.ensemble-parts select { min-width: 0; width: 62%; }
+.ensemble-morph { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }

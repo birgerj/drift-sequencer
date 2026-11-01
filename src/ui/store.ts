@@ -41,6 +41,7 @@ import {
   type ProjectSummary,
 } from '../state/storage';
 import { createProject, createTrack, TRACK_COLORS } from '../state/templates';
+import { EnsembleController } from './ensemble';
 
 import type { SectionId } from './shortcuts';
 import { toEpoch, VisualsLink } from '../visuals/link';
@@ -141,6 +142,8 @@ export class AppStore {
   /** Open tab of the track detail pane; kept when switching tracks. */
   trackTab: SectionId = 'overview';
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
+  /** MusicVAE trio: melody, bass and drums from one model. */
+  readonly ensemble = new EnsembleController(this);
 
   private listeners = new Set<() => void>();
   private pending: Pending[] = [];
@@ -207,7 +210,7 @@ export class AppStore {
     return () => this.listeners.delete(fn);
   }
 
-  private notify(): void {
+  notify(): void {
     this.listeners.forEach((l) => l());
     if (this.visuals?.active && !this.visualsTimer) {
       this.visualsTimer = setTimeout(() => {
@@ -501,6 +504,7 @@ export class AppStore {
         // Animation frames pause in a hidden tab; don't let the display queue grow.
         if (this.pending.length > 2000) this.pending.splice(0, this.pending.length - 1000);
         this.pending.push({ at: timeMs, kind: 'step', step, bar });
+        this.ensemble.onStep(step, bar);
         this.visuals?.send({ t: 'step', step, bar, at: toEpoch(timeMs) });
       }),
       ev.on('chord', ({ chord }) => {
@@ -514,7 +518,8 @@ export class AppStore {
       ev.on('lfo', ({ trackId, value, timeMs }) => this.visuals?.send({ t: 'lfo', track: trackId, value, at: toEpoch(timeMs) })),
       ev.on('mutation', ({ trackId, bar, kind }) => {
         const t = this.project.tracks.find((x) => x.id === trackId);
-        const text = kind === 'theme' ? 'back to the theme' : kind === 'recall' ? 'recalls an earlier variation' : 'pattern mutated';
+        const text =
+          kind === 'theme' ? 'back to the theme' : kind === 'recall' ? 'recalls an earlier variation' : kind === 'ensemble' ? 'next ensemble phrase' : 'pattern mutated';
         if (t) this.addLog(bar, `${t.name} · ${text}`, t.color);
       }),
       ev.on('transport', ({ playing }) => {
@@ -636,7 +641,13 @@ export class AppStore {
   }
 
   removeTrack(id: string): void {
-    this.change((p) => ({ ...p, tracks: p.tracks.filter((t) => t.id !== id) }));
+    this.change((p) => ({
+      ...p,
+      tracks: p.tracks
+        .filter((t) => t.id !== id)
+        // Nobody keeps listening to a track that is gone.
+        .map((t) => (t.interplay?.listenTo.includes(id) ? { ...t, interplay: { ...t.interplay, listenTo: t.interplay.listenTo.filter((x) => x !== id) } } : t)),
+    }));
     this.go({ name: 'performance' });
   }
 
@@ -920,7 +931,7 @@ export class AppStore {
 
   // ---------- live loop ----------
 
-  private addLog(bar: number, text: string, color: string): void {
+  addLog(bar: number, text: string, color: string): void {
     this.log = [{ id: ++this.logId, bar, text, color }, ...this.log].slice(0, 30);
     this.notify();
   }

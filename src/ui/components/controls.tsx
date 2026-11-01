@@ -15,7 +15,8 @@ export function Slider(props: {
 }) {
   const id = useId();
   const pct = ((props.value - props.min) / (props.max - props.min || 1)) * 100;
-  const style = { '--fill': `${pct}%`, '--accent': props.color ?? 'var(--accent)' } as Record<string, string>;
+  // Without a colour, inherit --accent (setting it to var(--accent) would be a cycle and hide the track).
+  const style = (props.color ? { '--fill': `${pct}%`, '--accent': props.color } : { '--fill': `${pct}%` }) as Record<string, string>;
   return (
     <div class={`slider ${props.compact ? 'compact' : ''}`} style={style}>
       <label for={id}>

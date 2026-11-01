@@ -1,4 +1,5 @@
 import type { PhraseSettings } from '../core/engine/phrasing';
+import type { InterplaySettings } from '../core/engine/interplay';
 import type { DeviceRole } from './rack';
 import type { GeneratorConfig } from '../core/generators/registry';
 import type { Pattern, Register } from '../core/pattern/pattern';
@@ -78,6 +79,8 @@ export interface TrackState {
   humanize?: HumanizeSettings;
   /** Bass and acid tracks: make room for the kick drum. */
   kickMode?: KickMode;
+  /** Listen to other tracks: make room for them, lock to their rhythm, avoid their notes. */
+  interplay?: InterplaySettings;
   /** Every few mutations the track returns to its theme or an earlier variation. */
   memory?: MemorySettings;
   /** Knob movements recorded from the synth or the panel, played back in a loop. */
@@ -139,12 +142,35 @@ export interface ProjectState {
     /** 'vary' swaps one chord; 'new' writes a whole new progression. */
     mode: 'vary' | 'new';
   };
+  /** MusicVAE trio: melody, bass and drums written together by one model. */
+  ensemble?: EnsembleSettings;
   clock: {
     /** Port names that receive MIDI clock + start/stop (e.g. the TR-8S). */
     sendTo: string[];
   };
   tracks: TrackState[];
   updatedAt: string;
+}
+
+export interface EnsembleSettings {
+  melody?: string;
+  bass?: string;
+  drums?: string;
+  /** 0.1..1.5 — low is safe and repetitive, high is surprising. */
+  temperature: number;
+  /** Keep moving through the model's latent space while playing. */
+  evolve: boolean;
+  /** Take a step every N bars (a multiple of the trio's 4 bars). */
+  everyBars: number;
+  /** 0..1 — how far each step moves. */
+  amount: number;
+  /** Current point in the latent space; the linked tracks follow the model while it is set. */
+  z?: number[];
+  /** Stored points to morph between. */
+  a?: number[];
+  b?: number[];
+  /** 0..1 position between A and B. */
+  morph?: number;
 }
 
 export function newId(): string {

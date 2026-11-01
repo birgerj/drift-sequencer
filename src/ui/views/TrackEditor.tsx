@@ -2,6 +2,7 @@ import { slotComponent } from '../theme/slots';
 import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { noteName } from '../../core/theory/note';
+import { DEFAULT_INTERPLAY, interplayActive, type InterplaySettings } from '../../core/engine/interplay';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { useState } from 'preact/hooks';
@@ -182,6 +183,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
             </div>
           </Card>
           <FeelCard track={track} />
+          <ListenCard track={track} />
           {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
         </div>
 
@@ -395,6 +397,65 @@ function FeelCard({ track }: { track: TrackState }) {
         {memory.every > 0
           ? `After ${memory.every} changes the track comes back to ${memory.mode === 'theme' ? 'its theme (the pattern it started with)' : 'one of its earlier variations'}, then evolves again.`
           : 'Timing and velocity drift make a track sound played rather than programmed.'}
+      </p>
+    </Card>
+  );
+}
+
+/** Interplay: this track reacts to what other tracks play on the same step. */
+function ListenCard({ track }: { track: TrackState }) {
+  const s = useStore();
+  const settings = track.interplay ?? DEFAULT_INTERPLAY;
+  const set = (patch: Partial<InterplaySettings>) => s.updateTrack(track.id, { interplay: { ...settings, ...patch } });
+  const others = s.project.tracks.filter((t) => t.id !== track.id);
+  const drums = track.generator.type === 'drums';
+  const names = settings.listenTo.map((id) => others.find((t) => t.id === id)?.name).filter(Boolean).join(' and ');
+  const toggle = (id: string) =>
+    set({ listenTo: settings.listenTo.includes(id) ? settings.listenTo.filter((x) => x !== id) : [...settings.listenTo, id] });
+  const active = interplayActive(track.interplay);
+  return (
+    <Card title="Listens to">
+      <div class="chips" role="group" aria-label="Tracks to listen to">
+        {others.map((t) => (
+          <button type="button" class="chip" style={{ '--accent': t.color }} aria-pressed={settings.listenTo.includes(t.id)} onClick={() => toggle(t.id)}>
+            {t.name}
+          </button>
+        ))}
+        {others.length === 0 && <span class="hint">Add another track first.</span>}
+      </div>
+      {settings.listenTo.length > 0 && (
+        <div class="param-grid">
+          <Segmented
+            label="Rhythm"
+            value={settings.rhythm}
+            options={[
+              { value: 'free', label: 'Own rhythm' },
+              { value: 'space', label: 'Make room' },
+              { value: 'lock', label: 'Play along' },
+            ]}
+            onChange={(rhythm) => set({ rhythm })}
+          />
+          {!drums && (
+            <Toggle
+              label="Different note"
+              description="On the beat, pick a chord tone they aren’t playing"
+              checked={settings.otherTone}
+              onChange={(otherTone) => set({ otherTone })}
+            />
+          )}
+          <Slider label="Strength" value={settings.amount} min={0} max={1} step={0.05} format={(x) => `${Math.round(x * 100)}%`} color={track.color} onInput={(amount) => set({ amount })} />
+        </div>
+      )}
+      <p class="hint">
+        {!active
+          ? 'Pick tracks to listen to. This track then reacts to what they play, live — also after they change.'
+          : [
+              settings.rhythm === 'space' ? `Rests where ${names} play${settings.listenTo.length > 1 ? '' : 's'}.` : '',
+              settings.rhythm === 'lock' ? `Plays together with ${names} and rests in between.` : '',
+              settings.otherTone && !drums ? `On the beat it avoids the note ${names} ${settings.listenTo.length > 1 ? 'play' : 'plays'}.` : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
       </p>
     </Card>
   );

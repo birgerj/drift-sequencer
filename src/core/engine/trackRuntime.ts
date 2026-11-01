@@ -52,7 +52,14 @@ export class TrackRuntime {
   theme: Pattern;
   private mutations = 0;
   /** What the last change at a bar boundary was. */
-  lastChange: 'mutation' | 'theme' | 'recall' = 'mutation';
+  lastChange: 'mutation' | 'theme' | 'recall' | 'ensemble' = 'mutation';
+  /**
+   * Driven from outside (the ensemble model): the track's own generator
+   * doesn't mutate it; new patterns arrive through queuePattern().
+   */
+  external = false;
+  /** A pattern waiting for the next phrase start (see queuePattern). */
+  pending: Pattern | undefined;
 
   constructor(
     public config: TrackState,
@@ -85,9 +92,25 @@ export class TrackRuntime {
     if (this.history.length > 64) this.history.shift();
   }
 
+  /**
+   * Switch to `pattern` at the next bar where it starts in phase (a 4-bar
+   * pattern at bar 4, 8, …), so a running phrase is never cut off.
+   */
+  queuePattern(pattern: Pattern): void {
+    this.pending = pattern;
+  }
+
   /** Called at bar boundaries; returns true if the pattern changed. */
   maybeMutate(bar: number): boolean {
-    if (this.config.frozen || bar === 0) return false;
+    if (this.pending) {
+      const bars = Math.max(1, Math.round(this.pending.lengthSteps / this.stepsPerBar));
+      if (bar % bars !== 0) return false;
+      this.setPattern(this.pending);
+      this.pending = undefined;
+      this.lastChange = 'ensemble';
+      return true;
+    }
+    if (this.config.frozen || bar === 0 || this.external) return false;
     if (bar % Math.max(1, this.config.mutationIntervalBars) !== 0) return false;
     this.mutations++;
     const memory = this.config.memory;
