@@ -8,7 +8,7 @@ import type { TrackType } from '../core/generators/types';
 import type { InstrumentDefinition } from '../core/instruments/instrument';
 import type { MidiNote } from '../core/theory/note';
 import type { Pattern } from '../core/pattern/pattern';
-import { resizePattern } from '../core/pattern/edit';
+import { resizePattern, toChordDegrees } from '../core/pattern/edit';
 import { Rng } from '../core/random/rng';
 import { Chord } from '../core/theory/chord';
 import { generateProgression, varyProgression, type ProgressionStyle } from '../core/theory/progressionGenerator';
@@ -655,11 +655,20 @@ export class AppStore {
    * Apply a user edit to a track's current pattern. The result is saved in
    * the project; the track is frozen so the edit isn't mutated away.
    */
+  /** A track's pattern as the editors show it: key-relative lines rewritten against the chords. */
+  editablePattern(id: string): Pattern | undefined {
+    const rt = this.sequencer.track(id);
+    if (!rt) return undefined;
+    const harmony = this.sequencer.currentHarmony;
+    const spb = this.project.stepsPerBar;
+    return toChordDegrees(rt.pattern, (step) => harmony.at(Math.floor(step / spb)).chord.degree, harmony.scale.size);
+  }
+
   editPattern(id: string, edit: (p: Pattern) => Pattern): void {
     const rt = this.sequencer.track(id);
     const t = this.project.tracks.find((x) => x.id === id);
     if (!rt || !t) return;
-    const userPattern = edit(rt.pattern);
+    const userPattern = edit(this.editablePattern(id) ?? rt.pattern);
     if (!t.frozen) this.showToast(`${t.name} is frozen so your edit stays. Unfreeze it to let it evolve.`);
     this.updateTrack(id, { userPattern, frozen: true });
   }

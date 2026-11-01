@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Builds Drift as ONE self-contained HTML file (JS, CSS and icon inlined) in
-// docs/index.html. It runs by double-clicking it (file://), from any static
-// host, or from GitHub Pages ("Deploy from a branch" → /docs).
+// standalone/index.html. It runs by double-clicking it (file://), from any static
+// host, or from GitHub Pages (the publish workflow).
 
 import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { build } from 'vite';
 
 const tmp = '.standalone-build';
-const outFile = 'docs/index.html';
+const outFile = 'standalone/index.html';
 
 await build({
   logLevel: 'warn',
@@ -44,9 +44,9 @@ html = html.replace(/href="\.\/favicon\.svg"/, `href="data:image/svg+xml,${encod
 
 if (/\.\/assets\//.test(html)) throw new Error('Some assets were not inlined: ' + files.join(', '));
 
-mkdirSync('docs', { recursive: true });
+mkdirSync('standalone', { recursive: true });
 writeFileSync(outFile, html);
-writeFileSync('docs/.nojekyll', '');
+writeFileSync('standalone/.nojekyll', '');
 
 // PWA files (manifest, icons, service worker) sit next to index.html. They are
 // only used when served over https (GitHub Pages); opening the file from disk
@@ -55,7 +55,7 @@ const version = createHash('sha256').update(html).digest('hex').slice(0, 12);
 for (const entry of readdirSync(tmp)) {
   if (entry === 'index.html' || entry === 'assets') continue;
   const from = join(tmp, entry);
-  const to = join('docs', entry);
+  const to = join('standalone', entry);
   if (entry === 'sw.js') writeFileSync(to, readFileSync(from, 'utf8').replace("'__BUILD__'", `'${version}'`));
   else cpSync(from, to, { recursive: true });
 }

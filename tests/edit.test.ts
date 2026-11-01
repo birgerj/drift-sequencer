@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { Sequencer } from '../src/core/engine/sequencer';
-import { cycleDrumCell, drumCell, resizePattern, toggleMotifNote } from '../src/core/pattern/edit';
+import { cycleDrumCell, drumCell, resizePattern, toChordDegrees, toggleMotifNote } from '../src/core/pattern/edit';
 import type { Pattern } from '../src/core/pattern/pattern';
 import { RecordingOutput, StaticPortResolver } from '../src/io/midi/output';
 import { createProject } from '../src/state/templates';
@@ -59,5 +59,28 @@ describe('pattern editing', () => {
     };
     seq.update(tweaked);
     expect(seq.track(drums.id)!.pattern).toBe(userPattern);
+  });
+});
+
+
+describe('key-relative lines in the editor', () => {
+  it('shows key degrees as chord degrees, fitted notes on chord tones', () => {
+    const p = {
+      lengthSteps: 32,
+      events: [
+        { step: 0, length: 1, velocity: 90, pitch: { kind: 'keyDegree' as const, degree: 4, nearest: true } },
+        { step: 16, length: 1, velocity: 90, pitch: { kind: 'keyDegree' as const, degree: 4, fit: 'tone' as const } },
+        { step: 20, length: 1, velocity: 90, pitch: { kind: 'keyDegree' as const, degree: 5, fit: 'root' as const } },
+      ],
+    };
+    // Bar 0 on the I chord, bar 1 on IV (degree 3).
+    const out = toChordDegrees(p, (step) => (step < 16 ? 0 : 3));
+    expect(out.events.map((e) => e.pitch)).toEqual([
+      { kind: 'degree', degree: 4, nearest: true },
+      { kind: 'degree', degree: 2 }, // 4 − 3 = 1 → nearest chord tone, ties go up
+      { kind: 'degree', degree: 0 }, // 5 − 3 = 2 → root
+    ]);
+    const plain = { lengthSteps: 16, events: [] };
+    expect(toChordDegrees(plain, () => 0)).toBe(plain);
   });
 });

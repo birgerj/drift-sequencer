@@ -26,6 +26,35 @@ export function cycleDrumCell(pattern: Pattern, step: number, note: number, velo
   return { ...pattern, events: sortByStep(next) };
 }
 
+/**
+ * The note editors work in chord-relative degrees. Key-relative lines (the
+ * ensemble writes those) are rewritten against the chord each note falls on,
+ * so they show up in the grid and sound the same. Notes that were fitted to
+ * the chord land on the matching chord tone (7-note scales).
+ */
+export function toChordDegrees(pattern: Pattern, chordDegreeAt: (step: number) => number, scaleSize = 7): Pattern {
+  if (!pattern.events.some((e) => e.pitch.kind === 'keyDegree')) return pattern;
+  return {
+    ...pattern,
+    events: pattern.events.map((e) => {
+      if (e.pitch.kind !== 'keyDegree') return e;
+      let degree = e.pitch.degree - chordDegreeAt(e.step);
+      if (e.pitch.fit && scaleSize === 7) degree = fitDegree(degree, e.pitch.fit);
+      return { ...e, pitch: { kind: 'degree', degree, ...(e.pitch.nearest ? { nearest: true } : {}) } };
+    }),
+  };
+}
+
+/** Nearest chord tone (0, 2, 4 above the root; ties go up) or root, in chord-relative degrees. */
+function fitDegree(degree: number, fit: 'tone' | 'root'): number {
+  const within = ((degree % 7) + 7) % 7;
+  const base = degree - within;
+  const targets = fit === 'root' ? [0, 7] : [0, 2, 4, 7];
+  let best = targets[0]!;
+  for (const t of targets) if (Math.abs(t - within) < Math.abs(best - within) || (Math.abs(t - within) === Math.abs(best - within) && t > best)) best = t;
+  return base + best;
+}
+
 /** Degree of the motif note starting at `step`, if any. */
 export function motifNoteAt(pattern: Pattern, step: number): PatternEvent | undefined {
   return pattern.events.find((e) => e.step === step && e.pitch.kind === 'degree');

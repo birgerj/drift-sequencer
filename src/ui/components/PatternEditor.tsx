@@ -41,7 +41,7 @@ export function PatternEditor({ track }: { track: TrackState }) {
     return s.sequencer.playing && l.step >= 0 && rt ? rt.patternStepAt(l.step) : -1;
   });
   if (!rt) return null;
-  const pattern = rt.pattern;
+  const pattern = s.editablePattern(track.id) ?? rt.pattern;
 
   const [mode, setMode] = useState<EditMode>('notes');
 
