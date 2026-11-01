@@ -12,8 +12,12 @@ export type PitchSpec =
    * chosen, so a melody moves smoothly across chord changes.
    */
   | { kind: 'degree'; degree: number; octave?: number; nearest?: boolean }
-  /** Scale degree offset from the key's root (ignores chords). */
-  | { kind: 'keyDegree'; degree: number }
+  /**
+   * Scale degree offset from the key's root: the line keeps its own shape
+   * across chord changes. `fit` moves this note onto the current chord (any
+   * chord tone, or the root); `nearest` works as for `degree`.
+   */
+  | { kind: 'keyDegree'; degree: number; nearest?: boolean; fit?: 'tone' | 'root' }
   /** A tone of the current chord: 0 = root, 1 = third, 2 = fifth, … */
   | { kind: 'chordTone'; index: number; octave: number }
   /** The whole current chord, voice-led from the previous voicing. */

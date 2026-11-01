@@ -33,15 +33,16 @@ self.onmessage = async (e) => {
       if (!model) await (loading = loading || load(m));
       self.postMessage({ type: 'loaded', id: m.id, zDims: model.zDims, backend: tf.getBackend() });
     } else if (m.type === 'decode') {
-      const z = tf.tensor2d([m.z]);
+      const z = tf.tensor2d(m.zs);
       const out = await model.decode(z, m.temperature);
       z.dispose();
-      const ns = out[0];
-      const notes = ns.notes.map((n) => {
-        const start = n.quantizedStartStep || 0;
-        return { pitch: n.pitch, start, end: n.quantizedEndStep || start + 1, instrument: n.instrument || 0, isDrum: !!n.isDrum };
-      });
-      self.postMessage({ type: 'decoded', id: m.id, notes });
+      const sequences = out.map((ns) =>
+        ns.notes.map((n) => {
+          const start = n.quantizedStartStep || 0;
+          return { pitch: n.pitch, start, end: n.quantizedEndStep || start + 1, instrument: n.instrument || 0, isDrum: !!n.isDrum };
+        }),
+      );
+      self.postMessage({ type: 'decoded', id: m.id, sequences });
     }
   } catch (err) {
     loading = undefined;
@@ -52,7 +53,7 @@ self.onmessage = async (e) => {
 
 type Reply =
   | { type: 'loaded'; id: number; zDims: number; backend: string }
-  | { type: 'decoded'; id: number; notes: TrioNote[] }
+  | { type: 'decoded'; id: number; sequences: TrioNote[][] }
   | { type: 'error'; id: number; message: string };
 
 export class TrioModel {
@@ -75,10 +76,11 @@ export class TrioModel {
     this.backend = r.backend;
   }
 
-  async decode(z: readonly number[], temperature: number): Promise<TrioNote[]> {
-    if (z.length !== this.zDims) throw new Error(`Latent has ${z.length} values, the model expects ${this.zDims}`);
-    const r = await this.call({ type: 'decode', z: [...z], temperature }, 30_000);
-    return r.type === 'decoded' ? r.notes : [];
+  /** Decode several latent points in one batch (each decode samples, so the same point can sound different). */
+  async decode(zs: readonly (readonly number[])[], temperature: number): Promise<TrioNote[][]> {
+    for (const z of zs) if (z.length !== this.zDims) throw new Error(`Latent has ${z.length} values, the model expects ${this.zDims}`);
+    const r = await this.call({ type: 'decode', zs: zs.map((z) => [...z]), temperature }, 60_000);
+    return r.type === 'decoded' ? r.sequences : [];
   }
 
   dispose(): void {

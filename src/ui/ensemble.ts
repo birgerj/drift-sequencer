@@ -1,4 +1,4 @@
-import { evolveLatent, randomLatent, slerp, trioToPatterns, TRIO_BARS, TRIO_STEPS_PER_BAR, type TrioPatterns } from '../core/ensemble/trio';
+import { evolveLatent, randomLatent, scoreTrio, slerp, trioToPatterns, TRIO_BARS, TRIO_STEPS_PER_BAR, type TrioPatterns } from '../core/ensemble/trio';
 import type { Pattern } from '../core/pattern/pattern';
 import { Scale } from '../core/theory/scale';
 import { TrioModel } from '../io/ensemble/trioModel';
@@ -79,7 +79,9 @@ export class EnsembleController {
   /** A fresh trio from a random point in the latent space. */
   async generate(): Promise<void> {
     if (!(await this.load()) || !this.model) return;
-    await this.write(randomLatent(this.model.zDims), 'new trio');
+    const zDims = this.model.zDims;
+    // Random points vary a lot in quality: decode a batch and keep the best.
+    await this.write(Array.from({ length: 8 }, () => randomLatent(zDims)), 'new trio');
   }
 
   storeSlot(slot: 'a' | 'b'): void {
@@ -97,7 +99,8 @@ export class EnsembleController {
   private async morphNow(t: number): Promise<void> {
     const { a, b } = this.settings;
     if (!a || !b || !(await this.load())) return;
-    await this.write(slerp(a, b, t), `morph ${Math.round(t * 100)}% A→B`);
+    const z = slerp(a, b, t);
+    await this.write([z, z, z], `morph ${Math.round(t * 100)}% A→B`);
   }
 
   /** Called by the store on every step: one bar before a phrase change, prepare the next step. */
@@ -109,17 +112,30 @@ export class EnsembleController {
     const every = Math.max(TRIO_BARS, Math.round(e.everyBars / TRIO_BARS) * TRIO_BARS);
     // Decode during the last bar, so the result is there when the phrase starts again.
     if ((bar + 1) % every !== 0) return;
-    void this.write(evolveLatent(e.z, e.amount), undefined);
+    const z = e.z;
+    void this.write([0, 1, 2].map(() => evolveLatent(z, e.amount)), undefined);
   }
 
-  private async write(z: number[], log: string | undefined): Promise<void> {
+  /** Decode the candidates, keep the one that scores best, and hand its parts to the tracks. */
+  private async write(candidates: number[][], log: string | undefined): Promise<void> {
     if (!this.model) return;
     this.busy = true;
     this.store.notify();
     try {
-      const notes = await this.model.decode(z, this.settings.temperature);
+      const decoded = await this.model.decode(candidates, this.settings.temperature);
+      const linked = { melody: !!this.track('melody'), bass: !!this.track('bass'), drums: !!this.track('drums') };
+      let best = 0;
+      let bestScore = -1;
+      decoded.forEach((notes, i) => {
+        const score = scoreTrio(notes, linked);
+        if (score > bestScore) {
+          bestScore = score;
+          best = i;
+        }
+      });
+      const z = candidates[best]!;
       const project = this.store.project;
-      const patterns = trioToPatterns(notes, {
+      const patterns = trioToPatterns(decoded[best] ?? [], {
         scale: new Scale(project.key.root, project.key.mode),
         drumNotes: this.drumNotes(),
       });

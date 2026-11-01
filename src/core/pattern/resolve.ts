@@ -28,8 +28,15 @@ export function resolvePitch(
       state.lastMelodic = note;
       return [note];
     }
-    case 'keyDegree':
-      return [fold(scale.degreeToMidi(spec.degree, register.baseOctave), register)];
+    case 'keyDegree': {
+      let written = scale.degreeToMidi(spec.degree, register.baseOctave);
+      if (spec.fit) written = nearestWithPitchClass(written, spec.fit === 'root' ? [chord.root] : chord.tones);
+      written = fold(written, register);
+      if (!spec.nearest) return [written];
+      const note = nearestOctave(written, state.lastMelodic, register);
+      state.lastMelodic = note;
+      return [note];
+    }
     case 'chordTone': {
       const tones = chord.tones;
       const idx = ((spec.index % tones.length) + tones.length) % tones.length;
@@ -66,6 +73,16 @@ export function nearestOctave(written: MidiNote, last: MidiNote | undefined, reg
     }
   }
   return best;
+}
+
+/** The note closest to `note` whose pitch class is one of `pcs` (ties go up). */
+export function nearestWithPitchClass(note: MidiNote, pcs: readonly number[]): MidiNote {
+  if (pcs.length === 0) return note;
+  for (let d = 0; d <= 6; d++) {
+    if (pcs.includes(pitchClassOf(note + d))) return note + d;
+    if (pcs.includes(pitchClassOf(note - d))) return note - d;
+  }
+  return note;
 }
 
 /** Move a note by octaves until it lies within the register. */

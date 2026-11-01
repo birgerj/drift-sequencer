@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   bestTransposition,
+  scoreTrio,
   degreeOf,
   evolveLatent,
   randomLatent,
@@ -57,17 +58,25 @@ describe('trio conversion', () => {
     expect(b.events).toHaveLength(4);
     // Unknown drum pitch dropped; low tom goes to the TR-8S LT note.
     expect(drums.events.map((e) => e.pitch.kind === 'fixed' && e.pitch.note)).toEqual([36, 42, 38, 43, 36]);
-    // F# at step 12 (a beat) snaps to a chord tone.
-    const at12 = melody.events.find((e) => e.step === 12)!;
-    expect(at12.pitch.kind === 'degree' && [0, 2, 4].includes(((at12.pitch.degree % 7) + 7) % 7)).toBe(true);
+    // The line keeps its shape (key degrees); only bar downbeats and halves are bent onto the chord.
+    expect(melody.events.every((e) => e.pitch.kind === 'keyDegree' && e.pitch.nearest)).toBe(true);
+    const fits = (p: typeof melody, step: number) => {
+      const e = p.events.find((x) => x.step === step)!;
+      return e.pitch.kind === 'keyDegree' ? e.pitch.fit : undefined;
+    };
+    expect([fits(melody, 0), fits(melody, 8), fits(melody, 2), fits(melody, 12)]).toEqual(['tone', 'tone', undefined, undefined]);
+    expect([fits(b, 0), fits(b, 8), fits(b, 16)]).toEqual(['root', 'tone', 'root']);
 
     // Resolve against a C – F progression: every note is in key.
     const harmony = new Harmony(C_MAJOR, [{ degree: 0, bars: 2 }, { degree: 3, bars: 2 }]);
     const register = { baseOctave: 5, low: 48, high: 96 };
-    for (const [bar, pattern] of [[0, melody], [2, melody], [0, b]] as const) {
+    for (const pattern of [melody, b]) {
       for (const e of pattern.events) {
-        const [n] = resolvePitch(e.pitch, harmony.at(bar), register, {});
+        const bar = Math.floor(e.step / 16);
+        const moment = harmony.at(bar);
+        const [n] = resolvePitch(e.pitch, moment, register, {});
         expect(C_MAJOR.contains(n!)).toBe(true);
+        if (e.pitch.kind === 'keyDegree' && e.pitch.fit) expect(moment.chord.contains(n!)).toBe(true);
       }
     }
   });
@@ -75,6 +84,28 @@ describe('trio conversion', () => {
   it('handles an empty decode', () => {
     const p = trioToPatterns([], { scale: A_MINOR });
     expect([p.melody, p.bass, p.drums].every((x) => x.events.length === 0 && x.lengthSteps === TRIO_STEPS)).toBe(true);
+  });
+});
+
+describe('trio scoring', () => {
+  const groove = [0, 16, 32, 48].flatMap((b) => [drum(36, b), drum(36, b + 8), drum(38, b + 4), drum(38, b + 12), ...[0, 2, 4, 6, 8, 10, 12, 14].map((s) => drum(42, b + s))]);
+  const tune = [60, 62, 64, 67, 65, 64, 62, 60, 64, 65, 67, 69, 67, 65, 64, 62].map((p, i) => mel(p, i * 4));
+  const walking = [36, 36, 43, 41, 38, 38, 41, 43].map((p, i) => bass(p, i * 8));
+
+  it('prefers a real groove and a moving melody', () => {
+    const good = scoreTrio([...groove, ...tune, ...walking]);
+    const droning = scoreTrio([...groove, ...tune.map((n) => ({ ...n, pitch: 64 })), ...walking]);
+    const noKick = scoreTrio([...groove.filter((n) => n.pitch !== 36), ...tune, ...walking]);
+    const empty = scoreTrio([...groove, ...walking]);
+    expect(good).toBeGreaterThan(0.8);
+    expect(droning).toBeLessThan(good);
+    expect(noKick).toBeLessThan(good);
+    expect(empty).toBeLessThan(good);
+  });
+
+  it('only scores the parts that are linked', () => {
+    const notes = [...tune, ...walking];
+    expect(scoreTrio(notes, { melody: true, bass: true, drums: false })).toBeGreaterThan(scoreTrio(notes));
   });
 });
 

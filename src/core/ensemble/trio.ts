@@ -53,33 +53,37 @@ export interface TrioPatterns {
 }
 
 /**
- * Turn a decoded trio into three chord-relative patterns:
+ * Turn a decoded trio into three patterns:
  * - the trio is transposed so most of its notes fall in Drift's key,
- * - every note becomes a scale degree (out-of-key notes snap to the nearest),
- * - degrees are stored relative to the chord root, like Drift's own motifs,
- *   so the parts follow the progression together,
- * - on the beat, melody and bass land on chord tones.
+ * - melody and bass become key degrees, so each line keeps the shape the
+ *   model wrote (out-of-key notes snap to the nearest degree),
+ * - only the strong points are bent onto Drift's chords: the bass plays the
+ *   chord root on each bar's downbeat and a chord tone halfway, the melody a
+ *   chord tone on the downbeat and halfway,
+ * - lines resolve to the nearest octave, so the register fold never makes
+ *   them jump.
  */
 export function trioToPatterns(notes: readonly TrioNote[], opts: TrioOptions): TrioPatterns {
   const { scale } = opts;
   const melodic = notes.filter((n) => !n.isDrum && n.instrument !== 2);
   const shift = bestTransposition(melodic, scale);
-  const part = (instrument: number, velocity: number): Pattern => {
+  const part = (instrument: number, velocity: number, bass: boolean): Pattern => {
     const own = melodic.filter((n) => n.instrument === instrument).sort((a, b) => a.start - b.start);
     const degrees = own.map((n) => degreeOf(n.pitch + shift, scale));
-    // Centre the part on the track's register: its median lands in the base octave.
+    // Centre the part on the track's base octave: its median lands within ±half an octave of the root.
     const sorted = [...degrees].sort((a, b) => a - b);
     const median = sorted[Math.floor(sorted.length / 2)] ?? 0;
-    const offset = Math.floor(median / scale.size) * scale.size;
+    const offset = Math.round(median / scale.size) * scale.size;
     const events = own.map((n, i): PatternEvent => {
       const step = clampStep(n.start);
-      let degree = degrees[i]! - offset;
-      if (step % 4 === 0) degree = snapToChordTone(degree, scale.size);
+      const downbeat = step % TRIO_STEPS_PER_BAR === 0;
+      const half = step % (TRIO_STEPS_PER_BAR / 2) === 0;
+      const fit = downbeat && bass ? 'root' : half ? 'tone' : undefined;
       return {
         step,
         length: Math.max(1, Math.min(TRIO_STEPS - step, n.end - n.start)),
-        velocity: step % 4 === 0 ? Math.min(127, velocity + 8) : velocity,
-        pitch: { kind: 'degree', degree },
+        velocity: half ? Math.min(127, velocity + 8) : velocity,
+        pitch: { kind: 'keyDegree', degree: degrees[i]! - offset, nearest: true, ...(fit ? { fit } : {}) },
       };
     });
     return { lengthSteps: TRIO_STEPS, events: dedupe(events) };
@@ -101,10 +105,56 @@ export function trioToPatterns(notes: readonly TrioNote[], opts: TrioOptions): T
     });
 
   return {
-    melody: part(0, opts.melodyVelocity ?? 96),
-    bass: part(1, opts.bassVelocity ?? 100),
+    melody: part(0, opts.melodyVelocity ?? 96, false),
+    bass: part(1, opts.bassVelocity ?? 100, true),
     drums: { lengthSteps: TRIO_STEPS, events: dedupe(drumEvents) },
   };
+}
+
+/**
+ * How usable a decoded trio is, 0..1. Samples from a random point vary a lot:
+ * some have no kick or snare, a melody of two notes or a bass that never
+ * moves. Several candidates are decoded and the best one plays.
+ */
+export function scoreTrio(notes: readonly TrioNote[], parts: { melody: boolean; bass: boolean; drums: boolean } = { melody: true, bass: true, drums: true }): number {
+  const scores: number[] = [];
+  const line = (instrument: number) => notes.filter((n) => !n.isDrum && n.instrument === instrument).sort((a, b) => a.start - b.start);
+  const lineScore = (ns: TrioNote[], minNotes: number, maxNotes: number, minDistinct: number, maxRange: number, minMoves: number) => {
+    if (ns.length === 0) return 0;
+    // A line that repeats one note for bars isn't a melody, however many notes it has.
+    let moves = 0;
+    for (let i = 1; i < ns.length; i++) if (ns[i]!.pitch !== ns[i - 1]!.pitch) moves++;
+    const motion = Math.min(1, moves / Math.max(1, ns.length - 1) / minMoves);
+    const pitches = ns.map((n) => n.pitch);
+    const range = Math.max(...pitches) - Math.min(...pitches);
+    const distinct = new Set(pitches.map((p) => p % 12)).size;
+    const count = ns.length < minNotes ? ns.length / minNotes : ns.length > maxNotes ? maxNotes / ns.length : 1;
+    const variety = Math.min(1, distinct / minDistinct);
+    const span = range > maxRange ? maxRange / range : range < 3 ? 0.4 : 1;
+    // Every bar should have something to play.
+    const bars = new Set(ns.map((n) => Math.floor(n.start / TRIO_STEPS_PER_BAR))).size / TRIO_BARS;
+    return count * variety * span * motion * (0.5 + 0.5 * bars);
+  };
+  if (parts.melody) scores.push(lineScore(line(0), 10, 40, 4, 14, 0.4));
+  if (parts.bass) scores.push(lineScore(line(1), 6, 36, 3, 15, 0.2));
+  if (parts.drums) {
+    const drums = notes.filter((n) => n.isDrum || n.instrument === 2);
+    const at = (pitch: number, step: number) => drums.some((n) => n.pitch === pitch && n.start === step);
+    let kicks = 0;
+    let backbeats = 0;
+    for (let bar = 0; bar < TRIO_BARS; bar++) {
+      const b = bar * TRIO_STEPS_PER_BAR;
+      if (at(36, b)) kicks++;
+      if (at(38, b + 4) || at(38, b + 12)) backbeats++;
+    }
+    const hats = drums.filter((n) => n.pitch === 42 || n.pitch === 46 || n.pitch === 51).length;
+    const perBar = drums.length / TRIO_BARS;
+    const groove = (kicks / TRIO_BARS) * (0.4 + 0.6 * (backbeats / TRIO_BARS));
+    const pulse = hats >= 8 ? 1 : 0.6;
+    const busy = perBar > 14 ? 14 / perBar : 1;
+    scores.push(groove * pulse * busy);
+  }
+  return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 }
 
 /** Semitone shift (−5…+6) that puts the most note-time inside the scale. Ties: smallest shift. */
@@ -150,7 +200,7 @@ export function degreeOf(note: number, scale: Scale): number {
   return octave * scale.size + best;
 }
 
-/** In a 7-note scale, chord tones are degrees 0, 2 and 4 above the chord root. */
+/** In a 7-note scale, chord tones are degrees 0, 2 and 4 above the chord root. (Kept for chord-relative lines.) */
 export function snapToChordTone(degree: number, size: number): number {
   if (size !== 7) return degree;
   const within = mod(degree, 7);
