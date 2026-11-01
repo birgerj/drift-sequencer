@@ -15,8 +15,9 @@ The **Feel** card is on a track's *Generator* tab.
 - **Velocity drift**: small random velocity changes.
 - **Lay back**: plays up to 25 ms behind the beat.
 - **Kick drum** (bass and acid tracks only):
-  - *Make room* moves a bass note that lands on a kick to the next step,
-    if that step is free.
+  - *Ignore* (default) plays as written.
+  - *Make room* moves a bass note that lands on a kick to the next step.
+    If that step is taken, the note is left out.
   - *Duck* plays it softer, like sidechain compression.
 - **Melody memory**: after 2, 3, 4 or 6 changes, the track comes back to
   **the theme** (the pattern it started with) or to **an earlier
@@ -59,6 +60,9 @@ response answers in the gap after it. The card is on the *Modulation* tab.
   phrase of the calling track.
 - **Transform**: how the answer changes the call: *Echo*, *Invert*,
   *Up a third*, *Down a fourth* or *Reverse*.
+
+If the calling track still plays all the time, the card offers **Make
+*track* the call**.
 
 The *Conversation* template shows this in action.
 

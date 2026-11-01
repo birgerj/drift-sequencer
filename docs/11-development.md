@@ -67,8 +67,10 @@ to what the others planned.
 inline Blob, so it also works in the single-file build. TensorFlow.js and
 Magenta load from jsDelivr, and the checkpoint from Google's bucket, only
 when the user asks. Several candidates are decoded and scored
-(`scoreTrio`); the best is converted to key-relative patterns
-(`trioToPatterns`). Linked tracks are `external` and take queued patterns
+(`scoreTrio`, with optional density taste); the best is converted to
+key-relative patterns (`trioToPatterns`, with a chord-fit setting). The
+AI page is `src/ui/views/AiView.tsx`; the controller is
+`src/ui/ensemble.ts`. Linked tracks are `external` and take queued patterns
 at 4-bar phrase starts.
 
 **State and storage.** `ProjectState` is one serialisable object with a

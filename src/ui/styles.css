@@ -437,7 +437,7 @@ kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border-radius
 .rail-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
 .rail-clock { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
 .rail-clock select { min-height: 36px; font-size: 13px; flex: 1 1 auto; min-width: 0; }
-.rail-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; }
+.rail-nav { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
 .rail-nav button { min-height: 52px; padding: 0; flex-direction: column; gap: 2px; font-size: 10px; background: transparent; border-color: transparent; color: var(--text-2); }
 .rail-nav button[aria-current='true'] { background: var(--surface-2); border-color: var(--line-2); color: var(--text); }
 .rail-help, .rail-install { background: transparent; border-color: transparent; color: var(--muted); font-size: 12px; min-height: 36px !important; }
@@ -619,3 +619,5 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .ensemble-parts .field { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; }
 .ensemble-parts select { min-width: 0; width: 62%; }
 .ensemble-morph { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); padding-top: 12px; }
+.ai-intro { max-width: 760px; }
+.ensemble-mini { display: flex; flex-direction: column; gap: 10px; }

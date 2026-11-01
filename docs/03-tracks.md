@@ -18,7 +18,7 @@ performance screen, or press its number (`1`–`9`).
 | **Drone** | Long notes on the root. | Follows (*Key root* or *Chord root*) |
 | **Drums** | Euclidean voices with step chance. | Mutation, Ratchets, Conditions, plus a card per drum voice |
 
-Melodic tracks never store fixed notes. They store notes *relative to the
+Most types also have **Velocity variation**. Melodic tracks never store fixed notes. They store notes *relative to the
 harmony*, so a melody keeps its shape while following the chords. See
 [Harmony](04-harmony.md).
 
@@ -54,7 +54,8 @@ On the *Overview* and *Pattern* tabs:
 - **Speed**: ×2, ×1, ½ or ¼ (`Shift+←` `Shift+→`). Slow speeds suit
   chords and drones; ×2 makes fast runs and arps. The hint shows how long
   one pass takes.
-- **Octave**: −3 to +3 (`[` `]`). Not for drums.
+- **Octave**: −3 to +3 (`[` `]`). Tap the number to reset it to 0. Not
+  for drums.
 
 ## Evolution and freeze
 
@@ -65,9 +66,9 @@ stays, so the music evolves without losing its identity.
   4, 8 or 16 bars.
 - **Freeze** stops a track from changing. Frozen tracks keep their
   pattern until you unfreeze them.
-- **Variations** (on the *Pattern* tab) lists the last ten patterns as
-  *A*, *A1*, *A2*… Tap one to go back to it. Variations only last until
-  you reload the page.
+- **Variations** (on the *Pattern* tab) shows the last ten patterns,
+  named after their place in the track's history (*A*, *A1*, *A2*…). Tap
+  one to go back to it. Variations only last until you reload the page.
 
 ## Drawing patterns
 
@@ -87,11 +88,13 @@ the pattern.
   conditions*: 1:2 plays on the 1st of every 2 passes, 3:4 on the 3rd of
   every 4, and so on.
 - **Tap edits: Ratchet** repeats a hit 2, 3 or 4 times within its step.
-- **Presets** give one-tap grooves for the TR-8S, by genre: house
-  (Classic, Deep, Disco, Afro), techno (Driving, Minimal, Hard rumble,
-  Tribal toms), Acid 909, electro and breaks (Electro, Funky break, UK
-  garage, Drum & bass), hip hop (Boom bap, Trap, Dembow) and ambient. A
-  preset suggests a tempo but doesn't change it.
+- **Presets** give one-tap grooves for the TR-8S, by genre: House (Classic
+  house, Deep house, Disco, Afro house), Techno (Driving techno, Minimal,
+  Hard techno rumble, Tribal toms), Acid (Acid 909), Electro & breaks
+  (Electro, Funky break, UK garage 2-step, Drum & bass), Hip hop (Boom
+  bap, Trap (half time), Dembow) and Ambient (Sparse pulse). A preset
+  replaces the pattern and the drum voices, and freezes the track. It
+  suggests a tempo but doesn't change it.
 
 ### Motif
 
@@ -124,8 +127,9 @@ voice is a euclidean rhythm:
 - **Velocity**.
 
 **+ Voice** adds a voice. **+ All TR-8S lanes** adds a lane for every
-TR-8S instrument. The note of a voice comes from the drum machine's
-instrument definition.
+TR-8S instrument. Each voice has a name (up to six characters) and a note,
+chosen from the drum machine's instrument definition; the trash button
+removes it.
 
 ## Output
 

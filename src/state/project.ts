@@ -171,6 +171,15 @@ export interface EnsembleSettings {
   b?: number[];
   /** 0..1 position between A and B. */
   morph?: number;
+  /** How many trios to write per new trio; the best one plays. */
+  candidates?: number;
+  /** Preferred busyness; candidates closer to it win. */
+  melodyDensity?: 'sparse' | 'balanced' | 'busy';
+  drumDensity?: 'sparse' | 'balanced' | 'busy';
+  /** Which notes are bent onto the chords (see trioToPatterns). */
+  fit?: 'off' | 'bar' | 'half' | 'beat';
+  /** Parts that take part in evolving; the others keep their current trio part. */
+  evolveParts?: { melody: boolean; bass: boolean; drums: boolean };
 }
 
 export function newId(): string {

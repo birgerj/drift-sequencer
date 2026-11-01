@@ -44,7 +44,15 @@ export interface TrioOptions {
   drumNotes?: Record<string, number>;
   melodyVelocity?: number;
   bassVelocity?: number;
+  /**
+   * Which notes are bent onto Drift's chords: none, the bar downbeats, the
+   * downbeats and halves (default), or every beat. The bass takes the chord
+   * root on each bar's downbeat unless fit is 'off'.
+   */
+  fit?: ChordFit;
 }
+
+export type ChordFit = 'off' | 'bar' | 'half' | 'beat';
 
 export interface TrioPatterns {
   melody: Pattern;
@@ -77,12 +85,13 @@ export function trioToPatterns(notes: readonly TrioNote[], opts: TrioOptions): T
     const events = own.map((n, i): PatternEvent => {
       const step = clampStep(n.start);
       const downbeat = step % TRIO_STEPS_PER_BAR === 0;
-      const half = step % (TRIO_STEPS_PER_BAR / 2) === 0;
-      const fit = downbeat && bass ? 'root' : half ? 'tone' : undefined;
+      const every = FIT_STEPS[opts.fit ?? 'half'];
+      const strong = every > 0 && step % every === 0;
+      const fit = !strong ? undefined : downbeat && bass ? 'root' : 'tone';
       return {
         step,
         length: Math.max(1, Math.min(TRIO_STEPS - step, n.end - n.start)),
-        velocity: half ? Math.min(127, velocity + 8) : velocity,
+        velocity: step % (TRIO_STEPS_PER_BAR / 2) === 0 ? Math.min(127, velocity + 8) : velocity,
         pitch: { kind: 'keyDegree', degree: degrees[i]! - offset, nearest: true, ...(fit ? { fit } : {}) },
       };
     });
@@ -111,12 +120,37 @@ export function trioToPatterns(notes: readonly TrioNote[], opts: TrioOptions): T
   };
 }
 
+/** Steps between fitted notes per ChordFit (0 = none). */
+const FIT_STEPS: Record<ChordFit, number> = { off: 0, bar: TRIO_STEPS_PER_BAR, half: TRIO_STEPS_PER_BAR / 2, beat: TRIO_STEPS_PER_BAR / 4 };
+
+export type Density = 'sparse' | 'balanced' | 'busy';
+
+/** What the user would rather hear; candidates closer to it score higher. */
+export interface TrioTaste {
+  melody?: Density;
+  drums?: Density;
+}
+
+/** Notes per 4-bar melody and drum hits per bar that each density aims for. */
+const MELODY_TARGET: Record<Density, number> = { sparse: 12, balanced: 24, busy: 40 };
+const DRUM_TARGET: Record<Density, number> = { sparse: 6, balanced: 11, busy: 17 };
+
+/** 1 at the target, falling off smoothly; never below 0.35 so taste nudges rather than rules. */
+function closeness(value: number, target: number): number {
+  const x = (value - target) / (target * 0.6);
+  return 0.35 + 0.65 * Math.exp(-x * x);
+}
+
 /**
  * How usable a decoded trio is, 0..1. Samples from a random point vary a lot:
  * some have no kick or snare, a melody of two notes or a bass that never
  * moves. Several candidates are decoded and the best one plays.
  */
-export function scoreTrio(notes: readonly TrioNote[], parts: { melody: boolean; bass: boolean; drums: boolean } = { melody: true, bass: true, drums: true }): number {
+export function scoreTrio(
+  notes: readonly TrioNote[],
+  parts: { melody: boolean; bass: boolean; drums: boolean } = { melody: true, bass: true, drums: true },
+  taste: TrioTaste = {},
+): number {
   const scores: number[] = [];
   const line = (instrument: number) => notes.filter((n) => !n.isDrum && n.instrument === instrument).sort((a, b) => a.start - b.start);
   const lineScore = (ns: TrioNote[], minNotes: number, maxNotes: number, minDistinct: number, maxRange: number, minMoves: number) => {
@@ -135,7 +169,10 @@ export function scoreTrio(notes: readonly TrioNote[], parts: { melody: boolean; 
     const bars = new Set(ns.map((n) => Math.floor(n.start / TRIO_STEPS_PER_BAR))).size / TRIO_BARS;
     return count * variety * span * motion * (0.5 + 0.5 * bars);
   };
-  if (parts.melody) scores.push(lineScore(line(0), 10, 40, 4, 14, 0.4));
+  if (parts.melody) {
+    const mel = line(0);
+    scores.push(lineScore(mel, 10, 40, 4, 14, 0.4) * (taste.melody ? closeness(mel.length, MELODY_TARGET[taste.melody]) : 1));
+  }
   if (parts.bass) scores.push(lineScore(line(1), 6, 36, 3, 15, 0.2));
   if (parts.drums) {
     const drums = notes.filter((n) => n.isDrum || n.instrument === 2);
@@ -151,8 +188,10 @@ export function scoreTrio(notes: readonly TrioNote[], parts: { melody: boolean; 
     const perBar = drums.length / TRIO_BARS;
     const groove = (kicks / TRIO_BARS) * (0.4 + 0.6 * (backbeats / TRIO_BARS));
     const pulse = hats >= 8 ? 1 : 0.6;
-    const busy = perBar > 14 ? 14 / perBar : 1;
-    scores.push(groove * pulse * busy);
+    const limit = taste.drums === 'busy' ? 20 : 14;
+    const busy = perBar > limit ? limit / perBar : 1;
+    const liked = taste.drums ? closeness(perBar, DRUM_TARGET[taste.drums]) : 1;
+    scores.push(groove * pulse * busy * liked);
   }
   return scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
 }

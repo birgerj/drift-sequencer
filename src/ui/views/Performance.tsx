@@ -3,7 +3,7 @@ import { interplayActive } from '../../core/engine/interplay';
 import { Chord } from '../../core/theory/chord';
 import { NOTE_NAMES, noteName, pitchClassOf } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
-import { Icon, Segmented, Select, Slider, Toggle } from '../components/controls';
+import { Icon, Slider } from '../components/controls';
 import { ENSEMBLE_PARTS } from '../ensemble';
 import { OctaveControl } from '../components/OctaveControl';
 import { RATE_LABELS } from '../components/TrackTiming';
@@ -250,91 +250,30 @@ function drumName(track: TrackState, note: number): string | undefined {
   return track.generator.params.voices.find((v) => v.note === note)?.name;
 }
 
-/** MusicVAE trio: one model writes melody, bass and drums so they fit together. */
+/** Quick access to the AI trio while playing; everything else is on the AI page. */
 function EnsembleCard() {
   const s = useStore();
   const e = s.ensemble;
   const settings = e.settings;
-  const linked = !!settings.z;
-  const blocked = e.unavailable;
-  const tracks = s.project.tracks;
-  const loading = e.status === 'loading';
+  if (e.unavailable) return null;
+  const names = ENSEMBLE_PARTS.map(({ part }) => e.track(part)?.name).filter(Boolean).join(', ');
+  const status = e.status === 'loading' ? 'Loading model…' : e.busy ? 'Writing…' : settings.z ? `Linked: ${names || 'no tracks'}` : 'Not in use';
   return (
-    <section class="card ensemble">
+    <section class="card ensemble ensemble-mini">
       <div class="row-between">
-        <h2 class="eyebrow">Ensemble</h2>
-        <span class="small muted">
-          {loading ? 'Loading model…' : e.busy ? 'Writing…' : e.status === 'ready' ? 'MusicVAE trio' : linked ? 'Model not loaded' : ''}
-        </span>
+        <h2 class="eyebrow">AI ensemble</h2>
+        <button type="button" class="ghost small" onClick={() => s.go({ name: 'ai' })}>
+          Settings <Icon name="sliders" size={14} />
+        </button>
       </div>
-      {blocked ? (
-        <p class="hint">{blocked}</p>
-      ) : (
-        <>
-          <div class="ensemble-parts">
-            {ENSEMBLE_PARTS.map(({ part, label }) => (
-              <Select
-                label={label}
-                value={settings[part] ?? ''}
-                options={[{ value: '', label: 'None' }, ...tracks.map((t) => ({ value: t.id, label: t.name }))]}
-                onChange={(id) => e.update({ [part]: id || undefined })}
-              />
-            ))}
-          </div>
-          <div class="row gap-s wrap">
-            <button type="button" class="primary" disabled={loading || e.busy} onClick={() => void e.generate()}>
-              <Icon name="dice" /> {e.status === 'ready' ? 'Generate together' : 'Load model and generate'}
-            </button>
-            {linked && e.status !== 'ready' && (
-              <button type="button" disabled={loading} onClick={() => void e.load()}>
-                Load model
-              </button>
-            )}
-            {linked && (
-              <button type="button" onClick={() => e.unlink()} title="The tracks keep their pattern and evolve on their own again">
-                Unlink
-              </button>
-            )}
-          </div>
-          {e.status === 'error' && <p class="hint warn">Couldn’t load the model. It needs an internet connection the first time. ({e.error})</p>}
-          {e.status === 'idle' && !linked && (
-            <p class="hint">Downloads Magenta’s MusicVAE trio model once (tens of MB). It writes 4 bars of melody, bass and drums that belong together.</p>
-          )}
-          {linked && (
-            <>
-              <Slider label="Variation" value={settings.temperature} min={0.1} max={1.5} step={0.05} format={(x) => x.toFixed(2)} onInput={(temperature) => e.update({ temperature })} />
-              <Toggle label="Evolve" description="Drift through the model while playing" checked={settings.evolve} onChange={(evolve) => e.update({ evolve })} />
-              {settings.evolve && (
-                <>
-                  <Segmented
-                    label="Every (bars)"
-                    value={settings.everyBars}
-                    options={[4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
-                    onChange={(everyBars) => e.update({ everyBars })}
-                  />
-                  <Slider label="Step size" value={settings.amount} min={0.05} max={1} step={0.05} format={(x) => `${Math.round(x * 100)}%`} onInput={(amount) => e.update({ amount })} />
-                </>
-              )}
-              <div class="ensemble-morph">
-                <div class="row gap-s">
-                  <button type="button" aria-pressed={!!settings.a} onClick={() => e.storeSlot('a')} title="Remember this trio as A">
-                    Set A
-                  </button>
-                  <button type="button" aria-pressed={!!settings.b} onClick={() => e.storeSlot('b')} title="Remember this trio as B">
-                    Set B
-                  </button>
-                </div>
-                {settings.a && settings.b ? (
-                  <Slider label="Morph A → B" value={settings.morph ?? 0.5} min={0} max={1} step={0.05} format={(x) => `${Math.round(x * 100)}%`} onInput={(t) => e.morph(t)} />
-                ) : (
-                  <p class="hint">Store two trios as A and B, then slide between them.</p>
-                )}
-              </div>
-              {e.status !== 'ready' && settings.evolve && <p class="hint">Evolving starts once the model is loaded.</p>}
-            </>
-          )}
-        </>
-      )}
+      <span class="small muted">
+        {status}
+        {settings.z && settings.evolve ? ` · evolves every ${settings.everyBars} bars` : ''}
+      </span>
+      <button type="button" class="primary" disabled={e.status === 'loading' || e.busy} onClick={() => void e.generate()}>
+        <Icon name="dice" /> {e.status === 'ready' ? 'Generate together' : 'Load model and generate'}
+      </button>
+      {e.status === 'error' && <p class="hint warn">Couldn’t load the model. It needs an internet connection the first time.</p>}
     </section>
   );
 }

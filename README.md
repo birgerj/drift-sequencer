@@ -17,8 +17,10 @@ knobs instead of the mouse.
 - **One harmony for everything.** Pick a key and a chord progression, or
   let Drift write and evolve one. Every track follows it.
 - **AI ensemble.** Magenta's MusicVAE writes melody, bass and drums that
-  belong together, and drifts through variations while you play.
-- **No account, no backend.** A web app that works offline once installed.
+  belong together, and drifts through variations while you play. It has its
+  own page, with settings for fit, busyness and evolution.
+- **No account, no backend.** A web app that works offline once installed
+  (apart from the AI ensemble).
   Projects are saved in your browser.
 
 ## Open Drift
@@ -28,7 +30,8 @@ knobs instead of the mouse.
 - **As an app:** choose *Install app* in Drift's left bar, or the install
   icon in Chrome's address bar.
 - **As one file:** download [`standalone/index.html`](standalone/index.html)
-  and double-click it. No install or internet needed.
+  and double-click it. No install needed; only the AI ensemble needs the
+  internet.
 
 ## Manual
 

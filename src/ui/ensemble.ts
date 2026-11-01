@@ -1,4 +1,4 @@
-import { evolveLatent, randomLatent, scoreTrio, slerp, trioToPatterns, TRIO_BARS, TRIO_STEPS_PER_BAR, type TrioPatterns } from '../core/ensemble/trio';
+import { evolveLatent, randomLatent, scoreTrio, slerp, trioToPatterns, TRIO_BARS, TRIO_STEPS_PER_BAR, type TrioNote, type TrioPatterns } from '../core/ensemble/trio';
 import type { Pattern } from '../core/pattern/pattern';
 import { Scale } from '../core/theory/scale';
 import { TrioModel } from '../io/ensemble/trioModel';
@@ -8,7 +8,17 @@ import type { AppStore } from './store';
 export const DEFAULT_ENSEMBLE: EnsembleSettings = { temperature: 0.5, evolve: true, everyBars: 8, amount: 0.35, morph: 0.5 };
 
 export type EnsembleStatus = 'idle' | 'loading' | 'ready' | 'error';
-type Part = 'melody' | 'bass' | 'drums';
+export type Part = 'melody' | 'bass' | 'drums';
+
+/** A trio that played, so it can be brought back exactly. */
+export interface TrioMemory {
+  id: number;
+  label: string;
+  bar: number;
+  z: number[];
+  notes: TrioNote[];
+  score: number;
+}
 export const ENSEMBLE_PARTS: { part: Part; label: string }[] = [
   { part: 'melody', label: 'Melody' },
   { part: 'bass', label: 'Bass' },
@@ -24,6 +34,9 @@ export class EnsembleController {
   status: EnsembleStatus = 'idle';
   error = '';
   busy = false;
+  /** The last trios that played (newest first); kept for this session only. */
+  history: TrioMemory[] = [];
+  private nextMemory = 1;
   private model: TrioModel | undefined;
   private morphTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -37,6 +50,11 @@ export class EnsembleController {
   get unavailable(): string | undefined {
     if (this.store.project.stepsPerBar !== TRIO_STEPS_PER_BAR) return 'The trio model writes 16th notes in 4/4; this project uses another grid.';
     return undefined;
+  }
+
+  /** Backend the model runs on: 'webgl' is fast, 'cpu' works everywhere. */
+  get backend(): string {
+    return this.model?.backend ?? '';
   }
 
   /** Linked track ids, missing or not. */
@@ -81,7 +99,8 @@ export class EnsembleController {
     if (!(await this.load()) || !this.model) return;
     const zDims = this.model.zDims;
     // Random points vary a lot in quality: decode a batch and keep the best.
-    await this.write(Array.from({ length: 8 }, () => randomLatent(zDims)), 'new trio');
+    const n = Math.max(1, Math.min(16, this.settings.candidates ?? 8));
+    await this.write(Array.from({ length: n }, () => randomLatent(zDims)), 'new trio', 'manual');
   }
 
   storeSlot(slot: 'a' | 'b'): void {
@@ -100,7 +119,7 @@ export class EnsembleController {
     const { a, b } = this.settings;
     if (!a || !b || !(await this.load())) return;
     const z = slerp(a, b, t);
-    await this.write([z, z, z], `morph ${Math.round(t * 100)}% A→B`);
+    await this.write([z, z, z], `morph ${Math.round(t * 100)}% A→B`, 'manual');
   }
 
   /** Called by the store on every step: one bar before a phrase change, prepare the next step. */
@@ -113,34 +132,49 @@ export class EnsembleController {
     // Decode during the last bar, so the result is there when the phrase starts again.
     if ((bar + 1) % every !== 0) return;
     const z = e.z;
-    void this.write([0, 1, 2].map(() => evolveLatent(z, e.amount)), undefined);
+    void this.write([0, 1, 2].map(() => evolveLatent(z, e.amount)), undefined, 'evolve');
+  }
+
+  /** Play an earlier trio again, exactly as it was. */
+  recall(id: number): void {
+    const m = this.history.find((x) => x.id === id);
+    if (!m) return;
+    this.apply(m.z, this.convert(m.notes), 'manual');
+    this.store.addLog(Math.max(0, this.store.live.bar), `Ensemble · back to ${m.label}`, this.track('melody')?.color ?? 'var(--accent)');
+  }
+
+  /** Re-apply the current trio with new conversion settings (e.g. chord fit), without the model. */
+  refit(): void {
+    const z = this.settings.z;
+    const current = z && this.history.find((m) => m.z === z);
+    if (current) this.apply(current.z, this.convert(current.notes), 'manual');
   }
 
   /** Decode the candidates, keep the one that scores best, and hand its parts to the tracks. */
-  private async write(candidates: number[][], log: string | undefined): Promise<void> {
+  private async write(candidates: number[][], log: string | undefined, kind: 'manual' | 'evolve'): Promise<void> {
     if (!this.model) return;
     this.busy = true;
     this.store.notify();
     try {
       const decoded = await this.model.decode(candidates, this.settings.temperature);
       const linked = { melody: !!this.track('melody'), bass: !!this.track('bass'), drums: !!this.track('drums') };
+      const taste = { melody: this.settings.melodyDensity, drums: this.settings.drumDensity };
       let best = 0;
       let bestScore = -1;
       decoded.forEach((notes, i) => {
-        const score = scoreTrio(notes, linked);
+        const score = scoreTrio(notes, linked, taste);
         if (score > bestScore) {
           bestScore = score;
           best = i;
         }
       });
       const z = candidates[best]!;
-      const project = this.store.project;
-      const patterns = trioToPatterns(decoded[best] ?? [], {
-        scale: new Scale(project.key.root, project.key.mode),
-        drumNotes: this.drumNotes(),
-      });
-      this.apply(z, patterns);
-      if (log) this.store.addLog(Math.max(0, this.store.live.bar), `Ensemble · ${log}`, this.track('melody')?.color ?? 'var(--accent)');
+      const notes = decoded[best] ?? [];
+      this.apply(z, this.convert(notes), kind);
+      const bar = Math.max(0, this.store.live.bar);
+      const id = this.nextMemory++;
+      this.history = [{ id, label: `Trio ${id}`, bar, z, notes, score: bestScore }, ...this.history].slice(0, 12);
+      if (log) this.store.addLog(bar, `Ensemble · ${log}`, this.track('melody')?.color ?? 'var(--accent)');
     } catch (e) {
       this.error = e instanceof Error ? e.message : String(e);
       this.store.showToast(`Ensemble: ${this.error}`);
@@ -150,13 +184,24 @@ export class EnsembleController {
     }
   }
 
+  private convert(notes: TrioNote[]): TrioPatterns {
+    const project = this.store.project;
+    return trioToPatterns(notes, {
+      scale: new Scale(project.key.root, project.key.mode),
+      drumNotes: this.drumNotes(),
+      fit: this.settings.fit ?? 'half',
+    });
+  }
+
   /** Give each linked track its part: queued for the next 4-bar phrase while playing, right away when stopped. */
-  private apply(z: number[], parts: TrioPatterns): void {
+  private apply(z: number[], parts: TrioPatterns, kind: 'manual' | 'evolve'): void {
     const playing = this.store.sequencer.playing;
     const updates = new Map<string, Pattern>();
+    const evolving = this.settings.evolveParts ?? { melody: true, bass: true, drums: true };
     for (const { part } of ENSEMBLE_PARTS) {
       const t = this.track(part);
       if (!t || t.frozen) continue;
+      if (kind === 'evolve' && !evolving[part]) continue;
       updates.set(t.id, parts[part]);
       if (playing) this.store.sequencer.track(t.id)?.queuePattern(parts[part]);
     }

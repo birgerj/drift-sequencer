@@ -37,11 +37,13 @@ progression moves from i to IV, a motif moves up with it.
 - **Vary one chord** swaps a single chord.
 - **Evolve while playing** changes the progression by itself at the end
   of a loop. Choose **How** (vary one chord, or a new progression) and
-  **Every (loops)**.
+  **Every (loops)**: 1, 2, 4 or 8.
 
 ## Presets
 
 Common progressions in one tap: i – VI – III – VII, I – V – vi – IV,
-i – iv – v – i, ii – V – I, i – VII – VI – VII and I – IV.
+i – iv – v – i, ii – V – I, i – VII – VI – VII and I – IV. A preset
+replaces the whole progression with triads of two bars each (*ii – V – I*
+holds the I for two chords).
 
 Next: [Playing together →](05-playing-together.md)

@@ -27,13 +27,15 @@ The *Panel* tab shows the synth's knobs, grouped in pages of eight.
 
 ## Record motion
 
-Turn knobs on the synth itself, or on the panel, and Drift loops the
-movement like an LFO.
+Turn knobs on the panel, or on the synth itself, and Drift loops the
+movement like an LFO. The recorder is at the bottom of the *Panel* tab, so
+it needs an instrument definition with knobs.
 
-1. Make sure Drift receives the synth's knobs: set **Knobs in (MIDI
-   input)** for the device under [Devices](08-devices.md).
-2. Press Play. Choose a length of **1, 2, 4 or 8 bars** and click **Record
-   motion**.
+1. To record knobs turned on the synth, Drift has to receive them: set
+   **Knobs in (MIDI input)** for the device under
+   [Devices](08-devices.md). For the on-screen knobs this isn't needed.
+2. Press Play. Choose a length (**1 bar**, **2 bars**, **4 bars** or
+   **8 bars**; 4 by default) and click **Record motion**.
 3. Recording starts on the next bar. Turn the knobs.
 
 Recorded motions appear in the **Recorded motions** card on the

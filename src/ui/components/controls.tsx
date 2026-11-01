@@ -170,6 +170,7 @@ const PATHS: Record<string, string> = {
   back: 'M15 5l-7 7 7 7',
   trash: 'M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12',
   refresh: 'M19 12a7 7 0 1 1-2.05-4.95M19 5v4h-4',
+  spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',
   dice: 'M3 7h3.5l9 10H21M3 17h3.5l2.5-2.8M13 9.8L15.5 7H21M18 4l3 3-3 3M18 14l3 3-3 3',
   snow: 'M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9',
   upload: 'M12 16V4M7 9l5-5 5 5M5 20h14',

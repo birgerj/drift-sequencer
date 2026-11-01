@@ -18,15 +18,16 @@ hand. Each device has:
   connected.
 - **Knobs in (MIDI input)**: where Drift listens for this synth's knobs,
   for [recording motions](07-sound-and-modulation.md). *Auto* guesses the
-  input with the same name.
+  input with the same name; *Off* ignores incoming knobs.
 - **Instrument (CC map)**: which synth this is, so Drift knows its knobs
   and drum notes.
 - **Used for**: the roles it plays (Lead, Bass, Pad / chords, Drums).
   New tracks and templates pick devices by role.
 - **Send clock**: MIDI clock and start/stop, so the device follows
-  Drift's tempo. The **Clock out** menu in the left bar picks a single
-  clock device quickly.
-- **Test note** plays a note.
+  Drift's tempo. Several devices can have it on. The **Clock out** menu in
+  the left bar quickly picks a single clock device.
+- **Test note** plays three notes: C–E–G on a synth, or kick, snare and
+  hat on a drum machine.
 - **Find channel…** steps through channels 1–16 with a test note until
   you hear it, then click **That one!**.
 - **Acid test** (bass devices and 303-style synths) plays plain, accent
@@ -58,7 +59,8 @@ note triggers which drum.
 
 - **midi.guide library**: click **Browse midi.guide** to search CC maps
   for hundreds of synths, from [midi.guide](https://midi.guide) by Pencil
-  Research (CC BY-SA 4.0). **Import** adds one.
+  Research (CC BY-SA 4.0). Search by name; **Import** adds one, and
+  **Update** refreshes one you already have.
 - **Installed definitions** lists what you have. Built-in ones can't be
   deleted.
 - **Import from file**: choose a midi.guide CSV, optionally with its

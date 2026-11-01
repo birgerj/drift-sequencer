@@ -82,7 +82,8 @@ export type View =
   | { name: 'templates' }
   | { name: 'instruments' }
   | { name: 'setup' }
-  | { name: 'harmony' };
+  | { name: 'harmony' }
+  | { name: 'ai' };
 
 export interface LogEntry {
   id: number;

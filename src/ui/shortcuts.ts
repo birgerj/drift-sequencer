@@ -29,6 +29,8 @@ export const SHORTCUT_HELP: { keys: string; action: string }[] = [
   { keys: 'Shift + ←  →', action: 'Speed slower / faster' },
   { keys: ',  .', action: 'Tempo −1 / +1 (Shift: ±5)' },
   { keys: 'O', action: 'All tracks (Overview page)' },
+  { keys: 'A', action: 'AI ensemble page' },
+  { keys: 'G', action: 'Generate a new AI trio' },
   { keys: 'Shift + T', action: 'Next theme' },
   { keys: '?', action: 'Show this list' },
   { keys: 'Esc', action: 'Close' },
@@ -82,6 +84,14 @@ export function handleShortcut(s: AppStore, e: Pick<KeyboardEvent, 'key' | 'code
   }
   if (key === 'o' || key === 'O') {
     s.go({ name: 'performance' });
+    return true;
+  }
+  if (key === 'a' || key === 'A') {
+    s.go({ name: 'ai' });
+    return true;
+  }
+  if (key === 'g' || key === 'G') {
+    if (!s.ensemble.unavailable && !s.ensemble.busy) void s.ensemble.generate();
     return true;
   }
   if (key === ',' || key === '.' || key === '<' || key === '>') {

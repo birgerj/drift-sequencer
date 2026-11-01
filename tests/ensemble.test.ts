@@ -66,6 +66,13 @@ describe('trio conversion', () => {
     };
     expect([fits(melody, 0), fits(melody, 8), fits(melody, 2), fits(melody, 12)]).toEqual(['tone', 'tone', undefined, undefined]);
     expect([fits(b, 0), fits(b, 8), fits(b, 16)]).toEqual(['root', 'tone', 'root']);
+    // Other fit settings.
+    const off = trioToPatterns(notes, { scale: C_MAJOR, fit: 'off' });
+    expect(off.melody.events.some((e) => e.pitch.kind === 'keyDegree' && e.pitch.fit)).toBe(false);
+    const beat = trioToPatterns(notes, { scale: C_MAJOR, fit: 'beat' });
+    expect([fits(beat.melody, 4), fits(beat.melody, 2)]).toEqual(['tone', undefined]);
+    const bar = trioToPatterns(notes, { scale: C_MAJOR, fit: 'bar' });
+    expect([fits(bar.melody, 0), fits(bar.melody, 8)]).toEqual(['tone', undefined]);
 
     // Resolve against a C – F progression: every note is in key.
     const harmony = new Harmony(C_MAJOR, [{ degree: 0, bars: 2 }, { degree: 3, bars: 2 }]);
@@ -101,6 +108,14 @@ describe('trio scoring', () => {
     expect(droning).toBeLessThan(good);
     expect(noKick).toBeLessThan(good);
     expect(empty).toBeLessThan(good);
+  });
+
+  it('prefers the density you ask for', () => {
+    const sparseTune = tune.filter((_, i) => i % 2 === 0);
+    const busyTune = [...tune, ...tune.map((n) => ({ ...n, start: n.start + 2, end: n.start + 3, pitch: n.pitch + 2 }))];
+    const parts = { melody: true, bass: false, drums: false };
+    expect(scoreTrio(busyTune, parts, { melody: 'busy' })).toBeGreaterThan(scoreTrio(sparseTune, parts, { melody: 'busy' }));
+    expect(scoreTrio(sparseTune, parts, { melody: 'sparse' })).toBeGreaterThan(scoreTrio(busyTune, parts, { melody: 'sparse' }));
   });
 
   it('only scores the parts that are linked', () => {

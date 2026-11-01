@@ -20,9 +20,11 @@ Press `?` in Drift to see this list.
 | `Shift+←` `Shift+→` | Speed slower / faster |
 | `,` `.` | Tempo −1 / +1 (with Shift: ±5) |
 | `O` | Overview (the performance screen) |
+| `A` | AI page |
+| `G` | Generate a new AI trio |
 | `Shift+T` | Next theme |
 | `?` | Shortcut list |
-| `Esc` | Close |
+| `Esc` | Close the shortcut list |
 
 Track keys work once a track is selected. Shortcuts are ignored while you
 type in a text field. On a focused knob or slider, the arrow keys move

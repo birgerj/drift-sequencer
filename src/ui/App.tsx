@@ -5,6 +5,7 @@ import { Icon } from './components/controls';
 import { Rail } from './components/Rail';
 import { SHORTCUT_HELP, useShortcuts } from './shortcuts';
 import { useStore } from './store';
+import { AiView } from './views/AiView';
 import { HarmonyEditor } from './views/HarmonyEditor';
 import { Instruments } from './views/Instruments';
 import { Library } from './views/Library';
@@ -34,6 +35,7 @@ export function App() {
         {v.name === 'templates' && <Library />}
         {v.name === 'instruments' && <Instruments />}
         {v.name === 'harmony' && <HarmonyEditor />}
+        {v.name === 'ai' && <AiView />}
         {v.name === 'setup' && <Setup />}
       </main>
       {s.shortcutsOpen && <ShortcutHelp />}

@@ -8,7 +8,7 @@ through every screen. Start with *Getting started* if you're new.
 3. [Tracks](03-tracks.md): track types, the track editor, drawing patterns, variations and freeze.
 4. [Harmony](04-harmony.md): key, mode and chord progressions.
 5. [Playing together](05-playing-together.md): feel, *Listens to*, and call and response.
-6. [The AI ensemble](06-ensemble.md): melody, bass and drums written together by MusicVAE.
+6. [The AI ensemble](06-ensemble.md): the AI page, where MusicVAE writes melody, bass and drums together.
 7. [Sound and modulation](07-sound-and-modulation.md): the knob panel, LFOs and recorded knob motions.
 8. [Devices](08-devices.md): your synths, instrument definitions, clock, the built-in Drift Synth and themes.
 9. [Projects and templates](09-projects.md): templates, saving, export and import.
