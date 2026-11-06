@@ -918,6 +918,8 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 
 /* Module panel: a hand-made layout per built-in synth, kept compact. */
 .knob-panel.with-modules { display: flex; flex-direction: column; align-items: stretch; gap: 10px; width: 100%; min-width: 0; }
+.panel-tabs { align-self: flex-start; max-width: 100%; }
+.panel-tabs button { flex: 0 0 auto; min-height: 34px; font-size: 13px; padding: 0 12px; }
 .panel-modules { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; }
 .panel-module { flex: 1 1 220px; min-width: 0; display: flex; flex-direction: column; gap: 6px; background: var(--module); border: 1px solid var(--module-line); border-radius: 12px; padding: 8px 10px 10px; }
 .panel-module.wide { flex: 2 1 380px; }
@@ -947,6 +949,14 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 
 .mod-faders { display: flex; flex-wrap: wrap; gap: 2px; flex: 1 1 auto; justify-content: space-around; }
 .mod-sliders { display: flex; flex-direction: column; gap: 6px; flex: 1 1 100%; }
+.panel-module:has(.mod-strips) { flex-basis: 100%; }
+.mod-strips { flex: 1 1 100%; display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 6px 4px; }
+.strip { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 4px 0 6px; background: var(--well); border-radius: 8px; min-width: 0; }
+.strip-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 18px; }
+.strip .mini-knob.no-label { height: 58px; }
+.strip-legend { background: transparent; align-items: flex-end; padding-right: 2px; }
+.legend-cell { height: 58px; display: flex; align-items: center; font-size: 11px; color: var(--muted); white-space: nowrap; }
+.strip .fader.vertical .fader-track { height: 72px; }
 .fader { display: flex; min-width: 0; }
 .fader.vertical { flex-direction: column; align-items: center; width: 44px; gap: 2px; }
 .fader.horizontal { flex-direction: column; gap: 2px; }

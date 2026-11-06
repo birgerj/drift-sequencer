@@ -11,22 +11,29 @@ empty; LFOs can still send any CC number.
 
 ## Panel
 
-The *Panel* tab shows the synth's knobs, grouped in pages of eight.
-
-![The knob panel](images/lead-panel.png)
-
-The built-in Drift Synth sounds get their own compact panel instead,
-with a control that suits each kind of parameter:
+The *Panel* tab shows the synth's knobs, in sections, with a control
+that suits each kind of parameter:
 
 - **Switches** for stepped choices: Juno range and chorus, Mono
-  waveforms, drum kit. One tap picks a setting.
-- **Faders** for mixer levels (oscillators, drum voices). Tap or drag.
+  waveforms, drum kit, on/off settings. One tap picks a setting.
+- **Faders** for mixer levels. Tap or drag.
+- **Channel strips** when a synth repeats the same knobs per voice or
+  oscillator (TR-8S drums, Hydrasynth OSC1–3): a narrow column each,
+  knobs over a level fader, with the knob names once on the left.
 - **Filter pad**: drag the dot left/right for cutoff and up/down for
   resonance. The curve shows the response; a pink band shows an LFO on
   the cutoff.
 - **Envelope graph**: drag the points. The first sets attack, the second
   decay (sideways) and sustain (up/down), the last release.
 - An **LFO preview** shows its speed and fade-in.
+
+The built-in Drift Synth sounds have a hand-made layout. Every other
+synth, including the ones you import from midi.guide, gets one built from
+its CC list: sections and names come from midi.guide, value bands in its
+usage notes (such as `0~42: saw, 43~85: pulse`) become switches, and
+cutoff + resonance, A/D/S/R and levels are recognised by name. Big synths
+show one section at a time, picked from a row of tabs; small sections
+share a tab.
 
 - **Drag** a knob up or down. Hold Shift for fine control. The mouse
   wheel also works.

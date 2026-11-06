@@ -1,7 +1,8 @@
-import { useRef } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import {
   choiceLabel,
   choiceValue,
+  widgetParams,
   type InstrumentDefinition,
   type InstrumentParam,
   type PanelModule,
@@ -10,19 +11,41 @@ import {
 import type { TrackState } from '../../state/project';
 import { useStore } from '../store';
 
+/** Above this many controls a panel with several groups shows one group at a time. */
+const TABS_ABOVE = 32;
+
 /**
- * The hand-made panel of an instrument: sections with a control per kind of
- * parameter (switches, faders, a filter pad, an envelope graph) instead of
- * a page of identical knobs. Kept compact so a whole synth fits on a screen.
+ * An instrument's panel: sections with a control per kind of parameter
+ * (switches, faders, a filter pad, an envelope graph) instead of a page of
+ * identical knobs. Kept compact so a whole synth fits on a screen; big
+ * synths get a row of tabs, one per group.
  */
 export function PanelModules({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition }) {
   const byId = new Map(instrument.params.map((p) => [p.id, p]));
+  const modules = instrument.panel ?? [];
+  const groups = [...new Set(modules.map((m) => m.group).filter((g): g is string => !!g))];
+  const controls = modules.reduce((n, m) => n + m.widgets.reduce((k, w) => k + widgetParams(w).length, 0), 0);
+  const tabbed = groups.length > 1 && controls > TABS_ABOVE;
+  const [picked, setPicked] = useState<string | undefined>(undefined);
+  const group = tabbed ? (picked && groups.includes(picked) ? picked : groups[0]) : undefined;
+  const shown = group ? modules.filter((m) => m.group === group) : modules;
   return (
-    <div class="panel-modules">
-      {(instrument.panel ?? []).map((m) => (
-        <Module key={m.title} module={m} track={track} byId={byId} />
-      ))}
-    </div>
+    <>
+      {tabbed && (
+        <div class="panel-tabs segmented" role="tablist" aria-label="Panel sections">
+          {groups.map((g) => (
+            <button type="button" role="tab" aria-selected={g === group} aria-checked={g === group} onClick={() => setPicked(g)}>
+              {g}
+            </button>
+          ))}
+        </div>
+      )}
+      <div class="panel-modules">
+        {shown.map((m, i) => (
+          <Module key={`${group}-${i}`} module={m} track={track} byId={byId} />
+        ))}
+      </div>
+    </>
   );
 }
 
@@ -89,6 +112,36 @@ function Widget({ widget: w, track, byId }: { widget: PanelWidget; track: TrackS
           sustainLevel={w.sustainLevel ?? 1}
         />
       );
+    case 'strips': {
+      // Strips that repeat the same knobs get one legend column instead of labels on each knob.
+      const names = (ids: string[]) => list(ids).map((p) => (p.short ?? p.name).toLowerCase().replace(/\s+/g, ''));
+      const first = names(w.strips[0]?.params ?? []);
+      const shared = w.strips.length > 1 && w.strips.every((st) => names(st.params).join('|') === first.join('|'));
+      return (
+        <div class="mod-strips">
+          {shared && (
+            <div class="strip strip-legend" aria-hidden="true">
+              <span class="strip-title">&nbsp;</span>
+              {list(w.strips[0]!.params).map((p) => (
+                <span class="legend-cell">{p.short ?? p.name}</span>
+              ))}
+            </div>
+          )}
+          {w.strips.map((st) => {
+            const level = get(st.level);
+            return (
+              <div class="strip" key={st.title} role="group" aria-label={st.title}>
+                <span class="strip-title">{st.title}</span>
+                {list(st.params).map((p) => (
+                  <MiniKnob key={p.id} track={track} param={p} hideLabel={shared} />
+                ))}
+                {level && <Fader track={track} param={level} vertical bare />}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
     case 'lfo': {
       const rate = get(w.rate);
       return rate ? <LfoWave track={track} rate={rate} delay={get(w.delay)} /> : null;
@@ -191,7 +244,7 @@ function arc(r: number, from: number, to: number): string {
 }
 
 /** Small knob with an arc: drag up/down, Shift for fine, double-tap resets. */
-function MiniKnob({ track, param }: { track: TrackState; param: InstrumentParam }) {
+function MiniKnob({ track, param, hideLabel }: { track: TrackState; param: InstrumentParam; hideLabel?: boolean }) {
   const p = useParam(track, param)!;
   const drag = useRef<{ y: number; start: number; moved: boolean } | undefined>(undefined);
   const tap = useDoubleTap(p.reset);
@@ -199,7 +252,7 @@ function MiniKnob({ track, param }: { track: TrackState; param: InstrumentParam 
   const [from, to] = param.bipolar ? [Math.min(0.5, p.pos), Math.max(0.5, p.pos)] : [0, p.pos];
   const [px, py] = polar(13, ARC_START + p.pos * ARC_SWEEP);
   return (
-    <div class="mini-knob" title={param.usage ?? param.name}>
+    <div class={`mini-knob ${hideLabel ? 'no-label' : ''}`} title={param.usage ?? param.name}>
       <div
         class="mini-knob-dial"
         role="slider"
@@ -240,7 +293,7 @@ function MiniKnob({ track, param }: { track: TrackState; param: InstrumentParam 
           <line x1="24" y1="24" x2={px.toFixed(2)} y2={py.toFixed(2)} class="mk-pointer" />
         </svg>
       </div>
-      <span class="mk-label">{param.short ?? param.name}</span>
+      {!hideLabel && <span class="mk-label">{param.short ?? param.name}</span>}
       <span class={`mk-value-text mono ${p.stored ? '' : 'unset'}`}>{p.shown}</span>
     </div>
   );
@@ -270,7 +323,7 @@ function ChoiceSwitch({ track, param }: { track: TrackState; param: InstrumentPa
 // ---------------------------------------------------------------- fader
 
 /** A fader: vertical for mixer channels, horizontal for levels and sends. Tap or drag to set. */
-function Fader({ track, param, vertical }: { track: TrackState; param: InstrumentParam; vertical?: boolean }) {
+function Fader({ track, param, vertical, bare }: { track: TrackState; param: InstrumentParam; vertical?: boolean; bare?: boolean }) {
   const p = useParam(track, param)!;
   const tap = useDoubleTap(p.reset);
   const dragging = useRef(false);
@@ -328,7 +381,7 @@ function Fader({ track, param, vertical }: { track: TrackState; param: Instrumen
       {vertical && (
         <>
           <span class={`mono fader-value ${p.stored ? '' : 'unset'}`}>{p.shown}</span>
-          <span class="mod-label fader-label">{param.short ?? param.name}</span>
+          {!bare && <span class="mod-label fader-label">{param.short ?? param.name}</span>}
         </>
       )}
     </div>
@@ -395,10 +448,10 @@ function FilterPad({ track, x, y }: { track: TrackState; x: InstrumentParam; y: 
           }}
         />
         <span class="pad-readout mono pad-x">
-          {x.name} {px.shown}
+          {x.short ?? x.name} {px.shown}
         </span>
         <span class="pad-readout mono pad-y">
-          {y.name} {py.shown}
+          {y.short ?? y.name} {py.shown}
         </span>
       </div>
     </div>
