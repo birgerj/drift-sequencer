@@ -6,6 +6,7 @@
  */
 
 import kitsVersion from './kitsVersion.json';
+import { SampleCache, samplesBase } from './sampleCache';
 
 export type SampleKitId = 'acoustic' | 'vintage' | 'jazz' | 'deep-house' | 'linn';
 
@@ -148,36 +149,9 @@ export interface LoadedKit {
   pieces: Partial<Record<Piece, LoadedPiece>>;
 }
 
-/** Published copy, used when Drift runs from a file:// standalone build. */
-const PUBLISHED = 'https://birgerj.github.io/drift-sequencer/kits/';
 /** Changes whenever the kits are rebuilt, so stale cached hits are never mixed in. */
-const CACHE = `drift-kits-${kitsVersion.version}`;
-let pruned = false;
-
-function kitsBase(): string {
-  if (typeof location !== 'undefined' && location.protocol.startsWith('http')) return new URL('kits/', document.baseURI).href;
-  return PUBLISHED;
-}
-
-async function fetchCached(url: string): Promise<Response> {
-  let cache: Cache | undefined;
-  try {
-    if (!pruned) {
-      pruned = true;
-      for (const k of await caches.keys()) if (k.startsWith('drift-kits-') && k !== CACHE) await caches.delete(k);
-    }
-    cache = await caches.open(CACHE);
-    const hit = await cache.match(url);
-    if (hit) return hit;
-  } catch {
-    cache = undefined; // no Cache Storage (file://, private mode): just download
-  }
-  const res = await fetch(url);
-  // A missing file can come back as the app's index.html (SPA fallback); never cache that.
-  if (!res.ok || res.headers.get('content-type')?.includes('text/html')) throw new Error(`Not found: ${url}`);
-  if (cache) await cache.put(url, res.clone()).catch(() => undefined);
-  return res;
-}
+const cache = new SampleCache('drift-kits-', kitsVersion.version);
+const fetchCached = (url: string) => cache.fetch(url);
 
 export type KitStatus = { id: SampleKitId; name: string; state: 'loading' | 'ready' | 'error'; error?: string };
 const listeners = new Set<(s: KitStatus) => void>();
@@ -195,7 +169,7 @@ export function loadSampleKit(ctx: BaseAudioContext, id: SampleKitId): Promise<L
   if (existing) return existing;
   const name = SAMPLE_KITS.find((k) => k.id === id)?.name ?? id;
   emit({ id, name, state: 'loading' });
-  const base = new URL(`${id}/`, kitsBase()).href;
+  const base = new URL(`${id}/`, samplesBase('kits')).href;
   const p = (async () => {
     const manifest = (await (await fetchCached(base + 'kit.json')).json()) as KitManifest;
     const pieces: LoadedKit['pieces'] = {};
