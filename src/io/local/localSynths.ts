@@ -4,7 +4,7 @@ import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrum
 import { DrumKit } from './drumKit';
 import { JunoSynth } from './juno/junoSynth';
 import { MonoSynth } from './mono/monoSynth';
-import type { WorkletSynth } from './workletSynth';
+import { PianoSynth } from './piano';
 import { LOCAL_PORTS, type LocalKind } from './ports';
 
 export { LOCAL_CC } from './common';
@@ -24,8 +24,8 @@ class LocalAudio {
   private master!: ToneNS.ToneAudioNode;
   private reverb!: ToneNS.ToneAudioNode;
   private delay!: ToneNS.ToneAudioNode;
-  /** Instruments that run in their own AudioWorklet, loaded on first use. */
-  private worklets = new Map<LocalKind, WorkletSynth>();
+  /** Instruments that load something on first use: a worklet or samples. */
+  private lazy = new Map<LocalKind, { load(): Promise<void> }>();
 
   get ready(): boolean {
     return this.instruments.size > 0;
@@ -33,7 +33,7 @@ class LocalAudio {
 
   /**
    * Load Tone.js and resume audio. Call from a click so the browser allows
-   * sound. With `kinds`, also load what those instruments need (their worklets).
+   * sound. With `kinds`, also load what those instruments need (worklets, samples).
    */
   wake(kinds: LocalKind[] = []): Promise<void> {
     this.loading ??= import('tone').then((T) => {
@@ -42,7 +42,7 @@ class LocalAudio {
     });
     return this.loading
       .then(() => this.T!.start())
-      .then(() => Promise.all(kinds.map((k) => this.worklets.get(k)?.load())))
+      .then(() => Promise.all(kinds.map((k) => this.lazy.get(k)?.load())))
       .then(() => undefined)
       .catch(() => undefined);
   }
@@ -80,9 +80,16 @@ class LocalAudio {
     this.instruments.set('pad', new PadSynth(T, this.channel(T, 0.35, 0)));
     this.instruments.set('drums', new DrumKit(T, this.channel(T, 0.06, 0)));
     // Worklet synths load on their first note or knob (or wake with their kind).
-    this.worklets.set('juno', new JunoSynth(T, this.channel(T, 0.3, 0.1)));
-    this.worklets.set('mono', new MonoSynth(T, this.channel(T, 0.04, 0)));
-    for (const [kind, synth] of this.worklets) this.instruments.set(kind, synth);
+    const lazy: [LocalKind, Instrument & { load(): Promise<void> }][] = [
+      ['juno', new JunoSynth(T, this.channel(T, 0.3, 0.1))],
+      ['mono', new MonoSynth(T, this.channel(T, 0.04, 0))],
+      // The piano's first pack downloads on its first note (or wake with 'piano').
+      ['piano', new PianoSynth(T, this.channel(T, 0.3, 0))],
+    ];
+    for (const [kind, synth] of lazy) {
+      this.lazy.set(kind, synth);
+      this.instruments.set(kind, synth);
+    }
   }
 
   private channel(T: typeof ToneNS, reverb: number, delay: number): Channel {

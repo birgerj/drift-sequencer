@@ -1,0 +1,255 @@
+{
+  "id": "drift-synth-piano",
+  "manufacturer": "Drift",
+  "device": "Synth Piano",
+  "params": [
+    {
+      "id": "pack",
+      "name": "Pack",
+      "section": "Piano",
+      "msg": {
+        "type": "cc",
+        "cc": 15
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0~31: Concert Grand, 32~63: Steinway, 64~95: Studio Grand, 96~127: Wurlitzer",
+      "choices": [
+        {
+          "upTo": 31,
+          "label": "Concert Grand"
+        },
+        {
+          "upTo": 63,
+          "label": "Steinway"
+        },
+        {
+          "upTo": 95,
+          "label": "Studio Grand"
+        },
+        {
+          "upTo": 127,
+          "label": "Wurlitzer"
+        }
+      ]
+    },
+    {
+      "id": "tone",
+      "name": "Tone",
+      "section": "Piano",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 110,
+      "usage": "Low-pass; fully right is open"
+    },
+    {
+      "id": "dynamics",
+      "name": "Dynamics",
+      "section": "Piano",
+      "msg": {
+        "type": "cc",
+        "cc": 30
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 90,
+      "usage": "How much louder hard notes are"
+    },
+    {
+      "id": "decay",
+      "name": "Decay",
+      "section": "Piano",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envDecay",
+      "default": 127,
+      "usage": "Fully right: notes ring out; lower: shorter, even while held"
+    },
+    {
+      "id": "release",
+      "name": "Release",
+      "section": "Piano",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envRelease",
+      "default": 45,
+      "usage": "How long a note rings after the key is let go"
+    },
+    {
+      "id": "level",
+      "name": "Level",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 110
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 40
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 0
+    }
+  ],
+  "triggers": [],
+  "presets": [
+    {
+      "name": "Concert Grand",
+      "values": {}
+    },
+    {
+      "name": "Steinway",
+      "values": {
+        "pack": 48
+      }
+    },
+    {
+      "name": "Studio Grand",
+      "values": {
+        "pack": 80,
+        "tone": 118
+      }
+    },
+    {
+      "name": "Wurlitzer",
+      "values": {
+        "pack": 112,
+        "tone": 100,
+        "dynamics": 100,
+        "release": 30,
+        "reverb-send": 20,
+        "delay-send": 20
+      }
+    },
+    {
+      "name": "Felt Piano",
+      "values": {
+        "pack": 48,
+        "tone": 58,
+        "dynamics": 60,
+        "release": 70,
+        "reverb-send": 70
+      }
+    },
+    {
+      "name": "Ballad Hall",
+      "values": {
+        "tone": 105,
+        "release": 85,
+        "reverb-send": 90
+      }
+    },
+    {
+      "name": "Bright Pop",
+      "values": {
+        "pack": 80,
+        "tone": 127,
+        "dynamics": 105,
+        "release": 35,
+        "reverb-send": 30
+      }
+    },
+    {
+      "name": "Lo-fi Keys",
+      "values": {
+        "pack": 48,
+        "tone": 45,
+        "decay": 75,
+        "release": 40,
+        "reverb-send": 50,
+        "delay-send": 40
+      }
+    }
+  ],
+  "panel": [
+    {
+      "title": "Piano",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "switch",
+          "param": "pack"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "tone",
+            "dynamics"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Ring",
+      "widgets": [
+        {
+          "kind": "knobs",
+          "params": [
+            "decay",
+            "release"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Output",
+      "widgets": [
+        {
+          "kind": "sliders",
+          "params": [
+            "level",
+            "reverb-send",
+            "delay-send"
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "Built-in Drift Synth (sampled piano packs, see public/pianos/ATTRIBUTION.md)"
+}

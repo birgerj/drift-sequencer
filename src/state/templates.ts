@@ -652,7 +652,8 @@ export const TEMPLATES: TemplateSpec[] = [
       chords('Comping', 'c - - - - - c - - - . . . . . . | . . . . . . c - - - - - . . . .', {
         velocity: 66,
         gate: 0.9,
-        sounds: { 'drift-synth-juno': 'Hollow Chords' },
+        prefer: ['korg-wavestate', 'drift-synth-piano', 'drift-synth-juno', 'asm-hydrasynth', 'drift-synth-pad'],
+        sounds: { 'drift-synth-piano': 'Ballad Hall', 'drift-synth-juno': 'Hollow Chords' },
         humanize: { timing: 0.3, velocity: 0.3, layBack: 0.4 },
       }),
       lead(
