@@ -5,12 +5,12 @@ import { cycleTheme } from './theme/theme';
 
 /** Tabs of the track detail pane, in order, with their shortcut keys. */
 export const SECTIONS = [
-  { id: 'overview', label: 'Overview', icon: 'list', key: 'Q' },
-  { id: 'pattern', label: 'Pattern', icon: 'grid', key: 'W' },
-  { id: 'generator', label: 'Generator', icon: 'sliders', key: 'E' },
-  { id: 'panel', label: 'Panel', icon: 'knob', key: 'R' },
-  { id: 'modulation', label: 'Modulation', icon: 'wave', key: 'T' },
-  { id: 'output', label: 'Output', icon: 'output', key: 'Y' },
+  { id: 'overview', label: 'Overview', short: 'Over', icon: 'list', key: 'Q' },
+  { id: 'pattern', label: 'Pattern', short: 'Patt', icon: 'grid', key: 'W' },
+  { id: 'generator', label: 'Generator', short: 'Gen', icon: 'sliders', key: 'E' },
+  { id: 'panel', label: 'Panel', short: 'Panel', icon: 'knob', key: 'R' },
+  { id: 'modulation', label: 'Modulation', short: 'Mod', icon: 'wave', key: 'T' },
+  { id: 'output', label: 'Output', short: 'Out', icon: 'output', key: 'Y' },
 ] as const;
 
 export type SectionId = (typeof SECTIONS)[number]['id'];

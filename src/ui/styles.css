@@ -780,3 +780,138 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .step-grid.paged .drum-label svg { display: none; }
 .step-grid.paged .drum-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .step-grid.paged .cell { border-radius: 4px; }
+
+/* ---------- dense phone sizing ----------
+   More, smaller controls: 28–32px targets with 2–4px gaps, 11–12px labels. */
+.jump-short { display: none; }
+
+@media (max-width: 820px) {
+  :root { --tap: 32px; --radius: 10px; --radius-control: 7px; }
+  body { font-size: 13px; }
+  .hint, .small { font-size: 11px; }
+  .field { gap: 2px; }
+  .field-label { font-size: 11px; }
+  .eyebrow { font-size: 10px; }
+  button, .button { padding: 0 10px; gap: 6px; }
+  select { padding: 0 26px 0 8px; font-size: 12px; background-position: calc(100% - 14px) 50%, calc(100% - 9px) 50%; }
+  input:not([type='range']) { padding: 0 8px; font-size: 13px; }
+
+  /* Transport bar and track strip */
+  .rail { gap: 4px; padding: max(4px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) 6px max(8px, env(safe-area-inset-left)); }
+  .rail .rail-project { font-size: 13px; min-height: 18px; }
+  .rail-project svg { width: 16px; height: 16px; }
+  .rail-pos { font-size: 10px; }
+  .rail-play { width: 36px; height: 36px; min-height: 36px; border-radius: 18px; }
+  .rail-readouts { gap: 4px; }
+  .rail-readout { min-height: 32px; padding: 0 6px; border-radius: 8px; }
+  .rail-readout small { font-size: 9px; }
+  .rail-readout b { font-size: 12px; }
+  .rail-readout.bpm button { min-height: 30px; width: 24px; }
+  .rail .rail-connect { min-height: 30px; font-size: 13px; }
+  .rail-tracks { gap: 4px; padding: 0 8px; margin: 0 -8px; }
+  .rail .rail-track { min-height: 28px !important; gap: 5px; padding: 0 9px 0 4px; border-radius: 14px; }
+  .rail-icon { width: 20px; height: 20px; border-radius: 10px; }
+  .rail-icon svg { width: 12px; height: 12px; }
+  .rail-name b { font-size: 12px; }
+  .rail-now, .rail-flag { font-size: 10px; }
+  .rail .rail-add { width: 28px; min-height: 28px; border-radius: 14px; }
+  .rail-nav { padding-top: 2px; padding-bottom: max(2px, env(safe-area-inset-bottom)); }
+  .rail-nav button { min-height: 44px; font-size: 9px; gap: 2px; }
+  .detail { padding: 0 8px calc(60px + env(safe-area-inset-bottom)); gap: 6px; }
+  .detail > .page, .detail > .performance { padding-top: 6px; }
+  .toast { bottom: calc(56px + env(safe-area-inset-bottom)); }
+  .toast.update { bottom: calc(112px + env(safe-area-inset-bottom)); }
+
+  /* Track header and tabs */
+  .detail-head { gap: 4px; padding: 4px 0; }
+  .detail-head input.title-input { font-size: 15px; min-height: 30px; }
+  .detail-meta { font-size: 11px; }
+  .detail-head .detail-actions { gap: 4px; }
+  .detail-head .detail-actions .jump { width: 30px; min-height: 30px; border-radius: 7px; }
+  .jump-bar { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px; padding: 2px; margin-bottom: 6px; border-radius: 9px; }
+  .jump-bar .jump { min-height: 28px; padding: 0; border-radius: 7px; font-size: 12px; justify-content: center; }
+  .jump-bar .jump-label, .jump-bar kbd { display: none; }
+  .jump-bar .jump-short { display: inline; }
+
+  /* Cards, sections */
+  .card { padding: 6px 8px; gap: 6px; }
+  .card-head { min-height: 22px; }
+  .card-actions button { min-height: 26px; padding: 0 6px; font-size: 12px; }
+  .detail-body, .detail-section, .page, .performance { gap: 6px; }
+  .detail-body .card { padding: 6px 8px; gap: 6px; }
+  .detail-body .pattern-editor, .pattern-editor { gap: 6px; }
+  .timing-row { gap: 4px 8px; }
+  .editor-tools { gap: 4px; }
+
+  /* Segmented, chips, steppers, switches, sliders */
+  .segmented { gap: 2px; padding: 2px; border-radius: 8px; }
+  .detail-body .segmented { flex-wrap: wrap; overflow: visible; }
+  .segmented button, .detail-body .segmented button { min-height: 28px; padding: 0 7px; font-size: 12px; border-radius: 6px; }
+  .chips { gap: 4px; }
+  .chip, .preset-chip, .type-chip, .variations .chip { min-height: 28px; padding: 0 9px; font-size: 12px; }
+  .type-chips, .presets { gap: 4px; }
+  .stepper { gap: 2px; }
+  .stepper input { width: 44px; font-size: 13px; }
+  .octave-value { min-width: 36px; padding: 0 4px; }
+  .octave-value .mono { font-size: 13px; }
+  .switch { width: 44px; min-width: 44px; height: 26px; padding: 0 3px; border-radius: 13px; }
+  .switch span { width: 20px; height: 20px; }
+  .switch[aria-checked='true'] span { transform: translateX(18px); }
+  .toggle-label { font-size: 12px; }
+  .slider label { font-size: 11px; }
+  .slider input[type='range'], .slider.compact input[type='range'] { height: 26px; }
+  .slider input[type='range']::-webkit-slider-runnable-track { height: 4px; }
+  .slider input[type='range']::-webkit-slider-thumb { width: 18px; height: 18px; margin-top: -7px; border-width: 2px; }
+  .slider input[type='range']::-moz-range-thumb { width: 16px; height: 16px; border-width: 2px; }
+  .detail-body .card:has(> .slider), .param-grid, .voice-sliders { gap: 0 12px; }
+
+  /* Overview facts */
+  .fact { min-height: 36px; padding: 4px 8px; }
+  .fact b, .fact span span { font-size: 12px; }
+  .fact svg { width: 16px; height: 16px; }
+
+  /* Step grids */
+  .cell, .step-grid.motif .cell, .step-grid.acid .cell, .step-grid.drums.dense .cell { min-height: 28px; height: 28px; }
+  .step-num { font-size: 9px; padding: 0; }
+  .bar-pager { gap: 4px; }
+  .bar-pager .square { width: 30px; min-height: 30px; }
+  .bar-follow { min-height: 30px; padding: 0 8px; font-size: 12px; }
+  .bar-pager-pos { font-size: 12px; min-width: 48px; }
+
+  /* Knob panel: page grid, four encoders per row */
+  .panel-pages { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px; overflow: visible; }
+  .panel-pages button { min-height: 28px; padding: 0 4px; gap: 4px; border-radius: 7px; font-size: 11px; justify-content: center; }
+  .panel-pages .page-led { display: none; }
+  .encoders { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  .encoder { padding: 4px 3px 2px; border-radius: 9px; }
+  .oled { padding: 2px 0; border-radius: 5px; }
+  .oled-label { font-size: 9px; }
+  .oled-value { font-size: 12px; }
+  .knob { width: 64px; height: 56px; }
+  .encoder-meta { font-size: 9px; }
+  .panel-bar { padding: 6px; gap: 4px; }
+  .snap { width: 30px; min-height: 30px; }
+
+  /* Overview lanes */
+  .harmony-strip { padding: 6px 8px; gap: 4px; }
+  .chords { gap: 4px; }
+  .chord-chip { min-height: 30px; padding: 0 8px; }
+  .chord-chip b { font-size: 13px; }
+  .lanes { gap: 4px; }
+  .lane-head { padding: 4px 8px; gap: 4px; }
+  .lane-name { font-size: 14px; min-height: 28px; }
+  .lane-head button { min-height: 28px; }
+  .lane-head button.square { width: 28px; }
+  .lane-pattern { padding: 4px 8px; }
+  .lane-params { padding: 2px 8px 6px; }
+  .add-track { min-height: 30px; }
+
+  /* Pages and lists */
+  .page-head { gap: 6px; }
+  .title-input { font-size: 17px; }
+  .section-title { font-size: 15px; }
+  .type-card, .template-card { padding: 8px; min-height: 0; }
+  .project-list li, .device-list li { padding: 2px 0; }
+  .sheet-item { min-height: 40px; }
+  .big-action { min-height: 40px; padding: 0 16px; font-size: 14px; }
+}
