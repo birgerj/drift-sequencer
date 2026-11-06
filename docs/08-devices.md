@@ -49,6 +49,7 @@ sounds built into Drift and play through your speakers:
 | Drift Synth Drums | Analog-style kit (808, 909 and electro sounds), or one of five sampled kits |
 | Drift Synth Juno | Six-voice Juno-60-style polysynth with chorus, for pads, chords and leads |
 | Drift Synth Mono | Minimoog / SH-101-style mono synth: round basses without the acid squelch, and mono leads |
+| Drift Synth Piano | Sampled piano: Concert Grand, Steinway, Studio Grand or Wurlitzer |
 
 They react to the knobs on the [Panel](07-sound-and-modulation.md) (cutoff,
 resonance, envelope and so on) and share reverb and delay. They ignore
@@ -112,6 +113,32 @@ The tune, decay and level knobs work on the samples too (decay can only
 shorten a hit). A drum a kit has no sample for, such as a clap in the
 brushes kit, is played by the synth kit. Sources and licenses are in
 [public/kits/ATTRIBUTION.md](../public/kits/ATTRIBUTION.md).
+
+### Drift Synth Piano
+
+A sampled piano with four packs, picked with the **Pack** switch:
+
+| Pack | Sound |
+| --- | --- |
+| Concert Grand | Yamaha C5 grand (Salamander), full and even |
+| Steinway | Steinway grand, warm and round |
+| Studio Grand | Yamaha C3 grand, close mics, bright |
+| Wurlitzer | Wurlitzer EP200 electric piano |
+
+Each pack has a soft and a hard velocity layer and takes 1–4 MB. Like the
+drum kits, a pack downloads the first time you use it and is then kept by
+the browser, so it also works offline. Until it is ready, a soft synth tone
+plays in its place.
+
+The other knobs: **Tone** (a low-pass; fully right is open), **Dynamics**
+(how much louder hard notes are), **Decay** (fully right lets notes ring
+out; lower shortens them, even while held), **Release** (how long a note
+rings after it ends), and level, reverb and delay. The presets (such as
+*Felt Piano*, *Ballad Hall* and *Lo-fi Keys*) combine a pack with these.
+
+Notes ring out like a real piano for a few seconds at most; there is no
+sustain pedal. Sources and licenses are in
+[public/pianos/ATTRIBUTION.md](../public/pianos/ATTRIBUTION.md).
 
 ## Instrument definitions
 

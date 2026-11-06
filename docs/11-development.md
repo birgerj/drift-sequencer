@@ -29,6 +29,15 @@ site instead. To change a kit, edit `scripts/kits/kits.config.mjs` and run
 lists the source repositories). That also bumps
 `src/io/local/kitsVersion.json`, so browsers drop their cached copies.
 
+**Piano packs** work the same way: `public/pianos/<id>/` (FLAC zones plus a
+`piano.json` manifest of velocity layers and key zones), copied to
+`standalone/pianos/` by the build. Edit `scripts/pianos/pianos.config.mjs`
+and run `node scripts/pianos/build-pianos.mjs <sources-dir>`; with `--list`
+it prints only the source files it needs, so blobless clones
+(`git clone --filter=blob:none`) plus a checkout of those files are enough.
+It bumps `src/io/local/pianosVersion.json`. Downloads for both go through
+`src/io/local/sampleCache.ts`.
+
 ## Architecture
 
 ```
@@ -43,7 +52,7 @@ src/
     instruments/         instrument definitions (CC/NRPN maps, drum notes)
     events.ts            typed event emitter (engine → UI)
   io/midi/               Web MIDI wrapper behind a MidiOutputPort interface
-  io/local/              the built-in Drift Synth (Tone.js; the Juno and Mono are AudioWorklets)
+  io/local/              the built-in Drift Synth (Tone.js; the Juno and Mono are AudioWorklets; sampled kits and piano)
   io/ensemble/           Claude API call from the browser, API key storage
   state/                 ProjectState schema, templates, storage + migrations
   ui/                    view layer; talks only to the Sequencer API + events
