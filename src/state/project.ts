@@ -47,6 +47,8 @@ export interface TrackState {
   role?: DeviceRole;
   /** Instrument definition id; normally taken from the rack device. */
   instrumentId?: string;
+  /** Instruments (definition ids) that suit this part best, best first; used by "best fit". */
+  prefer?: string[];
   /**
    * Resolved at runtime from the instrument definition (not stored): the CC
    * that switches slide on, e.g. 102 on the TB-03.

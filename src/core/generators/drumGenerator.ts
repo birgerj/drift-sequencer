@@ -13,6 +13,8 @@ export interface DrumVoice {
   velocity: number;
   /** Silenced at play time; the lane keeps its hits. */
   muted?: boolean;
+  /** Kept as written: mutations leave this lane alone (e.g. a four-on-the-floor kick). */
+  locked?: boolean;
 }
 
 export interface DrumParams {
@@ -77,7 +79,7 @@ export class DrumGenerator implements PatternGenerator<DrumParams> {
   mutate(pattern: Pattern, params: DrumParams, ctx: GeneratorContext): Pattern {
     let events = pattern.events;
     for (const voice of params.voices) {
-      if (!ctx.rng.chance(params.mutation)) continue;
+      if (voice.locked || !ctx.rng.chance(params.mutation)) continue;
       const shift = ctx.rng.pick([-1, 1]);
       events = events.filter((e) => !(e.pitch.kind === 'fixed' && e.pitch.note === voice.note));
       events = events.concat(this.voiceEvents(voice, voice.rotate + shift, params, ctx));

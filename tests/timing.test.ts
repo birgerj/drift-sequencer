@@ -57,9 +57,11 @@ describe('track speed', () => {
 
 describe('track length', () => {
   it('changing the length keeps the pattern (repeats it) instead of regenerating', () => {
-    const project = createProject('deep-house');
+    // Generated (not written) patterns: the engine itself repeats them.
+    const written = createProject('deep-house');
+    const project = { ...written, tracks: written.tracks.map((t) => ({ ...t, userPattern: undefined })) };
     const seq = new Sequencer(project, new StaticPortResolver([]));
-    const lead = project.tracks[0]!;
+    const lead = project.tracks.find((t) => t.generator.type === 'motif')!;
     const before = seq.track(lead.id)!.pattern;
     const next = {
       ...project,

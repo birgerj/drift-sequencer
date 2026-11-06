@@ -1,3 +1,4 @@
+import { instrumentForLocalPort, isLocalPort, LOCAL_PORTS } from '../../io/local/ports';
 import { slotComponent } from '../theme/slots';
 import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
@@ -536,7 +537,7 @@ function OutputCard({ track }: { track: TrackState }) {
             value: n,
             label: s.portAvailable(n) ? n : `${n} (not connected)`,
           }))}
-          onChange={(portName) => s.updateTrack(track.id, { output: { ...track.output, portName } })}
+          onChange={(portName) => s.updateTrack(track.id, { output: { ...track.output, portName }, instrumentId: instrumentForLocalPort(portName) })}
         />
         <div class="field">
           <span class="field-label">Channel</span>
@@ -569,12 +570,38 @@ function OutputCard({ track }: { track: TrackState }) {
           </button>
         ))}
       </div>
+      <span class="field-label">Built-in synths</span>
+      <div class="chips device-pick" role="radiogroup" aria-label="Built-in synth">
+        {Object.values(LOCAL_PORTS)
+          .filter((port) => !s.rack.devices.some((d) => d.portName === port))
+          .map((port) => {
+            const on = !device && track.output.portName === port;
+            return (
+              <button
+                type="button"
+                role="radio"
+                class="chip device-option"
+                aria-checked={on}
+                aria-pressed={on}
+                onClick={() =>
+                  s.updateTrack(track.id, {
+                    deviceId: undefined,
+                    output: { portName: port, channel: track.output.channel },
+                    instrumentId: instrumentForLocalPort(port),
+                  })
+                }
+              >
+                {port.replace(/^Drift Synth /, '')}
+              </button>
+            );
+          })}
+      </div>
       <p class={`hint ${s.portAvailable(out.portName) ? '' : 'warn'}`}>
         {out.portName} · channel {out.channel}
         {instrument ? ` · ${instrument.manufacturer} ${instrument.device}` : ''}
         {s.portAvailable(out.portName) ? '' : ' · not connected'}
       </p>
-      {!device && <p class="warn small">No device chosen — this track uses its own port setting.</p>}
+      {!device && !isLocalPort(track.output.portName) && <p class="warn small">No device chosen — this track uses its own port setting.</p>}
       <button type="button" class="link" onClick={() => s.go({ name: 'instruments' })}>
         Edit my devices…
       </button>

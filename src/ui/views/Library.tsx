@@ -2,7 +2,7 @@ import { NOTE_NAMES, parsePitchClass } from '../../core/theory/note';
 import { Chord } from '../../core/theory/chord';
 import { Scale } from '../../core/theory/scale';
 import { TEMPLATES } from '../../state/templates';
-import { Card, Icon } from '../components/controls';
+import { Card, Icon, Segmented } from '../components/controls';
 import { useStore } from '../store';
 
 export function Library() {
@@ -34,7 +34,24 @@ export function Library() {
       </div>
 
       <h2 class="section-title">Start from a template</h2>
-      <p class="hint">Each template sets tempo, key, chord progression and track types. Everything stays editable.</p>
+      <p class="hint">
+        Each template starts from written parts — drums, bass, hooks, chords — that evolve while they play and keep coming back to
+        their theme. Everything stays editable.
+      </p>
+      <Segmented
+        label="Instruments"
+        value={s.instrumentChoice}
+        options={[
+          { value: 'best', label: 'Best fit' },
+          { value: 'role', label: 'By role' },
+        ]}
+        onChange={(v) => s.setInstrumentChoice(v)}
+      />
+      <p class="hint">
+        {s.instrumentChoice === 'best'
+          ? 'Each part gets the synth that suits it: your own devices first, one part per synth; built-in synths with a matching sound fill the gaps.'
+          : 'Each part plays on the device you set up for its role under Devices.'}
+      </p>
       <div class="template-grid">
         {TEMPLATES.map((t) => {
           const scale = new Scale(parsePitchClass(t.key), t.mode);
@@ -45,9 +62,11 @@ export function Library() {
                 <b>{t.name}</b>
                 <span class="mono muted">{t.bpm} bpm</span>
               </div>
+              <span class="muted small">{t.genre}</span>
               <span>
                 {NOTE_NAMES[scale.root]} {t.mode}
               </span>
+              <span class="small">{t.description}</span>
               <span class="mono muted small">{prog}</span>
               <span class="hint">{t.tracks.map((x) => x.name).join(' · ')}</span>
             </button>

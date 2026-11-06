@@ -43,7 +43,7 @@ function project(bass: Partial<TrackState>, kicks: number[] = []): ProjectState 
     ...p,
     bpm: 120,
     tracks: [
-      { ...b, output: { portName: 'B', channel: 2 }, modulations: [], frozen: true, userPattern: steps([0, 4, 8, 12], 40), ...bass },
+      { ...b, output: { portName: 'B', channel: 2 }, modulations: [], frozen: true, kickMode: 'off', userPattern: steps([0, 4, 8, 12], 40), ...bass },
       { ...d, output: { portName: 'D', channel: 10 }, modulations: [], frozen: true, userPattern: steps(kicks, 36) },
     ],
   };
