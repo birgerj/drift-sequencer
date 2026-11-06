@@ -17,9 +17,10 @@ import { isLocalPort } from '../io/local/localSynths';
 import { onKitStatus } from '../io/local/sampleKits';
 import { MidiHub } from '../io/midi/midiHub';
 import { MidiGuideClient } from '../io/midiGuideClient';
-import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
+import { BUILT_IN_INSTRUMENTS, IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
 import { newId, type CcMotion, type MidiTarget, type ProjectState, type TrackState } from '../state/project';
 import {
+  assignBestFit,
   assignDevices,
   deviceForRole,
   effectiveInstrumentId,
@@ -41,7 +42,7 @@ import {
   serializeProject,
   type ProjectSummary,
 } from '../state/storage';
-import { createProject, createTrack, TRACK_COLORS } from '../state/templates';
+import { createProject, createTrack, templateSounds, TRACK_COLORS } from '../state/templates';
 import { EnsembleController } from './ensemble';
 
 import type { SectionId } from './shortcuts';
@@ -123,6 +124,8 @@ export class AppStore {
   sequencer: Sequencer;
   /** The user's hardware setup, shared by all projects on this device. */
   rack: Rack = loadRack();
+  /** How templates pick instruments (see AppSettings.instruments). */
+  instrumentChoice: 'best' | 'role' = loadSettings().instruments ?? 'best';
   view: View = { name: 'performance' };
   ports: string[] = [];
   /** Connected MIDI inputs. */
@@ -158,7 +161,7 @@ export class AppStore {
   private visualsTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
-    this.project = assignDevices(createProject('deep-house'), this.rack);
+    this.project = assignDevices(this.fromTemplate('deep-house'), this.rack);
     this.sequencer = this.createSequencer(this.project);
     onKitStatus((k) => {
       if (k.state === 'loading') this.showToast(`Loading ${k.name} kit…`);
@@ -493,6 +496,7 @@ export class AppStore {
       // Only ask for MIDI access when a track actually plays hardware.
       if (!this.midi.connected && !ports.every(isLocalPort)) await this.connectMidi();
       await this.midi.wakeAudioFor(ports);
+      this.sendBuiltInSounds();
       this.sequencer.start();
     }
     this.notify();
@@ -557,12 +561,36 @@ export class AppStore {
     this.view = { name: 'performance' };
     saveSettings({ lastProjectId: project.id });
     void this.repo.save(project).then(() => this.refreshProjects());
-    if (wasPlaying) this.sequencer.start();
+    if (wasPlaying) {
+      void this.midi.wakeAudioFor(this.engineView().tracks.map((t) => t.output.portName)).then(() => this.sendBuiltInSounds());
+      this.sequencer.start();
+    }
     this.notify();
   }
 
   newFromTemplate(templateId: string): void {
-    this.open(createProject(templateId));
+    this.open(this.fromTemplate(templateId));
+  }
+
+  /** A new project from a template, with instruments picked as the user chose. */
+  private fromTemplate(templateId: string): ProjectState {
+    const project = createProject(templateId);
+    if (this.instrumentChoice !== 'best') return project;
+    const defs = this.instruments.length ? this.instruments.map((i) => i.definition) : BUILT_IN_INSTRUMENTS;
+    return assignBestFit(project, this.rack, defs, templateSounds(templateId));
+  }
+
+  setInstrumentChoice(choice: 'best' | 'role'): void {
+    this.instrumentChoice = choice;
+    saveSettings({ instruments: choice });
+    this.notify();
+  }
+
+  /** Built-in synths start from their default sound: send each track's stored knobs to them. */
+  private sendBuiltInSounds(): void {
+    for (const t of this.project.tracks) {
+      if (t.panel && Object.keys(t.panel.values).length && isLocalPort(this.trackOutput(t).portName)) this.sendPanel(t.id);
+    }
   }
 
   async openSaved(id: string): Promise<void> {

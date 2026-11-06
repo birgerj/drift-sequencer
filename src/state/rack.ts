@@ -1,5 +1,6 @@
 import type { TrackType } from '../core/generators/types';
-import type { InstrumentDefinition } from '../core/instruments/instrument';
+import { presetCcValues, type InstrumentDefinition } from '../core/instruments/instrument';
+import { isLocalPort, localPortForInstrument, MONO_LOCAL_INSTRUMENTS } from '../io/local/ports';
 import { newId, type MidiTarget, type ProjectState, type TrackState } from './project';
 
 /**
@@ -123,6 +124,8 @@ export function assignDevices(project: ProjectState, rack: Rack, force = false):
   const tracks = project.tracks.map((t) => {
     const known = t.deviceId && rack.devices.some((d) => d.id === t.deviceId);
     if (known && !force) return t;
+    // A track set to a built-in synth on purpose keeps it.
+    if (!t.deviceId && !force && isLocalPort(t.output.portName)) return t;
     const device = deviceForRole(rack, roleOf(t));
     if (!device || device.id === t.deviceId) return t;
     changed = true;
@@ -186,6 +189,87 @@ export function suggestInstrument(portName: string, instruments: InstrumentDefin
   return [...instruments]
     .sort((a, b) => b.device.length - a.device.length)
     .find((d) => norm(d.device).length >= 3 && port.includes(norm(d.device)));
+}
+
+/** Instruments that suit a role when a track names none; best first. */
+export const DEFAULT_PREFER: Record<DeviceRole, string[]> = {
+  lead: ['asm-hydrasynth', 'drift-synth-lead', 'drift-synth-mono'],
+  bass: ['roland-tb-03', 'drift-synth-mono', 'drift-synth-bass'],
+  pad: ['korg-wavestate', 'drift-synth-juno', 'drift-synth-pad'],
+  drums: ['roland-tr-8s', 'drift-synth-drums'],
+};
+
+/** The instrument definition a rack device plays: chosen, or guessed from its port name. */
+export function deviceInstrumentId(device: RackDevice, instruments: InstrumentDefinition[]): string | undefined {
+  return device.instrumentId ?? suggestInstrument(device.portName, instruments)?.id;
+}
+
+/**
+ * Give every track the most suitable instrument:
+ *  1. a device from "My devices" playing one of the track's preferred instruments,
+ *  2. otherwise an unused device with the track's role (your own synths come first),
+ *  3. otherwise a preferred built-in synth, so nothing stays silent.
+ * A hardware device gets one track (most synths play one part); a call-and-
+ * response answer plays on the same instrument as its call. When the chosen
+ * instrument has the sound the track asks for (`sounds`), its knobs are set to it.
+ */
+export function assignBestFit(
+  project: ProjectState,
+  rack: Rack,
+  instruments: InstrumentDefinition[],
+  sounds: Record<string, Record<string, string>> = {},
+): ProjectState {
+  const used = new Set<string>();
+  const out: TrackState[] = [];
+  const instrumentOf = new Map(rack.devices.map((d) => [d.id, deviceInstrumentId(d, instruments)]));
+  for (const track of project.tracks) {
+    const source = track.phrase?.answer ? out.find((t) => t.id === track.phrase!.answer!.from) : undefined;
+    if (source) {
+      out.push({
+        ...track,
+        deviceId: source.deviceId,
+        output: { ...source.output },
+        ...(source.instrumentId ? { instrumentId: source.instrumentId } : {}),
+      });
+      continue;
+    }
+    const role = roleOf(track);
+    const prefer = track.prefer?.length ? track.prefer : DEFAULT_PREFER[role];
+    const free = (d: RackDevice) => !used.has(d.id);
+    const device =
+      prefer.map((id) => rack.devices.find((d) => free(d) && instrumentOf.get(d.id) === id)).find(Boolean) ??
+      rack.devices.find((d) => free(d) && d.roles.includes(role));
+    let next: TrackState;
+    let instrumentId: string | undefined;
+    if (device) {
+      used.add(device.id);
+      instrumentId = instrumentOf.get(device.id);
+      next = { ...track, deviceId: device.id };
+    } else {
+      const builtIns = prefer.filter((id) => localPortForInstrument(id));
+      instrumentId =
+        builtIns.find((id) => !used.has(id)) ?? builtIns.find((id) => !MONO_LOCAL_INSTRUMENTS.has(id)) ?? builtIns[0];
+      const port = instrumentId && localPortForInstrument(instrumentId);
+      if (instrumentId && port) {
+        used.add(instrumentId);
+        next = { ...track, deviceId: undefined, output: { portName: port, channel: role === 'drums' ? 10 : 1 }, instrumentId };
+      } else {
+        const fallback = deviceForRole(rack, role);
+        next = fallback ? { ...track, deviceId: fallback.id } : track;
+        instrumentId = fallback && instrumentOf.get(fallback.id);
+      }
+    }
+    if (instrumentId) used.add(instrumentId);
+    const def = instrumentId ? instruments.find((d) => d.id === instrumentId) : undefined;
+    const soundName = instrumentId ? sounds[track.name]?.[instrumentId] : undefined;
+    const preset = soundName ? def?.presets?.find((p) => p.name === soundName) : undefined;
+    if (def && preset) {
+      const values = presetCcValues(def, preset);
+      next = { ...next, panel: { values, preset: { name: preset.name, values } } };
+    }
+    out.push(next);
+  }
+  return { ...project, tracks: out };
 }
 
 function safeStorage(): Storage | undefined {

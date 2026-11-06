@@ -43,12 +43,13 @@ describe('rack', () => {
 
   it('keeps chosen devices unless forced, and repairs unknown ones', () => {
     const p = assignDevices(createProject('techno'), rack);
-    const lead = p.tracks[0]!;
+    const lead = p.tracks.find((t) => t.name === 'Hook')!;
+    const leadOf = (q: typeof p) => q.tracks.find((t) => t.id === lead.id)!;
     const moved = { ...p, tracks: p.tracks.map((t) => (t.id === lead.id ? { ...t, deviceId: rack.devices[1]!.id } : t)) };
-    expect(assignDevices(moved, rack).tracks[0]!.deviceId).toBe(rack.devices[1]!.id);
-    expect(assignDevices(moved, rack, true).tracks[0]!.deviceId).toBe(rack.devices[0]!.id);
+    expect(leadOf(assignDevices(moved, rack)).deviceId).toBe(rack.devices[1]!.id);
+    expect(leadOf(assignDevices(moved, rack, true)).deviceId).toBe(rack.devices[0]!.id);
     const broken = { ...p, tracks: p.tracks.map((t) => ({ ...t, deviceId: 'gone' })) };
-    expect(assignDevices(broken, rack).tracks[0]!.deviceId).toBe(rack.devices[0]!.id);
+    expect(leadOf(assignDevices(broken, rack)).deviceId).toBe(rack.devices[0]!.id);
   });
 
   it('without devices, projects use their own ports', () => {

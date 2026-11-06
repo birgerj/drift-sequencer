@@ -126,6 +126,12 @@ export class IndexedDbProjectRepository implements ProjectRepository {
 /** Small per-device app settings (last project, UI prefs) in localStorage. */
 export interface AppSettings {
   lastProjectId?: string;
+  /**
+   * How a new project from a template picks instruments:
+   * best — the most suitable synth per part (your devices first, built-ins fill gaps)
+   * role — the devices set up per role in "My devices"
+   */
+  instruments?: 'best' | 'role';
 }
 
 const SETTINGS_KEY = 'drift.settings';
@@ -138,9 +144,10 @@ export function loadSettings(): AppSettings {
   }
 }
 
+/** Merge into the stored settings (other keys are kept). */
 export function saveSettings(settings: AppSettings): void {
   try {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ ...loadSettings(), ...settings }));
   } catch {
     /* storage unavailable (private mode); settings are optional */
   }

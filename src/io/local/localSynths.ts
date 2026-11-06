@@ -5,28 +5,16 @@ import { DrumKit } from './drumKit';
 import { JunoSynth } from './juno/junoSynth';
 import { MonoSynth } from './mono/monoSynth';
 import type { WorkletSynth } from './workletSynth';
+import { LOCAL_PORTS, type LocalKind } from './ports';
 
 export { LOCAL_CC } from './common';
+export { LOCAL_PORTS, isLocalPort, type LocalKind } from './ports';
 
 /**
  * Built-in Web Audio instruments (Tone.js), exposed as MIDI output ports so
  * the sequencer, knob panel and LFOs drive them exactly like hardware.
  * Pick one as a device's port in "My devices". Tone.js is loaded on first use.
  */
-export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums' | 'juno' | 'mono';
-
-export const LOCAL_PORTS: Record<LocalKind, string> = {
-  lead: 'Drift Synth Lead',
-  bass: 'Drift Synth Bass',
-  pad: 'Drift Synth Pad',
-  drums: 'Drift Synth Drums',
-  juno: 'Drift Synth Juno',
-  mono: 'Drift Synth Mono',
-};
-
-export function isLocalPort(name: string): boolean {
-  return Object.values(LOCAL_PORTS).includes(name);
-}
 
 /** Shared audio graph: master bus with reverb and delay sends. */
 class LocalAudio {
