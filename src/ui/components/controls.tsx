@@ -168,6 +168,7 @@ const PATHS: Record<string, string> = {
   plus: 'M12 5v14M5 12h14',
   minus: 'M5 12h14',
   back: 'M15 5l-7 7 7 7',
+  forward: 'M9 5l7 7-7 7',
   trash: 'M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12',
   refresh: 'M19 12a7 7 0 1 1-2.05-4.95M19 5v4h-4',
   spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',

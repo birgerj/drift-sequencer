@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
+import { useNarrow } from '../useNarrow';
 import type { DrumParams } from '../../core/generators/drumGenerator';
 import type { MotifParams } from '../../core/generators/motifGenerator';
 import type { AcidParams } from '../../core/generators/acidGenerator';
@@ -81,13 +82,14 @@ export function PatternEditor({ track }: { track: TrackState }) {
   );
 }
 
-function StepHeader({ length, playStep }: { length: number; playStep: number }) {
+function StepHeader({ length, playStep, from = 0 }: { length: number; playStep: number; from?: number }) {
   return (
     <>
       <span />
-      {Array.from({ length }, (_, i) => (
-        <span class={`step-num ${i % 4 === 0 ? 'beat' : ''} ${i === playStep ? 'now' : ''}`}>{i % 4 === 0 ? i / 4 + 1 : '·'}</span>
-      ))}
+      {Array.from({ length }, (_, k) => {
+        const i = from + k;
+        return <span class={`step-num ${i % 4 === 0 ? 'beat' : ''} ${i === playStep ? 'now' : ''}`}>{i % 4 === 0 ? i / 4 + 1 : '·'}</span>;
+      })}
     </>
   );
 }
@@ -116,11 +118,47 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
   const s = useStore();
   const params = track.generator.params as DrumParams;
   const len = pattern.lengthSteps;
+  // Phones: one bar per screen with a bar switcher instead of a sideways-scrolling grid.
+  const narrow = useNarrow();
+  const perBar = Math.max(1, s.project.stepsPerBar);
+  const pages = narrow ? Math.max(1, Math.ceil(len / perBar)) : 1;
+  const [chosen, setChosen] = useState(0);
+  // While playing, the grid follows the playhead until you pick a bar yourself.
+  const [follow, setFollow] = useState(true);
+  const playPage = playStep >= 0 ? Math.floor(playStep / perBar) : -1;
+  const page = Math.min(pages - 1, follow && playPage >= 0 ? playPage : chosen);
+  const from = narrow ? page * perBar : 0;
+  const count = narrow ? Math.min(perBar, len - from) : len;
+  const pick = (p: number) => {
+    setChosen(Math.max(0, Math.min(pages - 1, p)));
+    setFollow(false);
+  };
+  const visiblePlay = playStep >= from && playStep < from + count ? playStep - from : -1;
   return (
     <>
-      <div class="grid-scroll">
-        <div class={`step-grid drums ${params.voices.length > 7 ? 'dense' : ''}`} style={{ gridTemplateColumns: `76px repeat(${len}, minmax(38px, 1fr))` }}>
-          <StepHeader length={len} playStep={playStep} />
+      {pages > 1 && (
+        <div class="bar-pager" role="group" aria-label="Bar">
+          <button type="button" class="square" aria-label="Previous bar" disabled={page === 0} onClick={() => pick(page - 1)}>
+            <Icon name="back" size={16} />
+          </button>
+          <span class="mono bar-pager-pos">
+            Bar {page + 1}/{pages}
+          </span>
+          <button type="button" class="square" aria-label="Next bar" disabled={page === pages - 1} onClick={() => pick(page + 1)}>
+            <Icon name="forward" size={16} />
+          </button>
+          <div class="spacer" />
+          <button type="button" class="bar-follow" aria-pressed={follow} onClick={() => setFollow(!follow)} title="Follow the playhead">
+            Follow
+          </button>
+        </div>
+      )}
+      <div class={narrow ? 'grid-paged' : 'grid-scroll'}>
+        <div
+          class={`step-grid drums ${params.voices.length > 7 ? 'dense' : ''} ${narrow ? 'paged' : ''}`}
+          style={{ gridTemplateColumns: narrow ? `44px repeat(${count}, minmax(0, 1fr))` : `76px repeat(${len}, minmax(38px, 1fr))` }}
+        >
+          <StepHeader length={count} playStep={playStep} from={from} />
           {useMemo(() => params.voices.map((v) => (
             <>
               <button
@@ -133,9 +171,10 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
                 onClick={() => s.toggleDrumVoiceMute(track.id, v.note)}
               >
                 <Icon name={v.muted ? 'mute' : drumIcon(v.name, v.note)} size={18} />
-                {v.name}
+                <span class="drum-name">{v.name}</span>
               </button>
-              {Array.from({ length: len }, (_, step) => {
+              {Array.from({ length: count }, (_, k) => {
+                const step = from + k;
                 const state = drumCell(pattern, step, v.note);
                 const ev = pattern.events.find(drumAt(step, v.note));
                 const badge = cellBadge(ev);
@@ -158,8 +197,8 @@ function DrumGrid({ track, pattern, playStep, mode }: { track: TrackState; patte
                 );
               })}
             </>
-          )), [pattern, params.voices, mode, len, track.id])}
-          <Playhead step={playStep} rows={params.voices.length + 1} />
+          )), [pattern, params.voices, mode, len, from, count, track.id])}
+          <Playhead step={visiblePlay} rows={params.voices.length + 1} />
         </div>
       </div>
       {mode === 'notes' && <p class="hint">Tap a step: hit → 50% chance → off.</p>}

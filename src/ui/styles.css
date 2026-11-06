@@ -763,3 +763,15 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .add-track { min-height: 44px; }
   .page { gap: 12px; }
 }
+
+/* Drum grid, one bar per screen on phones */
+.bar-pager { display: flex; align-items: center; gap: 6px; }
+.bar-pager .square { width: 40px; min-height: 40px; }
+.bar-pager-pos { font-size: 13px; color: var(--text-2); min-width: 64px; text-align: center; }
+.bar-follow { min-height: 40px; padding: 0 12px; font-size: 13px; }
+.grid-paged { min-width: 0; }
+.step-grid.paged { gap: 2px; min-width: 0; }
+.step-grid.paged .drum-label { justify-content: flex-start; padding: 0 2px 0 0; font-size: 10px; overflow: hidden; min-width: 0; }
+.step-grid.paged .drum-label svg { display: none; }
+.step-grid.paged .drum-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.step-grid.paged .cell { border-radius: 4px; }
