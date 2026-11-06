@@ -1,0 +1,183 @@
+{
+  "id": "vintage",
+  "name": "Vintage",
+  "description": "Ludwig kit with a porkpie snare and Zildjian cymbals",
+  "source": "AVL Drumkits by Glen MacArthur (bandshed.net/avldrumkits)",
+  "license": "CC BY-SA 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+  "pieces": {
+    "kick": {
+      "layers": [
+        "kick-1.flac",
+        "kick-2.flac",
+        "kick-3.flac",
+        "kick-4.flac",
+        "kick-5.flac"
+      ],
+      "gain": 1
+    },
+    "snare": {
+      "layers": [
+        "snare-1.flac",
+        "snare-2.flac",
+        "snare-3.flac",
+        "snare-4.flac",
+        "snare-5.flac"
+      ],
+      "gain": 0.9
+    },
+    "snareAlt": {
+      "layers": [
+        "snareAlt-1.flac",
+        "snareAlt-2.flac",
+        "snareAlt-3.flac",
+        "snareAlt-4.flac",
+        "snareAlt-5.flac"
+      ],
+      "gain": 0.85
+    },
+    "rim": {
+      "layers": [
+        "rim-1.flac",
+        "rim-2.flac",
+        "rim-3.flac",
+        "rim-4.flac",
+        "rim-5.flac"
+      ],
+      "gain": 0.8
+    },
+    "clap": {
+      "layers": [
+        "clap-1.flac",
+        "clap-2.flac",
+        "clap-3.flac",
+        "clap-4.flac",
+        "clap-5.flac"
+      ],
+      "gain": 0.8
+    },
+    "hatClosed": {
+      "layers": [
+        "hatClosed-1.flac",
+        "hatClosed-2.flac",
+        "hatClosed-3.flac",
+        "hatClosed-4.flac",
+        "hatClosed-5.flac"
+      ],
+      "gain": 0.5,
+      "pan": 0.3
+    },
+    "hatPedal": {
+      "layers": [
+        "hatPedal-1.flac",
+        "hatPedal-2.flac",
+        "hatPedal-3.flac",
+        "hatPedal-4.flac",
+        "hatPedal-5.flac"
+      ],
+      "gain": 0.5,
+      "pan": 0.3
+    },
+    "hatOpen": {
+      "layers": [
+        "hatOpen-1.flac",
+        "hatOpen-2.flac",
+        "hatOpen-3.flac",
+        "hatOpen-4.flac",
+        "hatOpen-5.flac"
+      ],
+      "gain": 0.5,
+      "pan": 0.3
+    },
+    "tomHigh": {
+      "layers": [
+        "tomHigh-1.flac",
+        "tomHigh-2.flac",
+        "tomHigh-3.flac",
+        "tomHigh-4.flac",
+        "tomHigh-5.flac"
+      ],
+      "gain": 0.8,
+      "pan": 0.2
+    },
+    "tomMid": {
+      "layers": [
+        "tomMid-1.flac",
+        "tomMid-2.flac",
+        "tomMid-3.flac",
+        "tomMid-4.flac",
+        "tomMid-5.flac"
+      ],
+      "gain": 0.85,
+      "pan": -0.15
+    },
+    "tomLow": {
+      "layers": [
+        "tomLow-1.flac",
+        "tomLow-2.flac",
+        "tomLow-3.flac",
+        "tomLow-4.flac",
+        "tomLow-5.flac"
+      ],
+      "gain": 0.85,
+      "pan": -0.35
+    },
+    "crash": {
+      "layers": [
+        "crash-1.flac",
+        "crash-2.flac",
+        "crash-3.flac",
+        "crash-4.flac",
+        "crash-5.flac"
+      ],
+      "gain": 0.6,
+      "pan": 0.35
+    },
+    "ride": {
+      "layers": [
+        "ride-1.flac",
+        "ride-2.flac",
+        "ride-3.flac",
+        "ride-4.flac",
+        "ride-5.flac"
+      ],
+      "gain": 0.5,
+      "pan": -0.4
+    },
+    "rideBell": {
+      "layers": [
+        "rideBell-1.flac",
+        "rideBell-2.flac",
+        "rideBell-3.flac",
+        "rideBell-4.flac",
+        "rideBell-5.flac"
+      ],
+      "gain": 0.45,
+      "pan": -0.4
+    },
+    "tambourine": {
+      "layers": [
+        "tambourine-1.flac",
+        "tambourine-2.flac"
+      ],
+      "gain": 0.4,
+      "pan": 0.5
+    },
+    "cowbell": {
+      "layers": [
+        "cowbell-1.flac",
+        "cowbell-2.flac"
+      ],
+      "gain": 0.4,
+      "pan": -0.3
+    },
+    "shaker": {
+      "layers": [
+        "shaker-1.flac",
+        "shaker-2.flac"
+      ],
+      "gain": 0.35,
+      "pan": 0.45
+    }
+  }
+}

@@ -20,6 +20,15 @@ runs by double-clicking it (`file://`) or from any static host.
 publishes `standalone/` to GitHub Pages (`.github/workflows/publish.yml`).
 One-time setup: Settings → Pages → Source: *GitHub Actions*.
 
+**Sampled drum kits** live in `public/kits/<id>/` (FLAC hits plus a
+`kit.json` manifest) and are fetched on demand, so they stay out of
+`index.html`. The build copies them to `standalone/kits/` (not committed;
+CI publishes them). A `file://` copy downloads them from the published
+site instead. To change a kit, edit `scripts/kits/kits.config.mjs` and run
+`node scripts/kits/build-kits.mjs <sources-dir>` (needs ffmpeg; the config
+lists the source repositories). That also bumps
+`src/io/local/kitsVersion.json`, so browsers drop their cached copies.
+
 ## Architecture
 
 ```

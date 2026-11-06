@@ -46,7 +46,7 @@ sounds built into Drift and play through your speakers:
 | Drift Synth Lead | Polyphonic saw synth with a resonant filter |
 | Drift Synth Bass | 303-style mono bass. Overlapping notes slide; loud notes are accents |
 | Drift Synth Pad | Wide detuned pad with chorus |
-| Drift Synth Drums | Analog-style kit (808, 909 and electro sounds) |
+| Drift Synth Drums | Analog-style kit (808, 909 and electro sounds), or one of five sampled kits |
 | Drift Synth Juno | Six-voice Juno-60-style polysynth with chorus, for pads, chords and leads |
 
 They react to the knobs on the [Panel](07-sound-and-modulation.md) (cutoff,
@@ -66,6 +66,28 @@ the MIDI channel and clock.
 A seventh note takes over the voice that was released longest ago, or
 else the oldest held note. The sound runs in its own audio thread
 (AudioWorklet), loaded the first time you use it.
+
+### Sampled drum kits
+
+On Drift Synth Drums, the **Samples** knob (Kit page) swaps the synthesized
+kit for recorded drums:
+
+| Kit | Sound |
+| --- | --- |
+| Acoustic | Pearl kit with Sabian cymbals, five velocity layers |
+| Vintage | Ludwig kit with a porkpie snare and Zildjian cymbals |
+| Jazz brushes | Brushes; note 40 plays a brush sweep |
+| Deep house | TR-808, hit by hit, with congas and maracas |
+| 80s Linn | LinnDrum LM-2 |
+
+A kit downloads the first time you pick it (0.5–4 MB) and is then kept by
+the browser, so it also works offline. Until it is ready, the synthesized
+kit keeps playing. Turn the knob back to **Off** for the synth kit.
+
+The tune, decay and level knobs work on the samples too (decay can only
+shorten a hit). A drum a kit has no sample for, such as a clap in the
+brushes kit, is played by the synth kit. Sources and licenses are in
+[public/kits/ATTRIBUTION.md](../public/kits/ATTRIBUTION.md).
 
 ## Instrument definitions
 

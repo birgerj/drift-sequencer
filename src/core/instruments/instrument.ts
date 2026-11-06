@@ -39,6 +39,13 @@ export interface InstrumentParam {
   default?: number;
   bipolar: boolean;
   usage?: string;
+  /** Named value bands for stepped knobs (kit pickers): each label covers values up to `upTo`. */
+  choices?: { upTo: number; label: string }[];
+}
+
+/** The label of the band a value falls in, for knobs that pick from a list. */
+export function choiceLabel(param: InstrumentParam, value: number): string | undefined {
+  return param.choices?.find((c) => value <= c.upTo)?.label;
 }
 
 export interface InstrumentTrigger {

@@ -1,0 +1,116 @@
+{
+  "id": "jazz",
+  "name": "Jazz brushes",
+  "description": "Brushes kit; note 40 plays a brush sweep",
+  "source": "Swirly Drums by Karoryfer Samples (karoryfer.com)",
+  "license": "CC0 1.0",
+  "licenseUrl": "https://creativecommons.org/publicdomain/zero/1.0/",
+  "pieces": {
+    "kick": {
+      "layers": [
+        "kick-1.flac",
+        "kick-2.flac",
+        "kick-3.flac"
+      ],
+      "gain": 1.2
+    },
+    "snare": {
+      "layers": [
+        "snare-1.flac",
+        "snare-2.flac",
+        "snare-3.flac"
+      ],
+      "gain": 1.2
+    },
+    "snareAlt": {
+      "layers": [
+        "snareAlt-1.flac",
+        "snareAlt-2.flac",
+        "snareAlt-3.flac",
+        "snareAlt-4.flac"
+      ],
+      "gain": 0.675
+    },
+    "rim": {
+      "layers": [
+        "rim-1.flac",
+        "rim-2.flac"
+      ],
+      "gain": 1.05
+    },
+    "hatClosed": {
+      "layers": [
+        "hatClosed-1.flac",
+        "hatClosed-2.flac",
+        "hatClosed-3.flac"
+      ],
+      "gain": 0.675,
+      "pan": 0.3
+    },
+    "hatPedal": {
+      "layers": [
+        "hatPedal-1.flac",
+        "hatPedal-2.flac"
+      ],
+      "gain": 0.825,
+      "pan": 0.3
+    },
+    "hatOpen": {
+      "layers": [
+        "hatOpen-1.flac",
+        "hatOpen-2.flac"
+      ],
+      "gain": 0.675,
+      "pan": 0.3
+    },
+    "tomHigh": {
+      "layers": [
+        "tomHigh-1.flac",
+        "tomHigh-2.flac"
+      ],
+      "gain": 1.125,
+      "pan": 0.2
+    },
+    "tomMid": {
+      "layers": [
+        "tomMid-1.flac",
+        "tomMid-2.flac"
+      ],
+      "gain": 1.125,
+      "pan": -0.1
+    },
+    "tomLow": {
+      "layers": [
+        "tomLow-1.flac",
+        "tomLow-2.flac"
+      ],
+      "gain": 1.2,
+      "pan": -0.35
+    },
+    "crash": {
+      "layers": [
+        "crash-1.flac",
+        "crash-2.flac"
+      ],
+      "gain": 0.825,
+      "pan": 0.35
+    },
+    "ride": {
+      "layers": [
+        "ride-1.flac",
+        "ride-2.flac",
+        "ride-3.flac"
+      ],
+      "gain": 0.9,
+      "pan": -0.35
+    },
+    "cowbell": {
+      "layers": [
+        "cowbell-1.flac",
+        "cowbell-2.flac"
+      ],
+      "gain": 0.6,
+      "pan": -0.3
+    }
+  }
+}

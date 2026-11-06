@@ -1,0 +1,131 @@
+{
+  "id": "deep-house",
+  "name": "Deep house",
+  "description": "TR-808 sampled hit by hit, with congas and maracas",
+  "source": "Roland TR-808 sample set by Michael Fischer (Technopolis), via github.com/danigb/samples",
+  "license": "Free sample set; free to use per the author’s notes",
+  "licenseUrl": "https://github.com/danigb/samples",
+  "pieces": {
+    "kick": {
+      "layers": [
+        "kick-1.flac"
+      ],
+      "gain": 1
+    },
+    "snare": {
+      "layers": [
+        "snare-1.flac"
+      ],
+      "gain": 0.6
+    },
+    "snareAlt": {
+      "layers": [
+        "snareAlt-1.flac"
+      ],
+      "gain": 0.6
+    },
+    "rim": {
+      "layers": [
+        "rim-1.flac"
+      ],
+      "gain": 0.5,
+      "pan": -0.2
+    },
+    "clap": {
+      "layers": [
+        "clap-1.flac"
+      ],
+      "gain": 0.75
+    },
+    "hatClosed": {
+      "layers": [
+        "hatClosed-1.flac"
+      ],
+      "gain": 0.45,
+      "pan": 0.3
+    },
+    "hatPedal": {
+      "layers": [
+        "hatPedal-1.flac"
+      ],
+      "gain": 0.35,
+      "pan": 0.3
+    },
+    "hatOpen": {
+      "layers": [
+        "hatOpen-1.flac"
+      ],
+      "gain": 0.45,
+      "pan": 0.3
+    },
+    "tomHigh": {
+      "layers": [
+        "tomHigh-1.flac"
+      ],
+      "gain": 0.6,
+      "pan": 0.3
+    },
+    "tomMid": {
+      "layers": [
+        "tomMid-1.flac"
+      ],
+      "gain": 0.6
+    },
+    "tomLow": {
+      "layers": [
+        "tomLow-1.flac"
+      ],
+      "gain": 0.6,
+      "pan": -0.3
+    },
+    "crash": {
+      "layers": [
+        "crash-1.flac"
+      ],
+      "gain": 0.4,
+      "pan": 0.3
+    },
+    "ride": {
+      "layers": [
+        "ride-1.flac"
+      ],
+      "gain": 0.3,
+      "pan": -0.3
+    },
+    "cowbell": {
+      "layers": [
+        "cowbell-1.flac"
+      ],
+      "gain": 0.35,
+      "pan": -0.3
+    },
+    "shaker": {
+      "layers": [
+        "shaker-1.flac"
+      ],
+      "gain": 0.3,
+      "pan": 0.5
+    },
+    "clave": {
+      "layers": [
+        "clave-1.flac"
+      ],
+      "gain": 0.35,
+      "pan": 0.2
+    },
+    "congaLow": {
+      "layers": [
+        "congaLow-1.flac"
+      ],
+      "gain": 0.45,
+      "pan": -0.4
+    },
+    "congaHigh": {
+      "layers": [
+        "congaHigh-1.flac"
+      ],
+      "gain": 0.4,
+      "pan": 0.4
+    }
+  }
+}

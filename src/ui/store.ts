@@ -14,6 +14,7 @@ import { Chord } from '../core/theory/chord';
 import { generateProgression, varyProgression, type ProgressionStyle } from '../core/theory/progressionGenerator';
 import { Scale } from '../core/theory/scale';
 import { isLocalPort } from '../io/local/localSynths';
+import { onKitStatus } from '../io/local/sampleKits';
 import { MidiHub } from '../io/midi/midiHub';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
@@ -159,6 +160,11 @@ export class AppStore {
   constructor() {
     this.project = assignDevices(createProject('deep-house'), this.rack);
     this.sequencer = this.createSequencer(this.project);
+    onKitStatus((k) => {
+      if (k.state === 'loading') this.showToast(`Loading ${k.name} kit…`);
+      else if (k.state === 'ready') this.showToast(`${k.name} kit loaded.`);
+      else if (k.state === 'error') this.showToast(`${k.name} kit could not be downloaded; the synth kit keeps playing. (${k.error})`);
+    });
   }
 
   /** The project with outputs, instruments and clock taken from the rack. */

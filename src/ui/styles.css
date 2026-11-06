@@ -546,6 +546,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .oled-label { font-weight: 700; font-size: 13px; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .oled-line { width: 80%; height: 1px; background: var(--screen-dim); margin: 2px 0; }
 .oled-value { font-size: 20px; }
+.encoder .oled .oled-value.oled-text { font-size: 14px; line-height: 1.75; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .knob { width: 128px; height: 120px; touch-action: none; cursor: ns-resize; border-radius: 50%; outline-offset: -8px; }
 .knob:focus-visible { outline: 2px solid var(--accent); }
 .led { fill: var(--led-off); }

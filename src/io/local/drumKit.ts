@@ -1,16 +1,20 @@
 import type * as ToneNS from 'tone';
 import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrument } from './common';
+import { layerFor, loadSampleKit, piecesForNote, SAMPLES_CC, sampleKitFromCc, voiceOfPiece, type LoadedKit, type SampleKitId } from './sampleKits';
 
 /**
  * Analog-style drum synthesis on the GM drum notes (as used by the TR-8S).
  * Every hit builds its own short-lived Web Audio graph, scheduled to the
  * sample, so voices overlap naturally. Three kit characters: 808, 909, electro.
+ * The Samples knob swaps in a downloadable sampled kit (see sampleKits.ts);
+ * notes that kit has no sample for keep using the synthesized voices.
  */
 export type KitName = '808' | '909' | 'electro';
 
 /** Per-voice CCs; each voice has tune, decay and level. */
 export const DRUM_CC = {
   kit: 14,
+  samples: SAMPLES_CC,
   busDrive: 17,
   busComp: 18,
   hatTone: 74,
@@ -54,6 +58,9 @@ const KITS: Record<KitName, KitSound> = {
   },
 };
 
+/** Decay knob value (from CC 66, its default) at which samples play in full. */
+const SAMPLE_FULL_DECAY = expRange(66, 0.25, 3.5);
+
 /** The six detuned square oscillators of the TR-808 cymbal/hat circuit. */
 const METAL_HZ = [205.3, 304.4, 369.6, 522.7, 540, 800];
 
@@ -77,6 +84,8 @@ export class DrumKit implements Instrument {
   private kit: KitSound = KITS['808'];
   private hatTone = 1;
   private openHat: { gain: GainNode; start: number } | undefined;
+  private sampleKitId: SampleKitId | undefined;
+  private sampled: LoadedKit | undefined;
   private voices: Record<Voice, VoiceParams> = {
     kick: { tune: 1, decay: 1, level: 1 },
     snare: { tune: 1, decay: 1, level: 1 },
@@ -123,6 +132,7 @@ export class DrumKit implements Instrument {
 
   noteOn(note: number, velocity: number, time: number) {
     const v = norm(velocity);
+    if (this.sampled && this.playSample(note, v, time)) return;
     switch (note) {
       case 35:
       case 36:
@@ -166,6 +176,7 @@ export class DrumKit implements Instrument {
   cc(cc: number, value: number) {
     if (channelCc(this.ch, cc, value)) return;
     if (cc === DRUM_CC.kit) this.kit = KITS[kitFromCc(value)];
+    else if (cc === DRUM_CC.samples) this.selectSampleKit(sampleKitFromCc(value));
     else if (cc === DRUM_CC.busDrive || cc === LOCAL_CC.drive) this.setDrive(norm(value));
     else if (cc === DRUM_CC.busComp) this.setComp(norm(value));
     else if (cc === DRUM_CC.hatTone) this.hatTone = expRange(value, 0.5, 1.6);
@@ -178,6 +189,66 @@ export class DrumKit implements Instrument {
         else if (ccs.level === cc) p.level = Math.pow(value / 100, 2);
       }
     }
+  }
+
+  // ---------- sampled kits ----------
+
+  private selectSampleKit(id: SampleKitId | undefined) {
+    if (id === this.sampleKitId) return;
+    this.sampleKitId = id;
+    if (!id) {
+      this.sampled = undefined;
+      return;
+    }
+    // Keep playing the current sound until the new kit is ready.
+    loadSampleKit(this.ctx, id).then(
+      (kit) => {
+        if (this.sampleKitId === id) this.sampled = kit;
+      },
+      () => undefined, // reported through onKitStatus; the synth kit keeps playing
+    );
+  }
+
+  private playSample(note: number, v: number, t: number): boolean {
+    const kit = this.sampled!;
+    const name = piecesForNote(note).find((p) => kit.pieces[p]);
+    if (!name) return false;
+    const piece = kit.pieces[name]!;
+    const voice = voiceOfPiece(name);
+    const p = this.voices[voice];
+    const buffer = piece.layers[layerFor(v, piece.layers.length)]!;
+
+    if (voice === 'closedHat' || voice === 'openHat') this.chokeOpenHat(t);
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    src.playbackRate.value = p.tune;
+    // Real velocity layers carry most of the dynamics; single-hit kits need more gain range.
+    const dyn = piece.layers.length > 1 ? 0.6 + 0.4 * v : 0.2 + 0.8 * v;
+    const peak = piece.gain * dyn * p.level;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(peak, t);
+    const length = buffer.duration / p.tune;
+    // Decay can only shorten a recorded hit. The knob's default (66) plays it in full;
+    // below that, hold for less of the hit and fade out sooner.
+    const shorten = p.decay / SAMPLE_FULL_DECAY;
+    if (shorten < 1) {
+      const keep = length * shorten * shorten * shorten;
+      g.gain.setTargetAtTime(0, t + keep * 0.85, Math.max(0.004, keep * 0.08));
+    }
+    let node: AudioNode = g;
+    if (piece.pan) {
+      const pan = this.ctx.createStereoPanner();
+      pan.pan.value = piece.pan;
+      g.connect(pan);
+      node = pan;
+    }
+    src.connect(g);
+    node.connect(this.input);
+    src.start(t);
+    src.stop(t + length + 0.05);
+    if (voice === 'openHat') this.openHat = { gain: g, start: t };
+    return true;
   }
 
   // ---------- voices ----------
