@@ -41,6 +41,6 @@ export class MidiHub implements MidiPortResolver {
 
   /** Start audio for the Drift Synth ports if any of these is one. Call from a click. */
   async wakeAudioFor(portNames: string[]): Promise<void> {
-    if (portNames.some(isLocalPort)) await wakeLocalAudio();
+    if (portNames.some(isLocalPort)) await wakeLocalAudio(portNames);
   }
 }

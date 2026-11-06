@@ -1,0 +1,335 @@
+{
+  "id": "drift-synth-juno",
+  "manufacturer": "Drift",
+  "device": "Synth Juno",
+  "params": [
+    {
+      "id": "cutoff",
+      "name": "Cutoff",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 80
+    },
+    {
+      "id": "resonance",
+      "name": "Resonance",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterResonance",
+      "default": 20
+    },
+    {
+      "id": "env-amount",
+      "name": "Env amount",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 40
+    },
+    {
+      "id": "vcf-lfo",
+      "name": "LFO to filter",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 28
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "lfoDepth",
+      "default": 0
+    },
+    {
+      "id": "key-follow",
+      "name": "Key follow",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 29
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 64
+    },
+    {
+      "id": "hpf",
+      "name": "HPF",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 27
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0~3: off"
+    },
+    {
+      "id": "attack",
+      "name": "Attack",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envAttack",
+      "default": 35
+    },
+    {
+      "id": "decay",
+      "name": "Decay",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envDecay",
+      "default": 85
+    },
+    {
+      "id": "sustain",
+      "name": "Sustain",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 79
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 85
+    },
+    {
+      "id": "release",
+      "name": "Release",
+      "section": "Envelope",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envRelease",
+      "default": 82
+    },
+    {
+      "id": "range",
+      "name": "Range",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 64,
+      "usage": "0~42: 16', 43~85: 8', 86~127: 4'"
+    },
+    {
+      "id": "dco-lfo",
+      "name": "LFO to pitch",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 77
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "pwm",
+      "name": "PWM",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 21
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 70
+    },
+    {
+      "id": "pwm-source",
+      "name": "PWM source",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 22
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0~42: LFO, 43~85: manual, 86~127: envelope"
+    },
+    {
+      "id": "pulse",
+      "name": "Pulse",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 23
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 60
+    },
+    {
+      "id": "saw",
+      "name": "Saw",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 110
+    },
+    {
+      "id": "sub",
+      "name": "Sub",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 40
+    },
+    {
+      "id": "noise",
+      "name": "Noise",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 26
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "lfo-rate",
+      "name": "LFO rate",
+      "section": "LFO",
+      "msg": {
+        "type": "cc",
+        "cc": 76
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "lfoRate",
+      "default": 52
+    },
+    {
+      "id": "lfo-delay",
+      "name": "LFO delay",
+      "section": "LFO",
+      "msg": {
+        "type": "cc",
+        "cc": 78
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 30
+    },
+    {
+      "id": "vca-level",
+      "name": "VCA level",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 114
+    },
+    {
+      "id": "chorus",
+      "name": "Chorus",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 93
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 40,
+      "usage": "0~31: off, 32~63: I, 64~95: II, 96~127: I+II"
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 38
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 16
+    }
+  ],
+  "triggers": [],
+  "source": "Built-in Drift Synth (Juno-60-style AudioWorklet)"
+}

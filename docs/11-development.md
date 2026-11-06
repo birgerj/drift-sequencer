@@ -34,7 +34,7 @@ src/
     instruments/         instrument definitions (CC/NRPN maps, drum notes)
     events.ts            typed event emitter (engine → UI)
   io/midi/               Web MIDI wrapper behind a MidiOutputPort interface
-  io/local/              the built-in Drift Synth (Tone.js)
+  io/local/              the built-in Drift Synth (Tone.js; the Juno is an AudioWorklet)
   io/ensemble/           MusicVAE in a Web Worker
   state/                 ProjectState schema, templates, storage + migrations
   ui/                    view layer; talks only to the Sequencer API + events
@@ -72,6 +72,15 @@ key-relative patterns (`trioToPatterns`, with a chord-fit setting). The
 AI page is `src/ui/views/AiView.tsx`; the controller is
 `src/ui/ensemble.ts`. Linked tracks are `external` and take queued patterns
 at 4-bar phrase starts.
+
+**Drift Synth Juno.** Six voices in one AudioWorkletNode
+(`src/io/local/juno/junoProcessor.js`, plain JavaScript, written from
+scratch). It is imported as text (`?raw`) and loaded from a Blob URL, or
+from a `data:` URL on the native context when the file is opened from disk,
+so it works in the single-file build. Notes are posted with their
+AudioContext time and start on that exact frame. The CC map and its
+real-unit values live in `junoParams.ts`; tests run the worklet source
+directly in Node.
 
 **State and storage.** `ProjectState` is one serialisable object with a
 `schemaVersion`; `storage.ts` migrates older files on load. The UI never

@@ -7,6 +7,7 @@ import driftLead from '../core/instruments/data/drift-synth-lead.json';
 import driftBass from '../core/instruments/data/drift-synth-bass.json';
 import driftPad from '../core/instruments/data/drift-synth-pad.json';
 import driftDrums from '../core/instruments/data/drift-synth-drums.json';
+import driftJuno from '../core/instruments/data/drift-synth-juno.json';
 import { openDriftDb, INSTRUMENTS_STORE } from './db';
 
 export interface InstalledInstrument {
@@ -16,7 +17,7 @@ export interface InstalledInstrument {
   importedAt?: string;
 }
 
-export const BUILT_IN_INSTRUMENTS: InstrumentDefinition[] = [hydrasynth, wavestate, tb03, tr8s, driftLead, driftBass, driftPad, driftDrums] as InstrumentDefinition[];
+export const BUILT_IN_INSTRUMENTS: InstrumentDefinition[] = [hydrasynth, wavestate, tb03, tr8s, driftLead, driftBass, driftPad, driftDrums, driftJuno] as InstrumentDefinition[];
 
 export interface InstrumentStore {
   all(): Promise<InstrumentDefinition[]>;

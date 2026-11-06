@@ -47,10 +47,25 @@ sounds built into Drift and play through your speakers:
 | Drift Synth Bass | 303-style mono bass. Overlapping notes slide; loud notes are accents |
 | Drift Synth Pad | Wide detuned pad with chorus |
 | Drift Synth Drums | Analog-style kit (808, 909 and electro sounds) |
+| Drift Synth Juno | Six-voice Juno-60-style polysynth with chorus, for pads, chords and leads |
 
 They react to the knobs on the [Panel](07-sound-and-modulation.md) (cutoff,
 resonance, envelope and so on) and share reverb and delay. They ignore
 the MIDI channel and clock.
+
+**Drift Synth Juno** has the whole Juno-60 panel as knobs, on four pages:
+
+- **Filter**: cutoff, resonance, envelope amount, LFO to filter, key
+  follow and the high-pass (HPF; fully left is off).
+- **Envelope**: one ADSR for both filter and level.
+- **Oscillator**: range (16′ / 8′ / 4′), LFO to pitch, PWM and its source
+  (LFO, manual or envelope), and levels for pulse, saw, sub and noise.
+- **LFO · Amp · Effects**: LFO rate and delay, VCA level, chorus (off, I,
+  II, I+II) and the reverb and delay sends.
+
+A seventh note takes over the voice that was released longest ago, or
+else the oldest held note. The sound runs in its own audio thread
+(AudioWorklet), loaded the first time you use it.
 
 ## Instrument definitions
 
