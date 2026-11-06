@@ -15,6 +15,19 @@ The *Panel* tab shows the synth's knobs, grouped in pages of eight.
 
 ![The knob panel](images/lead-panel.png)
 
+The built-in Drift Synth sounds get their own compact panel instead,
+with a control that suits each kind of parameter:
+
+- **Switches** for stepped choices: Juno range and chorus, Mono
+  waveforms, drum kit. One tap picks a setting.
+- **Faders** for mixer levels (oscillators, drum voices). Tap or drag.
+- **Filter pad**: drag the dot left/right for cutoff and up/down for
+  resonance. The curve shows the response; a pink band shows an LFO on
+  the cutoff.
+- **Envelope graph**: drag the points. The first sets attack, the second
+  decay (sideways) and sustain (up/down), the last release.
+- An **LFO preview** shows its speed and fade-in.
+
 - **Drag** a knob up or down. Hold Shift for fine control. The mouse
   wheel also works.
 - **Double-tap** a knob to reset it.

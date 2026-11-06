@@ -73,6 +73,7 @@
     {
       "id": "bus-drive",
       "name": "Bus drive",
+      "short": "Drive",
       "section": "Kit",
       "msg": {
         "type": "cc",
@@ -87,6 +88,7 @@
     {
       "id": "bus-comp",
       "name": "Bus comp",
+      "short": "Comp",
       "section": "Kit",
       "msg": {
         "type": "cc",
@@ -100,6 +102,7 @@
     {
       "id": "hat-tone",
       "name": "Hat tone",
+      "short": "Hat tone",
       "section": "Kit",
       "msg": {
         "type": "cc",
@@ -114,6 +117,7 @@
     {
       "id": "kick-tune",
       "name": "Kick tune",
+      "short": "BD tune",
       "section": "Kick",
       "msg": {
         "type": "cc",
@@ -128,6 +132,7 @@
     {
       "id": "kick-decay",
       "name": "Kick decay",
+      "short": "BD decay",
       "section": "Kick",
       "msg": {
         "type": "cc",
@@ -142,6 +147,7 @@
     {
       "id": "kick-level",
       "name": "Kick level",
+      "short": "BD",
       "section": "Kick",
       "msg": {
         "type": "cc",
@@ -156,6 +162,7 @@
     {
       "id": "snare-tune",
       "name": "Snare tune",
+      "short": "SD tune",
       "section": "Snare",
       "msg": {
         "type": "cc",
@@ -170,6 +177,7 @@
     {
       "id": "snare-decay",
       "name": "Snare decay",
+      "short": "SD decay",
       "section": "Snare",
       "msg": {
         "type": "cc",
@@ -183,6 +191,7 @@
     {
       "id": "snare-level",
       "name": "Snare level",
+      "short": "SD",
       "section": "Snare",
       "msg": {
         "type": "cc",
@@ -196,6 +205,7 @@
     {
       "id": "clap-tune",
       "name": "Clap tune",
+      "short": "CP tune",
       "section": "Clap",
       "msg": {
         "type": "cc",
@@ -210,6 +220,7 @@
     {
       "id": "clap-decay",
       "name": "Clap decay",
+      "short": "CP decay",
       "section": "Clap",
       "msg": {
         "type": "cc",
@@ -223,6 +234,7 @@
     {
       "id": "clap-level",
       "name": "Clap level",
+      "short": "CP",
       "section": "Clap",
       "msg": {
         "type": "cc",
@@ -236,6 +248,7 @@
     {
       "id": "closed-hat-tune",
       "name": "Closed hat tune",
+      "short": "CH tune",
       "section": "Closed hat",
       "msg": {
         "type": "cc",
@@ -250,6 +263,7 @@
     {
       "id": "closed-hat-decay",
       "name": "Closed hat decay",
+      "short": "CH decay",
       "section": "Closed hat",
       "msg": {
         "type": "cc",
@@ -263,6 +277,7 @@
     {
       "id": "closed-hat-level",
       "name": "Closed hat level",
+      "short": "CH",
       "section": "Closed hat",
       "msg": {
         "type": "cc",
@@ -276,6 +291,7 @@
     {
       "id": "open-hat-tune",
       "name": "Open hat tune",
+      "short": "OH tune",
       "section": "Open hat",
       "msg": {
         "type": "cc",
@@ -290,6 +306,7 @@
     {
       "id": "open-hat-decay",
       "name": "Open hat decay",
+      "short": "OH decay",
       "section": "Open hat",
       "msg": {
         "type": "cc",
@@ -303,6 +320,7 @@
     {
       "id": "open-hat-level",
       "name": "Open hat level",
+      "short": "OH",
       "section": "Open hat",
       "msg": {
         "type": "cc",
@@ -316,6 +334,7 @@
     {
       "id": "toms-level",
       "name": "Toms level",
+      "short": "Toms",
       "section": "Other",
       "msg": {
         "type": "cc",
@@ -329,6 +348,7 @@
     {
       "id": "cymbals-level",
       "name": "Cymbals level",
+      "short": "Cym",
       "section": "Other",
       "msg": {
         "type": "cc",
@@ -342,6 +362,7 @@
     {
       "id": "perc-level",
       "name": "Perc level",
+      "short": "Perc",
       "section": "Other",
       "msg": {
         "type": "cc",
@@ -355,6 +376,7 @@
     {
       "id": "volume",
       "name": "Volume",
+      "short": "Vol",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -369,6 +391,7 @@
     {
       "id": "reverb-send",
       "name": "Reverb send",
+      "short": "Rev",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -383,6 +406,7 @@
     {
       "id": "delay-send",
       "name": "Delay send",
+      "short": "Dly",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -443,6 +467,73 @@
     {
       "name": "Cowbell",
       "note": 56
+    }
+  ],
+  "panel": [
+    {
+      "title": "Kit",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "switch",
+          "param": "kit"
+        },
+        {
+          "kind": "switch",
+          "param": "samples"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "hat-tone",
+            "bus-drive",
+            "bus-comp"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Levels · Mix",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "faders",
+          "params": [
+            "kick-level",
+            "snare-level",
+            "clap-level",
+            "closed-hat-level",
+            "open-hat-level",
+            "toms-level",
+            "cymbals-level",
+            "perc-level",
+            "volume",
+            "reverb-send",
+            "delay-send"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Tune · Decay",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "knobs",
+          "params": [
+            "kick-tune",
+            "kick-decay",
+            "snare-tune",
+            "snare-decay",
+            "clap-tune",
+            "clap-decay",
+            "closed-hat-tune",
+            "closed-hat-decay",
+            "open-hat-tune",
+            "open-hat-decay"
+          ]
+        }
+      ]
     }
   ],
   "source": "Built-in Drift Synth (Tone.js)"

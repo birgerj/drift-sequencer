@@ -12,6 +12,8 @@ export interface InstrumentDefinition {
   triggers: InstrumentTrigger[];
   /** Ready-made sounds for the knob panel. */
   presets?: InstrumentPreset[];
+  /** Hand-made panel layout; without one the panel shows paged knobs. */
+  panel?: PanelModule[];
   /** Attribution for third-party data. */
   source?: string;
 }
@@ -50,6 +52,8 @@ export function presetCcValues(instrument: InstrumentDefinition, preset: Instrum
 export interface InstrumentParam {
   id: string;
   name: string;
+  /** Shorter label for compact panels; `name` stays the accessible name. */
+  short?: string;
   section?: string;
   /** Set by hand for devices you own; midi.guide has no standard roles. */
   target?: ParamTarget;
@@ -61,6 +65,59 @@ export interface InstrumentParam {
   usage?: string;
   /** Named value bands for stepped knobs (kit pickers): each label covers values up to `upTo`. */
   choices?: { upTo: number; label: string }[];
+}
+
+/**
+ * One section of a hand-made panel. Widgets name params by id; each kind
+ * suits a kind of parameter: switches for stepped choices, faders for
+ * mixer levels, an XY pad for cutoff × resonance, an envelope graph.
+ */
+export interface PanelModule {
+  title: string;
+  /** Takes about twice the width of a normal module. */
+  wide?: boolean;
+  widgets: PanelWidget[];
+}
+
+export type PanelWidget =
+  | { kind: 'knobs'; params: string[] }
+  /** Segmented buttons from the param's `choices`. */
+  | { kind: 'switch'; param: string }
+  /** Vertical faders side by side, like a mixer. */
+  | { kind: 'faders'; params: string[] }
+  /** Horizontal sliders, for levels and sends. */
+  | { kind: 'sliders'; params: string[] }
+  /** Drag a point: x and y each drive a param. Drawn as a filter response. */
+  | { kind: 'xy'; x: string; y: string }
+  /** Envelope graph with draggable points. A missing sustain uses `sustainLevel` (0–1). */
+  | { kind: 'adsr'; attack?: string; decay?: string; sustain?: string; release?: string; sustainLevel?: number }
+  /** Display only: an LFO wave from its rate (and delay). */
+  | { kind: 'lfo'; rate: string; delay?: string };
+
+/** Param ids a panel widget controls (the lfo preview controls none). */
+export function widgetParams(w: PanelWidget): string[] {
+  switch (w.kind) {
+    case 'knobs':
+    case 'faders':
+    case 'sliders':
+      return w.params;
+    case 'switch':
+      return [w.param];
+    case 'xy':
+      return [w.x, w.y];
+    case 'adsr':
+      return [w.attack, w.decay, w.sustain, w.release].filter((x): x is string => !!x);
+    case 'lfo':
+      return [];
+  }
+}
+
+/** A value inside a choice band, to send when that choice is picked. */
+export function choiceValue(param: InstrumentParam, index: number): number {
+  const c = param.choices ?? [];
+  const lo = index === 0 ? param.min : c[index - 1]!.upTo + 1;
+  const hi = c[index]?.upTo ?? param.max;
+  return Math.round((lo + hi) / 2);
 }
 
 /** The label of the band a value falls in, for knobs that pick from a list. */

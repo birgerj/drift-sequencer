@@ -34,6 +34,7 @@
     {
       "id": "env-amount",
       "name": "Env amount",
+      "short": "Env",
       "section": "Filter",
       "msg": {
         "type": "cc",
@@ -60,6 +61,7 @@
     {
       "id": "key-follow",
       "name": "Key follow",
+      "short": "Key",
       "section": "Filter",
       "msg": {
         "type": "cc",
@@ -73,6 +75,7 @@
     {
       "id": "velocity-filter",
       "name": "Vel to filter",
+      "short": "Velocity",
       "section": "Filter",
       "msg": {
         "type": "cc",
@@ -100,6 +103,7 @@
     {
       "id": "filter-attack",
       "name": "Filter attack",
+      "short": "Attack",
       "section": "Filter env",
       "msg": {
         "type": "cc",
@@ -113,6 +117,7 @@
     {
       "id": "filter-decay",
       "name": "Filter decay",
+      "short": "Decay",
       "section": "Filter env",
       "msg": {
         "type": "cc",
@@ -127,6 +132,7 @@
     {
       "id": "filter-sustain",
       "name": "Filter sustain",
+      "short": "Sustain",
       "section": "Filter env",
       "msg": {
         "type": "cc",
@@ -208,6 +214,7 @@
     {
       "id": "osc1-wave",
       "name": "Osc 1 wave",
+      "short": "Osc 1",
       "section": "Oscillator",
       "msg": {
         "type": "cc",
@@ -217,11 +224,26 @@
       "max": 127,
       "bipolar": false,
       "default": 0,
-      "usage": "0~42: saw, 43~85: pulse, 86~127: triangle"
+      "usage": "0~42: saw, 43~85: pulse, 86~127: triangle",
+      "choices": [
+        {
+          "upTo": 42,
+          "label": "Saw"
+        },
+        {
+          "upTo": 85,
+          "label": "Pulse"
+        },
+        {
+          "upTo": 127,
+          "label": "Tri"
+        }
+      ]
     },
     {
       "id": "pulse-width",
       "name": "Pulse width",
+      "short": "PW",
       "section": "Oscillator",
       "msg": {
         "type": "cc",
@@ -236,6 +258,7 @@
     {
       "id": "osc2-wave",
       "name": "Osc 2 wave",
+      "short": "Osc 2",
       "section": "Oscillator",
       "msg": {
         "type": "cc",
@@ -245,11 +268,26 @@
       "max": 127,
       "bipolar": false,
       "default": 0,
-      "usage": "0~42: saw, 43~85: pulse, 86~127: triangle"
+      "usage": "0~42: saw, 43~85: pulse, 86~127: triangle",
+      "choices": [
+        {
+          "upTo": 42,
+          "label": "Saw"
+        },
+        {
+          "upTo": 85,
+          "label": "Pulse"
+        },
+        {
+          "upTo": 127,
+          "label": "Tri"
+        }
+      ]
     },
     {
       "id": "osc2-octave",
       "name": "Osc 2 octave",
+      "short": "Osc 2 oct",
       "section": "Oscillator",
       "msg": {
         "type": "cc",
@@ -259,11 +297,26 @@
       "max": 127,
       "bipolar": false,
       "default": 64,
-      "usage": "0~42: -1, 43~85: 0, 86~127: +1"
+      "usage": "0~42: -1, 43~85: 0, 86~127: +1",
+      "choices": [
+        {
+          "upTo": 42,
+          "label": "−1"
+        },
+        {
+          "upTo": 85,
+          "label": "0"
+        },
+        {
+          "upTo": 127,
+          "label": "+1"
+        }
+      ]
     },
     {
       "id": "osc2-detune",
       "name": "Osc 2 detune",
+      "short": "Detune",
       "section": "Oscillator",
       "msg": {
         "type": "cc",
@@ -274,11 +327,12 @@
       "bipolar": true,
       "target": "tune",
       "default": 70,
-      "usage": "64: in tune, \u00b150 cents"
+      "usage": "64: in tune, ±50 cents"
     },
     {
       "id": "osc1-level",
       "name": "Osc 1 level",
+      "short": "Osc 1",
       "section": "Mixer",
       "msg": {
         "type": "cc",
@@ -292,6 +346,7 @@
     {
       "id": "osc2-level",
       "name": "Osc 2 level",
+      "short": "Osc 2",
       "section": "Mixer",
       "msg": {
         "type": "cc",
@@ -305,6 +360,7 @@
     {
       "id": "sub",
       "name": "Sub (sine)",
+      "short": "Sub",
       "section": "Mixer",
       "msg": {
         "type": "cc",
@@ -346,6 +402,7 @@
     {
       "id": "pitch-env",
       "name": "Pitch env",
+      "short": "P. env",
       "section": "Pitch",
       "msg": {
         "type": "cc",
@@ -360,6 +417,7 @@
     {
       "id": "pitch-decay",
       "name": "Pitch decay",
+      "short": "P. decay",
       "section": "Pitch",
       "msg": {
         "type": "cc",
@@ -373,6 +431,7 @@
     {
       "id": "lfo-rate",
       "name": "LFO rate",
+      "short": "Rate",
       "section": "LFO",
       "msg": {
         "type": "cc",
@@ -387,6 +446,7 @@
     {
       "id": "lfo-filter",
       "name": "LFO to filter",
+      "short": "Filter",
       "section": "LFO",
       "msg": {
         "type": "cc",
@@ -401,6 +461,7 @@
     {
       "id": "lfo-pitch",
       "name": "LFO to pitch",
+      "short": "Pitch",
       "section": "LFO",
       "msg": {
         "type": "cc",
@@ -414,6 +475,7 @@
     {
       "id": "reverb-send",
       "name": "Reverb send",
+      "short": "Reverb",
       "section": "Effects",
       "msg": {
         "type": "cc",
@@ -428,6 +490,7 @@
     {
       "id": "delay-send",
       "name": "Delay send",
+      "short": "Delay",
       "section": "Effects",
       "msg": {
         "type": "cc",
@@ -577,6 +640,133 @@
         "reverb-send": 45,
         "delay-send": 35
       }
+    }
+  ],
+  "panel": [
+    {
+      "title": "Oscillators",
+      "widgets": [
+        {
+          "kind": "switch",
+          "param": "osc1-wave"
+        },
+        {
+          "kind": "switch",
+          "param": "osc2-wave"
+        },
+        {
+          "kind": "switch",
+          "param": "osc2-octave"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "pulse-width",
+            "osc2-detune"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Mixer",
+      "widgets": [
+        {
+          "kind": "faders",
+          "params": [
+            "osc1-level",
+            "osc2-level",
+            "sub",
+            "noise"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Filter",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "xy",
+          "x": "cutoff",
+          "y": "resonance"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "env-amount",
+            "drive",
+            "key-follow",
+            "velocity-filter",
+            "accent"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Filter env",
+      "widgets": [
+        {
+          "kind": "adsr",
+          "attack": "filter-attack",
+          "decay": "filter-decay",
+          "sustain": "filter-sustain"
+        }
+      ]
+    },
+    {
+      "title": "Amp env",
+      "widgets": [
+        {
+          "kind": "adsr",
+          "attack": "attack",
+          "decay": "amp-decay",
+          "sustain": "amp-sustain",
+          "release": "release"
+        }
+      ]
+    },
+    {
+      "title": "Pitch",
+      "widgets": [
+        {
+          "kind": "knobs",
+          "params": [
+            "glide",
+            "pitch-env",
+            "pitch-decay"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "LFO",
+      "widgets": [
+        {
+          "kind": "lfo",
+          "rate": "lfo-rate"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "lfo-rate",
+            "lfo-filter",
+            "lfo-pitch"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Output",
+      "widgets": [
+        {
+          "kind": "sliders",
+          "params": [
+            "level",
+            "reverb-send",
+            "delay-send"
+          ]
+        }
+      ]
     }
   ],
   "source": "Built-in Drift Synth (Minimoog / SH-101-style AudioWorklet)"

@@ -34,6 +34,7 @@
     {
       "id": "env-amount",
       "name": "Env amount",
+      "short": "Env",
       "section": "Filter",
       "msg": {
         "type": "cc",
@@ -97,7 +98,21 @@
       "min": 0,
       "max": 127,
       "bipolar": false,
-      "default": 0
+      "default": 0,
+      "choices": [
+        {
+          "upTo": 42,
+          "label": "Saw"
+        },
+        {
+          "upTo": 85,
+          "label": "Square"
+        },
+        {
+          "upTo": 127,
+          "label": "Tri"
+        }
+      ]
     },
     {
       "id": "volume",
@@ -116,6 +131,7 @@
     {
       "id": "reverb-send",
       "name": "Reverb send",
+      "short": "Reverb",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -130,6 +146,7 @@
     {
       "id": "delay-send",
       "name": "Delay send",
+      "short": "Delay",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -143,5 +160,53 @@
     }
   ],
   "triggers": [],
+  "panel": [
+    {
+      "title": "Filter",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "xy",
+          "x": "cutoff",
+          "y": "resonance"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "env-amount"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Envelope",
+      "widgets": [
+        {
+          "kind": "adsr",
+          "attack": "attack",
+          "decay": "decay",
+          "release": "release",
+          "sustainLevel": 0.5
+        }
+      ]
+    },
+    {
+      "title": "Oscillator · Mix",
+      "widgets": [
+        {
+          "kind": "switch",
+          "param": "waveform"
+        },
+        {
+          "kind": "sliders",
+          "params": [
+            "volume",
+            "reverb-send",
+            "delay-send"
+          ]
+        }
+      ]
+    }
+  ],
   "source": "Built-in Drift Synth (Tone.js)"
 }

@@ -54,15 +54,17 @@ They react to the knobs on the [Panel](07-sound-and-modulation.md) (cutoff,
 resonance, envelope and so on) and share reverb and delay. They ignore
 the MIDI channel and clock.
 
-**Drift Synth Juno** has the whole Juno-60 panel as knobs, on four pages:
+**Drift Synth Juno** has the whole Juno-60 panel, in six sections:
 
 - **Filter**: cutoff, resonance, envelope amount, LFO to filter, key
   follow and the high-pass (HPF; fully left is off).
 - **Envelope**: one ADSR for both filter and level.
-- **Oscillator**: range (16′ / 8′ / 4′), LFO to pitch, PWM and its source
-  (LFO, manual or envelope), and levels for pulse, saw, sub and noise.
-- **LFO · Amp · Effects**: LFO rate and delay, VCA level, chorus (off, I,
-  II, I+II) and the reverb and delay sends.
+- **Oscillator**: range (16′ / 8′ / 4′), LFO to pitch (vibrato), PWM and
+  its source (LFO, manual or envelope).
+- **Mixer**: faders for pulse, saw, sub and noise.
+- **LFO**: rate and delay.
+- **Amp · Effects**: chorus (off, I, II, I+II), VCA level and the reverb
+  and delay sends.
 
 A seventh note takes over the voice that was released longest ago, or
 else the oldest held note. The sound runs in its own audio thread
