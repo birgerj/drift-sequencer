@@ -434,6 +434,10 @@ export function startVisuals(root: HTMLElement): void {
     sync();
   });
   const fullBtn = button('Fullscreen', 'Fullscreen (F)', () => toggleFullscreen());
+  // On phones (and in the installed app) there is no window chrome to close the visuals with.
+  const closeBtn = button('Close', 'Close visuals (Esc)', () => closeVisuals());
+  closeBtn.className = 'vis-close';
+  closeBtn.setAttribute('aria-label', 'Close visuals');
   const speedWrap = document.createElement('label');
   speedWrap.className = 'vis-speed';
   speedWrap.title = 'Speed ( [ and ] )';
@@ -446,7 +450,14 @@ export function startVisuals(root: HTMLElement): void {
   speedInput.value = String(speed);
   speedInput.oninput = () => setSpeed(Number(speedInput.value));
   speedWrap.append(speedText, speedInput);
-  hud.append(...sceneButtons, spacer(), speedWrap, spacer(), notesBtn, strobeBtn, autoBtn, fullBtn);
+  const scenesRow = document.createElement('div');
+  scenesRow.className = 'vis-row';
+  scenesRow.append(...sceneButtons);
+  const optionsRow = document.createElement('div');
+  optionsRow.className = 'vis-row';
+  optionsRow.append(notesBtn, strobeBtn, autoBtn, fullBtn);
+  hud.append(scenesRow, spacer(), speedWrap, spacer(), optionsRow);
+  root.append(closeBtn);
   function setSpeed(v: number) {
     speed = Math.max(0.05, Math.min(1.5, Math.round(v * 100) / 100));
     speedInput.value = String(speed);
@@ -473,6 +484,20 @@ export function startVisuals(root: HTMLElement): void {
   }
   sync();
 
+  function closeVisuals() {
+    if (document.fullscreenElement) void document.exitFullscreen();
+    // Works when Drift opened this window; browsers ignore it otherwise.
+    window.close();
+    // Still here (opened by hand, or a tab the browser won't close): go back to Drift.
+    setTimeout(() => {
+      if (window.closed) return;
+      // Back only when that leads to Drift; otherwise load Drift in this tab.
+      const fromDrift = document.referrer.split('#')[0] === location.href.split('#')[0];
+      if (fromDrift && history.length > 1) history.back();
+      else location.replace(location.origin + location.pathname + location.search);
+    }, 150);
+  }
+
   function toggleFullscreen() {
     if (document.fullscreenElement) void document.exitFullscreen();
     else void document.documentElement.requestFullscreen?.();
@@ -485,6 +510,8 @@ export function startVisuals(root: HTMLElement): void {
     idle = setTimeout(() => root.classList.add('idle'), 2500);
   };
   window.addEventListener('pointermove', wake);
+  // Touch screens have no hover: a tap brings the controls back.
+  window.addEventListener('pointerdown', wake);
   wake();
 
   window.addEventListener('keydown', (e) => {
@@ -496,6 +523,7 @@ export function startVisuals(root: HTMLElement): void {
     else if (e.key === 'a' || e.key === 'A') autoBtn.click();
     else if (e.key === '[') setSpeed(speed - 0.05);
     else if (e.key === ']') setSpeed(speed + 0.05);
+    else if (e.key === 'Escape' && !document.fullscreenElement) closeVisuals();
     else return;
     wake();
   });
