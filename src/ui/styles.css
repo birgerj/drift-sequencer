@@ -558,6 +558,8 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .encoder-meta { font-size: 10px; color: var(--faint); }
 .encoder-meta.lfo { color: var(--lfo); }
 .panel-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 14px; }
+.preset-picker { display: flex; align-items: center; gap: 8px; margin-right: 6px; }
+.preset-picker select { min-height: 36px; font-size: 13px; min-width: 150px; }
 .snap { width: 44px; padding: 0; font-weight: 600; background: var(--well); color: var(--muted); border-style: dashed; }
 .snap.filled { border-style: solid; color: var(--text); border-color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, transparent); }
 @media (max-width: 1180px) { .encoders { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -750,6 +752,8 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .knob svg { width: 100%; height: 100%; }
   .panel-bar { padding: 8px 10px; gap: 6px; }
   .panel-bar .hint { display: none; }
+  .preset-picker { flex: 1 1 100%; margin-right: 0; }
+  .preset-picker select { flex: 1 1 auto; min-height: 40px; }
 
   /* Overview (all tracks) */
   .performance { gap: 10px; }

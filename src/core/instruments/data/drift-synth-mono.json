@@ -1,0 +1,583 @@
+{
+  "id": "drift-synth-mono",
+  "manufacturer": "Drift",
+  "device": "Synth Mono",
+  "params": [
+    {
+      "id": "cutoff",
+      "name": "Cutoff",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 50
+    },
+    {
+      "id": "resonance",
+      "name": "Resonance",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterResonance",
+      "default": 25
+    },
+    {
+      "id": "env-amount",
+      "name": "Env amount",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 12
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 45
+    },
+    {
+      "id": "drive",
+      "name": "Drive",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 17
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 40
+    },
+    {
+      "id": "key-follow",
+      "name": "Key follow",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 29
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 64
+    },
+    {
+      "id": "velocity-filter",
+      "name": "Vel to filter",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 30
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 30
+    },
+    {
+      "id": "accent",
+      "name": "Accent",
+      "section": "Filter",
+      "msg": {
+        "type": "cc",
+        "cc": 16
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 60,
+      "usage": "Extra level and filter on notes with velocity 100 or more"
+    },
+    {
+      "id": "filter-attack",
+      "name": "Filter attack",
+      "section": "Filter env",
+      "msg": {
+        "type": "cc",
+        "cc": 102
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "filter-decay",
+      "name": "Filter decay",
+      "section": "Filter env",
+      "msg": {
+        "type": "cc",
+        "cc": 75
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envDecay",
+      "default": 55
+    },
+    {
+      "id": "filter-sustain",
+      "name": "Filter sustain",
+      "section": "Filter env",
+      "msg": {
+        "type": "cc",
+        "cc": 103
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 20
+    },
+    {
+      "id": "attack",
+      "name": "Attack",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envAttack",
+      "default": 0
+    },
+    {
+      "id": "amp-decay",
+      "name": "Decay",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 104
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 80
+    },
+    {
+      "id": "amp-sustain",
+      "name": "Sustain",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 105
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 100
+    },
+    {
+      "id": "release",
+      "name": "Release",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envRelease",
+      "default": 30
+    },
+    {
+      "id": "level",
+      "name": "Level",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 110
+    },
+    {
+      "id": "osc1-wave",
+      "name": "Osc 1 wave",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 70
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0~42: saw, 43~85: pulse, 86~127: triangle"
+    },
+    {
+      "id": "pulse-width",
+      "name": "Pulse width",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 21
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0: square, up: narrower"
+    },
+    {
+      "id": "osc2-wave",
+      "name": "Osc 2 wave",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 22
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0~42: saw, 43~85: pulse, 86~127: triangle"
+    },
+    {
+      "id": "osc2-octave",
+      "name": "Osc 2 octave",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 26
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 64,
+      "usage": "0~42: -1, 43~85: 0, 86~127: +1"
+    },
+    {
+      "id": "osc2-detune",
+      "name": "Osc 2 detune",
+      "section": "Oscillator",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": true,
+      "target": "tune",
+      "default": 70,
+      "usage": "64: in tune, \u00b150 cents"
+    },
+    {
+      "id": "osc1-level",
+      "name": "Osc 1 level",
+      "section": "Mixer",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 110
+    },
+    {
+      "id": "osc2-level",
+      "name": "Osc 2 level",
+      "section": "Mixer",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 80
+    },
+    {
+      "id": "sub",
+      "name": "Sub (sine)",
+      "section": "Mixer",
+      "msg": {
+        "type": "cc",
+        "cc": 27
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 60,
+      "usage": "Sine one octave down"
+    },
+    {
+      "id": "noise",
+      "name": "Noise",
+      "section": "Mixer",
+      "msg": {
+        "type": "cc",
+        "cc": 28
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "glide",
+      "name": "Glide",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 5
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "0~1: off. Overlapping notes slide"
+    },
+    {
+      "id": "pitch-env",
+      "name": "Pitch env",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 106
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0,
+      "usage": "Starts each note higher and drops to it"
+    },
+    {
+      "id": "pitch-decay",
+      "name": "Pitch decay",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 107
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 40
+    },
+    {
+      "id": "lfo-rate",
+      "name": "LFO rate",
+      "section": "LFO",
+      "msg": {
+        "type": "cc",
+        "cc": 76
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "lfoRate",
+      "default": 40
+    },
+    {
+      "id": "lfo-filter",
+      "name": "LFO to filter",
+      "section": "LFO",
+      "msg": {
+        "type": "cc",
+        "cc": 31
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "lfoDepth",
+      "default": 0
+    },
+    {
+      "id": "lfo-pitch",
+      "name": "LFO to pitch",
+      "section": "LFO",
+      "msg": {
+        "type": "cc",
+        "cc": 77
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 0
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 10
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 0
+    }
+  ],
+  "triggers": [],
+  "presets": [
+    {
+      "name": "Round Moog",
+      "values": {}
+    },
+    {
+      "name": "Funk Moog",
+      "values": {
+        "cutoff": 38,
+        "resonance": 45,
+        "env-amount": 72,
+        "filter-decay": 40,
+        "filter-sustain": 10,
+        "osc2-detune": 68,
+        "sub": 40,
+        "glide": 28,
+        "accent": 85,
+        "drive": 50
+      }
+    },
+    {
+      "name": "101 Pluck",
+      "values": {
+        "osc1-wave": 64,
+        "pulse-width": 35,
+        "osc2-level": 0,
+        "sub": 75,
+        "cutoff": 42,
+        "resonance": 50,
+        "env-amount": 78,
+        "filter-decay": 36,
+        "filter-sustain": 0,
+        "amp-decay": 52,
+        "amp-sustain": 55,
+        "drive": 30
+      }
+    },
+    {
+      "name": "101 Square",
+      "values": {
+        "osc1-wave": 64,
+        "pulse-width": 0,
+        "osc2-level": 0,
+        "sub": 100,
+        "cutoff": 62,
+        "resonance": 15,
+        "env-amount": 30,
+        "filter-decay": 50,
+        "drive": 25
+      }
+    },
+    {
+      "name": "Deep Sub",
+      "values": {
+        "osc1-wave": 127,
+        "osc1-level": 55,
+        "osc2-level": 0,
+        "sub": 127,
+        "cutoff": 45,
+        "resonance": 0,
+        "env-amount": 15,
+        "drive": 50,
+        "pitch-env": 38,
+        "pitch-decay": 28,
+        "release": 40,
+        "key-follow": 100
+      }
+    },
+    {
+      "name": "808 Boom",
+      "values": {
+        "osc1-level": 0,
+        "osc2-level": 0,
+        "sub": 127,
+        "cutoff": 95,
+        "resonance": 0,
+        "env-amount": 0,
+        "drive": 80,
+        "pitch-env": 58,
+        "pitch-decay": 45,
+        "amp-decay": 88,
+        "amp-sustain": 0,
+        "release": 70,
+        "key-follow": 127,
+        "velocity-filter": 0
+      }
+    },
+    {
+      "name": "Reese",
+      "values": {
+        "osc2-detune": 92,
+        "cutoff": 58,
+        "resonance": 30,
+        "env-amount": 8,
+        "filter-sustain": 100,
+        "lfo-rate": 22,
+        "lfo-filter": 62,
+        "drive": 70,
+        "attack": 12,
+        "release": 50,
+        "sub": 70,
+        "accent": 20
+      }
+    },
+    {
+      "name": "Rubber",
+      "values": {
+        "osc1-wave": 127,
+        "osc2-octave": 0,
+        "osc2-level": 65,
+        "osc2-detune": 64,
+        "cutoff": 32,
+        "resonance": 78,
+        "env-amount": 62,
+        "filter-decay": 50,
+        "glide": 40,
+        "sub": 30
+      }
+    },
+    {
+      "name": "Mono Lead",
+      "values": {
+        "osc2-octave": 127,
+        "osc2-detune": 72,
+        "cutoff": 78,
+        "resonance": 30,
+        "env-amount": 40,
+        "glide": 35,
+        "lfo-rate": 72,
+        "lfo-pitch": 28,
+        "release": 55,
+        "sub": 0,
+        "key-follow": 90,
+        "reverb-send": 45,
+        "delay-send": 35
+      }
+    }
+  ],
+  "source": "Built-in Drift Synth (Minimoog / SH-101-style AudioWorklet)"
+}

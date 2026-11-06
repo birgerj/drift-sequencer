@@ -3,6 +3,8 @@ import type { MidiOutputPort } from '../midi/output';
 import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrument } from './common';
 import { DrumKit } from './drumKit';
 import { JunoSynth } from './juno/junoSynth';
+import { MonoSynth } from './mono/monoSynth';
+import type { WorkletSynth } from './workletSynth';
 
 export { LOCAL_CC } from './common';
 
@@ -11,7 +13,7 @@ export { LOCAL_CC } from './common';
  * the sequencer, knob panel and LFOs drive them exactly like hardware.
  * Pick one as a device's port in "My devices". Tone.js is loaded on first use.
  */
-export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums' | 'juno';
+export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums' | 'juno' | 'mono';
 
 export const LOCAL_PORTS: Record<LocalKind, string> = {
   lead: 'Drift Synth Lead',
@@ -19,6 +21,7 @@ export const LOCAL_PORTS: Record<LocalKind, string> = {
   pad: 'Drift Synth Pad',
   drums: 'Drift Synth Drums',
   juno: 'Drift Synth Juno',
+  mono: 'Drift Synth Mono',
 };
 
 export function isLocalPort(name: string): boolean {
@@ -33,7 +36,8 @@ class LocalAudio {
   private master!: ToneNS.ToneAudioNode;
   private reverb!: ToneNS.ToneAudioNode;
   private delay!: ToneNS.ToneAudioNode;
-  private juno: JunoSynth | undefined;
+  /** Instruments that run in their own AudioWorklet, loaded on first use. */
+  private worklets = new Map<LocalKind, WorkletSynth>();
 
   get ready(): boolean {
     return this.instruments.size > 0;
@@ -41,7 +45,7 @@ class LocalAudio {
 
   /**
    * Load Tone.js and resume audio. Call from a click so the browser allows
-   * sound. With `kinds`, also load what those instruments need (the Juno's worklet).
+   * sound. With `kinds`, also load what those instruments need (their worklets).
    */
   wake(kinds: LocalKind[] = []): Promise<void> {
     this.loading ??= import('tone').then((T) => {
@@ -50,7 +54,8 @@ class LocalAudio {
     });
     return this.loading
       .then(() => this.T!.start())
-      .then(() => (kinds.includes('juno') ? this.juno?.load() : undefined))
+      .then(() => Promise.all(kinds.map((k) => this.worklets.get(k)?.load())))
+      .then(() => undefined)
       .catch(() => undefined);
   }
 
@@ -86,9 +91,10 @@ class LocalAudio {
     this.instruments.set('bass', new AcidBass(T, this.channel(T, 0, 0)));
     this.instruments.set('pad', new PadSynth(T, this.channel(T, 0.35, 0)));
     this.instruments.set('drums', new DrumKit(T, this.channel(T, 0.06, 0)));
-    // The Juno's worklet loads on its first note or knob (or wake with 'juno').
-    this.juno = new JunoSynth(T, this.channel(T, 0.3, 0.1));
-    this.instruments.set('juno', this.juno);
+    // Worklet synths load on their first note or knob (or wake with their kind).
+    this.worklets.set('juno', new JunoSynth(T, this.channel(T, 0.3, 0.1)));
+    this.worklets.set('mono', new MonoSynth(T, this.channel(T, 0.04, 0)));
+    for (const [kind, synth] of this.worklets) this.instruments.set(kind, synth);
   }
 
   private channel(T: typeof ToneNS, reverb: number, delay: number): Channel {

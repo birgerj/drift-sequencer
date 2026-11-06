@@ -121,6 +121,8 @@ export interface PanelState {
   /** CC number (as string key) → 0..127. */
   values: Record<string, number>;
   snapshots?: Record<string, Record<string, number>>;
+  /** Name of the preset last loaded, with the values it set (to show when knobs moved since). */
+  preset?: { name: string; values: Record<string, number> };
 }
 
 export interface ProjectState {

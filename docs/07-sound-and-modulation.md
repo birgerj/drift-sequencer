@@ -20,6 +20,10 @@ The *Panel* tab shows the synth's knobs, grouped in pages of eight.
 - **Double-tap** a knob to reset it.
 - With a knob focused: arrow keys, PageUp/PageDown (±10), and Home/End.
 - The ring around a knob also shows the range of an LFO or motion on it.
+- **Preset**: synths that come with ready-made sounds (such as Drift
+  Synth Juno and Mono) have a preset menu. Choosing one sets every knob
+  and sends it to the synth. Once you turn a knob it shows *(edited)*;
+  **Revert** loads the preset again.
 - **Snapshots A–D**: tap an empty slot to store all knob values, and tap
   a filled one to recall them. Shift+tap overwrites.
 - **Send all values** sends every knob to the synth again, for example

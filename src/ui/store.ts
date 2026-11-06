@@ -5,7 +5,7 @@ import { keepAwake } from './keepAwake';
 import { Midi } from '../io/midi/messages';
 import { defaultConfig, type GeneratorConfig } from '../core/generators/registry';
 import type { TrackType } from '../core/generators/types';
-import type { InstrumentDefinition } from '../core/instruments/instrument';
+import { presetCcValues, type InstrumentDefinition } from '../core/instruments/instrument';
 import type { MidiNote } from '../core/theory/note';
 import type { Pattern } from '../core/pattern/pattern';
 import { resizePattern, toChordDegrees } from '../core/pattern/edit';
@@ -729,6 +729,18 @@ export class AppStore {
     if (!t || !snap) return;
     this.updateTrack(id, { panel: { ...t.panel!, values: { ...t.panel!.values, ...snap } } });
     this.sendPanel(id, snap);
+  }
+
+  /** Load one of the instrument's presets: every knob to the preset's value (or its default), sent to the synth. */
+  loadPanelPreset(id: string, name: string): void {
+    const t = this.project.tracks.find((x) => x.id === id);
+    const instrument = t && this.trackInstrument(t);
+    const preset = instrument?.presets?.find((p) => p.name === name);
+    if (!t || !instrument || !preset) return;
+    const values = presetCcValues(instrument, preset);
+    const panel = t.panel ?? { values: {} };
+    this.updateTrack(id, { panel: { ...panel, values: { ...panel.values, ...values }, preset: { name, values } } });
+    this.sendPanel(id, values);
   }
 
   private portForTrack(t: TrackState) {

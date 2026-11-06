@@ -331,5 +331,119 @@
     }
   ],
   "triggers": [],
+  "presets": [
+    {
+      "name": "Juno Strings",
+      "values": {}
+    },
+    {
+      "name": "Glass Pad",
+      "values": {
+        "saw": 0,
+        "pulse": 110,
+        "pwm": 95,
+        "pwm-source": 0,
+        "lfo-rate": 38,
+        "cutoff": 96,
+        "resonance": 30,
+        "env-amount": 15,
+        "attack": 82,
+        "decay": 90,
+        "sustain": 100,
+        "release": 100,
+        "chorus": 80,
+        "reverb-send": 70
+      }
+    },
+    {
+      "name": "Brass",
+      "values": {
+        "saw": 127,
+        "pulse": 0,
+        "sub": 30,
+        "cutoff": 52,
+        "resonance": 22,
+        "env-amount": 72,
+        "attack": 42,
+        "decay": 72,
+        "sustain": 92,
+        "release": 60,
+        "chorus": 40
+      }
+    },
+    {
+      "name": "Poly Pluck",
+      "values": {
+        "saw": 110,
+        "pulse": 30,
+        "sub": 50,
+        "cutoff": 40,
+        "resonance": 40,
+        "env-amount": 85,
+        "attack": 0,
+        "decay": 58,
+        "sustain": 0,
+        "release": 55,
+        "chorus": 40,
+        "delay-send": 40
+      }
+    },
+    {
+      "name": "Juno Bass",
+      "values": {
+        "range": 0,
+        "saw": 100,
+        "pulse": 0,
+        "sub": 100,
+        "cutoff": 45,
+        "resonance": 25,
+        "env-amount": 60,
+        "attack": 0,
+        "decay": 55,
+        "sustain": 40,
+        "release": 30,
+        "chorus": 0,
+        "reverb-send": 5,
+        "delay-send": 0
+      }
+    },
+    {
+      "name": "Warm Lead",
+      "values": {
+        "saw": 110,
+        "pulse": 60,
+        "sub": 0,
+        "cutoff": 70,
+        "resonance": 45,
+        "env-amount": 35,
+        "dco-lfo": 28,
+        "lfo-delay": 70,
+        "lfo-rate": 70,
+        "attack": 10,
+        "sustain": 100,
+        "release": 55,
+        "chorus": 40,
+        "delay-send": 45
+      }
+    },
+    {
+      "name": "Hollow Chords",
+      "values": {
+        "saw": 0,
+        "pulse": 100,
+        "pwm": 40,
+        "pwm-source": 64,
+        "sub": 20,
+        "hpf": 50,
+        "cutoff": 75,
+        "resonance": 35,
+        "env-amount": 30,
+        "decay": 75,
+        "sustain": 60,
+        "release": 70,
+        "chorus": 127
+      }
+    }
+  ],
   "source": "Built-in Drift Synth (Juno-60-style AudioWorklet)"
 }
