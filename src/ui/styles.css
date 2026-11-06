@@ -622,7 +622,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .rail-nav .nav-more { display: none; }
 
 .sheet-scrim { position: fixed; inset: 0; z-index: 70; background: var(--scrim); display: flex; align-items: flex-end; }
-.sheet { width: 100%; background: var(--surface); border-top: 1px solid var(--line-2); border-radius: 18px 18px 0 0; padding: 8px 12px max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-pop); }
+.sheet { width: 100%; background: linear-gradient(var(--surface), var(--surface)), var(--bg); border-top: 1px solid var(--line-2); border-radius: 18px 18px 0 0; padding: 8px 12px max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-pop); }
 .sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--line-2); align-self: center; margin-bottom: 6px; }
 .sheet-item { justify-content: flex-start; gap: 12px; min-height: 48px; background: transparent; border-color: transparent; font-weight: 500; }
 .sheet .rail-clock { padding: 4px 8px 0; }
@@ -670,7 +670,9 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .rail-now { font-size: 11px; }
   .rail .rail-add { flex: 0 0 auto; width: 40px; min-height: 40px; padding: 0; gap: 0; border-radius: 20px; font-size: 0; }
 
-  /* Bottom tab bar */
+  /* Bottom tab bar. The tab bar and More sheet are position: fixed inside the rail, so the
+     rail must not create a containing block (themes add backdrop-filter, filter or transform). */
+  .rail { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; filter: none !important; transform: none !important; }
   .rail-bottom { display: contents; }
   .rail-bottom > .rail-clock, .rail-bottom > .rail-install, .rail-bottom > .rail-help { display: none; }
   .rail-nav {
@@ -682,7 +684,8 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
     grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 0;
     padding: 4px max(4px, env(safe-area-inset-right)) max(4px, env(safe-area-inset-bottom)) max(4px, env(safe-area-inset-left));
-    background: var(--rail-bg);
+    /* Some themes use a see-through rail; the bar sits over content, so give it an opaque base. */
+    background: linear-gradient(var(--rail-bg), var(--rail-bg)), var(--bg);
     border-top: 1px solid var(--line);
   }
   .rail-nav .nav-devices { display: none; }
@@ -695,7 +698,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   /* Track header: title, meta and actions on one row; chords live in the Key readout. */
   .detail-head { flex-wrap: nowrap; gap: 8px; padding: 8px 0 6px; }
   .detail-icon, .detail-chords, .detail-head .spacer { display: none; }
-  .detail-head .title-input { font-size: 18px; max-width: 150px; min-width: 3ch; padding: 0 4px; field-sizing: content; flex: 0 1 auto; }
+  .detail-head input.title-input { font-size: 18px; max-width: 150px; min-width: 3ch; padding: 0 4px; field-sizing: content; flex: 0 0 auto; }
   .detail-meta { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-size: 12px; }
   .detail-head .detail-actions { display: flex; gap: 4px; flex: 0 0 auto; }
   .detail-head .detail-actions .jump { width: 40px; min-height: 40px; border-radius: 10px; }
