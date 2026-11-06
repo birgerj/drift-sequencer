@@ -43,7 +43,7 @@ src/
     instruments/         instrument definitions (CC/NRPN maps, drum notes)
     events.ts            typed event emitter (engine → UI)
   io/midi/               Web MIDI wrapper behind a MidiOutputPort interface
-  io/local/              the built-in Drift Synth (Tone.js; the Juno is an AudioWorklet)
+  io/local/              the built-in Drift Synth (Tone.js; the Juno and Mono are AudioWorklets)
   io/ensemble/           MusicVAE in a Web Worker
   state/                 ProjectState schema, templates, storage + migrations
   ui/                    view layer; talks only to the Sequencer API + events
@@ -90,6 +90,12 @@ so it works in the single-file build. Notes are posted with their
 AudioContext time and start on that exact frame. The CC map and its
 real-unit values live in `junoParams.ts`; tests run the worklet source
 directly in Node.
+
+**Drift Synth Mono** works the same way (`src/io/local/mono/`). Both share
+the loader in `src/io/local/workletSynth.ts`: a new worklet synth needs a
+processor file, a params file (CC → real units, defaults) and an
+instrument definition. Presets live in the definition (`presets`: name and
+knob values by param id; knobs left out go to their default).
 
 **State and storage.** `ProjectState` is one serialisable object with a
 `schemaVersion`; `storage.ts` migrates older files on load. The UI never

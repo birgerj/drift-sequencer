@@ -48,6 +48,7 @@ sounds built into Drift and play through your speakers:
 | Drift Synth Pad | Wide detuned pad with chorus |
 | Drift Synth Drums | Analog-style kit (808, 909 and electro sounds), or one of five sampled kits |
 | Drift Synth Juno | Six-voice Juno-60-style polysynth with chorus, for pads, chords and leads |
+| Drift Synth Mono | Minimoog / SH-101-style mono synth: round basses without the acid squelch, and mono leads |
 
 They react to the knobs on the [Panel](07-sound-and-modulation.md) (cutoff,
 resonance, envelope and so on) and share reverb and delay. They ignore
@@ -66,6 +67,27 @@ the MIDI channel and clock.
 A seventh note takes over the voice that was released longest ago, or
 else the oldest held note. The sound runs in its own audio thread
 (AudioWorklet), loaded the first time you use it.
+
+**Drift Synth Mono** is a monophonic synth for bass (and leads), in the
+spirit of a Minimoog or SH-101:
+
+- **Oscillator · Mixer**: two oscillators (saw, pulse or triangle; the
+  second with its own octave and detune), pulse width, a sine sub one
+  octave down and noise.
+- **Filter**: a driven 24 dB ladder with its own envelope, key follow,
+  velocity to filter (*Vel to filter*) and accent (notes with velocity
+  100 or more get louder and brighter).
+- **Amp**: ADSR and level.
+- **Pitch · LFO**: glide, a pitch envelope (each note starts higher and
+  drops, for punchy sub and 808 basses), and an LFO to filter and pitch.
+
+The newest held note plays. Overlapping notes slide when glide is up and
+don't restart the envelopes; releasing the top note goes back to the one
+still held.
+
+Both the Juno and the Mono come with **presets**, such as *Round Moog*,
+*101 Pluck*, *Deep Sub*, *808 Boom* and *Reese* on the Mono. Pick one at
+the bottom of the [Panel](07-sound-and-modulation.md).
 
 ### Sampled drum kits
 

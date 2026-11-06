@@ -51,7 +51,8 @@ or the same channel.
 > **No synths at hand?** Pick the *Drift Synth Lead*, *Bass*, *Pad* and
 > *Drums* ports. They are sounds built into Drift and play through your
 > computer's speakers. *Drift Synth Juno* is an extra Juno-60-style
-> polysynth for chords and leads.
+> polysynth for chords and leads, and *Drift Synth Mono* a Moog-style
+> bass that is rounder than the 303-style *Bass*.
 
 ## Play
 
