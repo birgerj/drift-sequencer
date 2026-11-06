@@ -2,6 +2,7 @@ import type * as ToneNS from 'tone';
 import type { MidiOutputPort } from '../midi/output';
 import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrument } from './common';
 import { DrumKit } from './drumKit';
+import { JunoSynth } from './juno/junoSynth';
 
 export { LOCAL_CC } from './common';
 
@@ -10,13 +11,14 @@ export { LOCAL_CC } from './common';
  * the sequencer, knob panel and LFOs drive them exactly like hardware.
  * Pick one as a device's port in "My devices". Tone.js is loaded on first use.
  */
-export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums';
+export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums' | 'juno';
 
 export const LOCAL_PORTS: Record<LocalKind, string> = {
   lead: 'Drift Synth Lead',
   bass: 'Drift Synth Bass',
   pad: 'Drift Synth Pad',
   drums: 'Drift Synth Drums',
+  juno: 'Drift Synth Juno',
 };
 
 export function isLocalPort(name: string): boolean {
@@ -31,18 +33,25 @@ class LocalAudio {
   private master!: ToneNS.ToneAudioNode;
   private reverb!: ToneNS.ToneAudioNode;
   private delay!: ToneNS.ToneAudioNode;
+  private juno: JunoSynth | undefined;
 
   get ready(): boolean {
     return this.instruments.size > 0;
   }
 
-  /** Load Tone.js and resume audio. Call from a click so the browser allows sound. */
-  wake(): Promise<void> {
+  /**
+   * Load Tone.js and resume audio. Call from a click so the browser allows
+   * sound. With `kinds`, also load what those instruments need (the Juno's worklet).
+   */
+  wake(kinds: LocalKind[] = []): Promise<void> {
     this.loading ??= import('tone').then((T) => {
       this.T = T;
       this.build(T);
     });
-    return this.loading.then(() => this.T!.start()).catch(() => undefined);
+    return this.loading
+      .then(() => this.T!.start())
+      .then(() => (kinds.includes('juno') ? this.juno?.load() : undefined))
+      .catch(() => undefined);
   }
 
   instrument(kind: LocalKind): Instrument | undefined {
@@ -77,6 +86,9 @@ class LocalAudio {
     this.instruments.set('bass', new AcidBass(T, this.channel(T, 0, 0)));
     this.instruments.set('pad', new PadSynth(T, this.channel(T, 0.35, 0)));
     this.instruments.set('drums', new DrumKit(T, this.channel(T, 0.06, 0)));
+    // The Juno's worklet loads on its first note or knob (or wake with 'juno').
+    this.juno = new JunoSynth(T, this.channel(T, 0.3, 0.1));
+    this.instruments.set('juno', this.juno);
   }
 
   private channel(T: typeof ToneNS, reverb: number, delay: number): Channel {
@@ -301,6 +313,7 @@ export const LOCAL_SYNTH_PORTS: MidiOutputPort[] = (Object.keys(LOCAL_PORTS) as 
 );
 
 /** Load Tone.js and resume audio; call from a user click (play, test). */
-export function wakeLocalAudio(): Promise<void> {
-  return audio.wake();
+export function wakeLocalAudio(portNames: string[] = []): Promise<void> {
+  const kinds = (Object.keys(LOCAL_PORTS) as LocalKind[]).filter((k) => portNames.includes(LOCAL_PORTS[k]));
+  return audio.wake(kinds);
 }
