@@ -238,22 +238,45 @@ export function startVisuals(root: HTMLElement): void {
   let scale = 0.6;
   let frames = 0;
   let fpsAt = performance.now();
+  // Size the page to what is actually visible. On iOS Safari the window extends under the
+  // (floating) toolbar, so a bottom-anchored bar ends up behind it or off screen.
+  function fitViewport() {
+    const vv = window.visualViewport;
+    if (vv) {
+      root.style.top = `${vv.offsetTop}px`;
+      root.style.left = `${vv.offsetLeft}px`;
+      root.style.width = `${vv.width}px`;
+      root.style.height = `${vv.height}px`;
+      root.style.minHeight = '0';
+      root.style.right = 'auto';
+      root.style.bottom = 'auto';
+    }
+  }
+  function viewW() {
+    return root.clientWidth || innerWidth;
+  }
+  function viewH() {
+    return root.clientHeight || innerHeight;
+  }
   function resize() {
+    fitViewport();
     const dpr = Math.min(2, window.devicePixelRatio || 1);
-    const w = Math.max(1, Math.floor(innerWidth * dpr * scale));
-    const h = Math.max(1, Math.floor(innerHeight * dpr * scale));
+    const w = Math.max(1, Math.floor(viewW() * dpr * scale));
+    const h = Math.max(1, Math.floor(viewH() * dpr * scale));
     if (gl3.width !== w || gl3.height !== h) {
       gl3.width = w;
       gl3.height = h;
     }
-    const ow = Math.floor(innerWidth * Math.min(1.5, dpr));
-    const oh = Math.floor(innerHeight * Math.min(1.5, dpr));
+    const ow = Math.floor(viewW() * Math.min(1.5, dpr));
+    const oh = Math.floor(viewH() * Math.min(1.5, dpr));
     if (overlay.width !== ow || overlay.height !== oh) {
       overlay.width = ow;
       overlay.height = oh;
     }
   }
   window.addEventListener('resize', resize);
+  window.visualViewport?.addEventListener('resize', resize);
+  window.visualViewport?.addEventListener('scroll', fitViewport);
   resize();
 
   const ctx = overlay.getContext('2d')!;
