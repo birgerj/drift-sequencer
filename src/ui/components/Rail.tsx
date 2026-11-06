@@ -1,3 +1,4 @@
+import { useState } from "preact/hooks";
 import { slotComponent } from "../theme/slots";
 import { NOTE_NAMES, noteName } from "../../core/theory/note";
 import type { TrackState } from "../../state/project";
@@ -17,6 +18,8 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
       : "001.1",
   );
   const chord = useLive((l) => (playing ? l.chord : ""));
+  // Phones: Devices, clock, visuals and install move into a "More" sheet.
+  const [moreOpen, setMoreOpen] = useState(false);
   const bpm = (delta: number) =>
     s.change((x) => ({
       ...x,
@@ -53,7 +56,7 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
         aria-label={playing ? "Stop (Space)" : "Play (Space)"}
       >
         <Icon name={playing ? "stop" : "play"} size={18} />
-        {playing ? "Stop" : "Play"}
+        <span class="rail-play-label">{playing ? "Stop" : "Play"}</span>
         <kbd>Space</kbd>
       </button>
 
@@ -137,7 +140,19 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
             icon="devices"
             label="Devices"
             also={["setup"]}
+            cls="nav-devices"
           />
+          <button
+            type="button"
+            class="nav-more"
+            aria-haspopup="dialog"
+            aria-expanded={moreOpen}
+            aria-current={s.view.name === "instruments" || s.view.name === "setup"}
+            onClick={() => setMoreOpen(true)}
+          >
+            <Icon name="more" size={18} />
+            <span>More</span>
+          </button>
         </nav>
         <button type="button" class="rail-help" onClick={() => s.openVisuals()}>
           <Icon name="eye" size={16} /> Visuals
@@ -150,7 +165,64 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
           <Icon name="keyboard" size={16} /> Shortcuts <kbd>?</kbd>
         </button>
       </div>
+      {moreOpen && (
+        <MoreSheet canInstall={canInstall} onClose={() => setMoreOpen(false)} />
+      )}
     </aside>
+  );
+}
+
+/** Phones only: the things that don't fit in the bottom tab bar. */
+function MoreSheet({
+  canInstall,
+  onClose,
+}: {
+  canInstall: boolean;
+  onClose: () => void;
+}) {
+  const s = useStore();
+  const go = (view: View) => {
+    s.go(view);
+    onClose();
+  };
+  return (
+    <div class="sheet-scrim" onClick={onClose}>
+      <div
+        class="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label="More"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div class="sheet-handle" aria-hidden="true" />
+        <button type="button" class="sheet-item" onClick={() => go({ name: "instruments" })}>
+          <Icon name="devices" size={18} /> Devices
+        </button>
+        <button
+          type="button"
+          class="sheet-item"
+          onClick={() => {
+            s.openVisuals();
+            onClose();
+          }}
+        >
+          <Icon name="eye" size={18} /> Visuals
+        </button>
+        {canInstall && (
+          <button
+            type="button"
+            class="sheet-item"
+            onClick={() => {
+              void pwa.install();
+              onClose();
+            }}
+          >
+            <Icon name="download" size={18} /> Install app
+          </button>
+        )}
+        <ClockSelect />
+      </div>
+    </div>
   );
 }
 
@@ -159,16 +231,18 @@ function NavButton({
   icon,
   label,
   also = [],
+  cls,
 }: {
   view: View;
   icon: string;
   label: string;
   also?: string[];
+  cls?: string;
 }) {
   const s = useStore();
   const current = s.view.name === view.name || also.includes(s.view.name);
   return (
-    <button type="button" aria-current={current} onClick={() => s.go(view)}>
+    <button type="button" class={cls} aria-current={current} onClick={() => s.go(view)}>
       <Icon name={icon} size={18} />
       <span>{label}</span>
     </button>
