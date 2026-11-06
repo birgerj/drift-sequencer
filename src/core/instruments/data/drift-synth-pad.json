@@ -76,6 +76,7 @@
     {
       "id": "reverb-send",
       "name": "Reverb send",
+      "short": "Reverb",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -90,6 +91,7 @@
     {
       "id": "delay-send",
       "name": "Delay send",
+      "short": "Delay",
       "section": "Mix",
       "msg": {
         "type": "cc",
@@ -103,5 +105,41 @@
     }
   ],
   "triggers": [],
+  "panel": [
+    {
+      "title": "Filter",
+      "widgets": [
+        {
+          "kind": "xy",
+          "x": "cutoff",
+          "y": "resonance"
+        }
+      ]
+    },
+    {
+      "title": "Envelope",
+      "widgets": [
+        {
+          "kind": "adsr",
+          "attack": "attack",
+          "release": "release",
+          "sustainLevel": 0.8
+        }
+      ]
+    },
+    {
+      "title": "Mix",
+      "widgets": [
+        {
+          "kind": "sliders",
+          "params": [
+            "volume",
+            "reverb-send",
+            "delay-send"
+          ]
+        }
+      ]
+    }
+  ],
   "source": "Built-in Drift Synth (Tone.js)"
 }

@@ -3,6 +3,7 @@ import { choiceLabel, type InstrumentDefinition, type InstrumentParam } from '..
 import type { TrackState } from '../../state/project';
 import { store, useLive, useStore } from '../store';
 import { Card } from './controls';
+import { PanelModules } from './PanelModules';
 
 const KNOBS_PER_PAGE = 8;
 const LEDS = 15;
@@ -91,7 +92,16 @@ export function KnobPanel({ track, instrument }: { track: TrackState; instrument
     );
   }
 
-  const snapshots = track.panel?.snapshots ?? {};
+  if (instrument.panel?.length) {
+    return (
+      <div class="knob-panel with-modules" style={{ '--accent': track.color }}>
+        <PanelModules track={track} instrument={instrument} />
+        <MotionRecorder track={track} />
+        <PanelBar track={track} instrument={instrument} />
+      </div>
+    );
+  }
+
   return (
     <div class="knob-panel" style={{ '--accent': track.color }}>
       <nav class="panel-pages" aria-label="Panel pages">
@@ -112,29 +122,37 @@ export function KnobPanel({ track, instrument }: { track: TrackState; instrument
         </div>
 
         <MotionRecorder track={track} />
-
-        <div class="panel-bar">
-          {instrument.presets?.length ? <PresetPicker track={track} instrument={instrument} /> : null}
-          <span class="eyebrow">Snapshots</span>
-          {['A', 'B', 'C', 'D'].map((slot) => (
-            <button
-              type="button"
-              class={`snap ${snapshots[slot] ? 'filled' : ''}`}
-              title={snapshots[slot] ? 'Tap to recall · Shift+tap to overwrite' : 'Tap to store the current knobs'}
-              onClick={(e) =>
-                snapshots[slot] && !e.shiftKey ? s.recallPanelSnapshot(track.id, slot) : s.storePanelSnapshot(track.id, slot)
-              }
-            >
-              {slot}
-            </button>
-          ))}
-          <div class="spacer" />
-          <span class="hint">Drag up/down · Shift for fine · double-tap resets</span>
-          <button type="button" onClick={() => s.sendPanel(track.id)}>
-            Send all values
-          </button>
-        </div>
+        <PanelBar track={track} instrument={instrument} />
       </div>
+    </div>
+  );
+}
+
+/** Presets, snapshots and sending every value. */
+function PanelBar({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition }) {
+  const s = useStore();
+  const snapshots = track.panel?.snapshots ?? {};
+  return (
+    <div class="panel-bar">
+      {instrument.presets?.length ? <PresetPicker track={track} instrument={instrument} /> : null}
+      <span class="eyebrow">Snapshots</span>
+      {['A', 'B', 'C', 'D'].map((slot) => (
+        <button
+          type="button"
+          class={`snap ${snapshots[slot] ? 'filled' : ''}`}
+          title={snapshots[slot] ? 'Tap to recall · Shift+tap to overwrite' : 'Tap to store the current knobs'}
+          onClick={(e) =>
+            snapshots[slot] && !e.shiftKey ? s.recallPanelSnapshot(track.id, slot) : s.storePanelSnapshot(track.id, slot)
+          }
+        >
+          {slot}
+        </button>
+      ))}
+      <div class="spacer" />
+      <span class="hint">Drag · Shift for fine · double-tap resets</span>
+      <button type="button" onClick={() => s.sendPanel(track.id)}>
+        Send all values
+      </button>
     </div>
   );
 }
