@@ -1,0 +1,333 @@
+{
+  "id": "steinway",
+  "name": "Steinway",
+  "description": "Steinway grand, warm and round (Splendid Grand Piano)",
+  "source": "Splendid Grand Piano, Akai samples, sfz by sfzinstruments (github.com/sfzinstruments/SplendidGrandPiano)",
+  "license": "Public domain",
+  "licenseUrl": "https://github.com/sfzinstruments/SplendidGrandPiano",
+  "layers": [
+    {
+      "hivel": 84,
+      "zones": [
+        {
+          "lo": 21,
+          "hi": 25,
+          "key": 23,
+          "file": "1-23.flac"
+        },
+        {
+          "lo": 26,
+          "hi": 29,
+          "key": 27,
+          "file": "1-27.flac"
+        },
+        {
+          "lo": 30,
+          "hi": 33,
+          "key": 31,
+          "file": "1-31.flac"
+        },
+        {
+          "lo": 34,
+          "hi": 36,
+          "key": 35,
+          "file": "1-35.flac"
+        },
+        {
+          "lo": 37,
+          "hi": 39,
+          "key": 38,
+          "file": "1-38.flac"
+        },
+        {
+          "lo": 40,
+          "hi": 43,
+          "key": 41,
+          "file": "1-41.flac"
+        },
+        {
+          "lo": 44,
+          "hi": 46,
+          "key": 45,
+          "file": "1-45.flac"
+        },
+        {
+          "lo": 47,
+          "hi": 50,
+          "key": 48,
+          "file": "1-48.flac"
+        },
+        {
+          "lo": 51,
+          "hi": 53,
+          "key": 52,
+          "file": "1-52.flac"
+        },
+        {
+          "lo": 54,
+          "hi": 56,
+          "key": 55,
+          "file": "1-55.flac"
+        },
+        {
+          "lo": 57,
+          "hi": 60,
+          "key": 58,
+          "file": "1-58.flac"
+        },
+        {
+          "lo": 61,
+          "hi": 63,
+          "key": 62,
+          "file": "1-62.flac"
+        },
+        {
+          "lo": 64,
+          "hi": 67,
+          "key": 65,
+          "file": "1-65.flac"
+        },
+        {
+          "lo": 68,
+          "hi": 70,
+          "key": 69,
+          "file": "1-69.flac"
+        },
+        {
+          "lo": 71,
+          "hi": 74,
+          "key": 72,
+          "file": "1-72.flac"
+        },
+        {
+          "lo": 75,
+          "hi": 77,
+          "key": 76,
+          "file": "1-76.flac"
+        },
+        {
+          "lo": 78,
+          "hi": 80,
+          "key": 79,
+          "file": "1-79.flac"
+        },
+        {
+          "lo": 81,
+          "hi": 83,
+          "key": 82,
+          "file": "1-82.flac"
+        },
+        {
+          "lo": 84,
+          "hi": 86,
+          "key": 85,
+          "file": "1-85.flac"
+        },
+        {
+          "lo": 87,
+          "hi": 89,
+          "key": 88,
+          "file": "1-88.flac"
+        },
+        {
+          "lo": 90,
+          "hi": 92,
+          "key": 91,
+          "file": "1-91.flac"
+        },
+        {
+          "lo": 93,
+          "hi": 95,
+          "key": 94,
+          "file": "1-94.flac"
+        },
+        {
+          "lo": 96,
+          "hi": 98,
+          "key": 97,
+          "file": "1-97.flac"
+        },
+        {
+          "lo": 99,
+          "hi": 101,
+          "key": 100,
+          "file": "1-100.flac"
+        },
+        {
+          "lo": 102,
+          "hi": 104,
+          "key": 103,
+          "file": "1-103.flac"
+        },
+        {
+          "lo": 105,
+          "hi": 108,
+          "key": 106,
+          "file": "1-106.flac"
+        }
+      ]
+    },
+    {
+      "hivel": 127,
+      "zones": [
+        {
+          "lo": 21,
+          "hi": 25,
+          "key": 23,
+          "file": "2-23.flac"
+        },
+        {
+          "lo": 26,
+          "hi": 29,
+          "key": 27,
+          "file": "2-27.flac"
+        },
+        {
+          "lo": 30,
+          "hi": 33,
+          "key": 31,
+          "file": "2-31.flac"
+        },
+        {
+          "lo": 34,
+          "hi": 36,
+          "key": 35,
+          "file": "2-35.flac"
+        },
+        {
+          "lo": 37,
+          "hi": 39,
+          "key": 38,
+          "file": "2-38.flac"
+        },
+        {
+          "lo": 40,
+          "hi": 43,
+          "key": 41,
+          "file": "2-41.flac"
+        },
+        {
+          "lo": 44,
+          "hi": 46,
+          "key": 45,
+          "file": "2-45.flac"
+        },
+        {
+          "lo": 47,
+          "hi": 50,
+          "key": 48,
+          "file": "2-48.flac"
+        },
+        {
+          "lo": 51,
+          "hi": 53,
+          "key": 52,
+          "file": "2-52.flac"
+        },
+        {
+          "lo": 54,
+          "hi": 56,
+          "key": 55,
+          "file": "2-55.flac"
+        },
+        {
+          "lo": 57,
+          "hi": 60,
+          "key": 58,
+          "file": "2-58.flac"
+        },
+        {
+          "lo": 61,
+          "hi": 63,
+          "key": 62,
+          "file": "2-62.flac"
+        },
+        {
+          "lo": 64,
+          "hi": 67,
+          "key": 65,
+          "file": "2-65.flac"
+        },
+        {
+          "lo": 68,
+          "hi": 70,
+          "key": 69,
+          "file": "2-69.flac"
+        },
+        {
+          "lo": 71,
+          "hi": 74,
+          "key": 72,
+          "file": "2-72.flac"
+        },
+        {
+          "lo": 75,
+          "hi": 77,
+          "key": 76,
+          "file": "2-76.flac"
+        },
+        {
+          "lo": 78,
+          "hi": 80,
+          "key": 79,
+          "file": "2-79.flac"
+        },
+        {
+          "lo": 81,
+          "hi": 83,
+          "key": 82,
+          "file": "2-82.flac"
+        },
+        {
+          "lo": 84,
+          "hi": 86,
+          "key": 85,
+          "file": "2-85.flac"
+        },
+        {
+          "lo": 87,
+          "hi": 89,
+          "key": 88,
+          "file": "2-88.flac"
+        },
+        {
+          "lo": 90,
+          "hi": 93,
+          "key": 91,
+          "file": "2-91.flac"
+        },
+        {
+          "lo": 94,
+          "hi": 96,
+          "key": 95,
+          "file": "2-95.flac"
+        },
+        {
+          "lo": 97,
+          "hi": 100,
+          "key": 98,
+          "file": "2-98.flac"
+        },
+        {
+          "lo": 101,
+          "hi": 103,
+          "key": 102,
+          "file": "2-102.flac"
+        },
+        {
+          "lo": 104,
+          "hi": 106,
+          "key": 105,
+          "file": "2-105.flac"
+        },
+        {
+          "lo": 107,
+          "hi": 108,
+          "key": 108,
+          "file": "2-108.flac"
+        }
+      ]
+    }
+  ],
+  "gain": 0.909
+}
