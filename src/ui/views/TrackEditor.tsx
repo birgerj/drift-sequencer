@@ -5,7 +5,8 @@ import { noteName } from '../../core/theory/note';
 import { DEFAULT_INTERPLAY, interplayActive, type InterplaySettings } from '../../core/engine/interplay';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
+import { useNarrow } from '../useNarrow';
 import { Chord } from '../../core/theory/chord';
 import { DRUM_PRESETS, PRESET_GENRES, tr8sKey, TR8S_GROUP_COLORS, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS, drumIcon } from '../components/controls';
@@ -194,20 +195,6 @@ export function TrackEditor({ trackId }: { trackId: string }) {
       </div>
     </div>
   );
-}
-
-/** True on phone-sized screens, where the layout goes compact (matches the CSS breakpoint). */
-function useNarrow() {
-  const query = '(max-width: 820px)';
-  const [narrow, setNarrow] = useState(() => typeof matchMedia === 'function' && matchMedia(query).matches);
-  useEffect(() => {
-    if (typeof matchMedia !== 'function') return;
-    const m = matchMedia(query);
-    const on = () => setNarrow(m.matches);
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, []);
-  return narrow;
 }
 
 /** New pattern, freeze, mute and solo. Shown in the tab bar on wide screens, next to the title on phones. */
