@@ -3,6 +3,7 @@ import type { InterplaySettings } from '../core/engine/interplay';
 import type { DeviceRole } from './rack';
 import type { GeneratorConfig } from '../core/generators/registry';
 import type { Pattern, Register } from '../core/pattern/pattern';
+import type { Composition } from '../core/ensemble/composition';
 import type { ProgressionStep } from '../core/theory/harmony';
 import type { ProgressionStyle } from '../core/theory/progressionGenerator';
 import type { PitchClass } from '../core/theory/note';
@@ -146,7 +147,7 @@ export interface ProjectState {
     /** 'vary' swaps one chord; 'new' writes a whole new progression. */
     mode: 'vary' | 'new';
   };
-  /** MusicVAE trio: melody, bass and drums written together by one model. */
+  /** AI ensemble: lead, bass, pads and drums composed together by Claude. */
   ensemble?: EnsembleSettings;
   clock: {
     /** Port names that receive MIDI clock + start/stop (e.g. the TR-8S). */
@@ -159,31 +160,29 @@ export interface ProjectState {
 export interface EnsembleSettings {
   melody?: string;
   bass?: string;
+  pads?: string;
   drums?: string;
-  /** 0.1..1.5 — low is safe and repetitive, high is surprising. */
-  temperature: number;
-  /** Keep moving through the model's latent space while playing. */
+  /** Claude model id. */
+  model: string;
+  /** The musician's wishes, passed to Claude as written. */
+  style: string;
+  /** Wanted section length in bars (whole passes of the progression). */
+  sectionLength?: number;
+  /** Let Claude write the next part of the piece while it plays. */
   evolve: boolean;
-  /** Take a step every N bars (a multiple of the trio's 4 bars). */
-  everyBars: number;
-  /** 0..1 — how far each step moves. */
-  amount: number;
-  /** Current point in the latent space; the linked tracks follow the model while it is set. */
-  z?: number[];
-  /** Stored points to morph between. */
-  a?: number[];
-  b?: number[];
-  /** 0..1 position between A and B. */
-  morph?: number;
-  /** How many trios to write per new trio; the best one plays. */
-  candidates?: number;
-  /** Preferred busyness; candidates closer to it win. */
+  /** Ask for the next part after this many passes through the form. */
+  everyLoops: number;
+  /** The linked tracks follow the composition while this is set. */
+  linked?: boolean;
+  /** What Claude wrote last; kept with the project, so a reload plays it without the API. */
+  composition?: Composition;
+  /** Preferred busyness, passed to Claude. */
   melodyDensity?: 'sparse' | 'balanced' | 'busy';
   drumDensity?: 'sparse' | 'balanced' | 'busy';
-  /** Which notes are bent onto the chords (see trioToPatterns). */
+  /** Bend notes on strong steps onto the chord that actually plays (see sectionPatterns). */
   fit?: 'off' | 'bar' | 'half' | 'beat';
-  /** Parts that take part in evolving; the others keep their current trio part. */
-  evolveParts?: { melody: boolean; bass: boolean; drums: boolean };
+  /** Parts that change when the piece moves on; the others keep what they play now. */
+  evolveParts?: { melody: boolean; bass: boolean; pads?: boolean; drums: boolean };
 }
 
 export function newId(): string {

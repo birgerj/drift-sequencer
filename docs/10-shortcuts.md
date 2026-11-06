@@ -21,7 +21,7 @@ Press `?` in Drift to see this list.
 | `,` `.` | Tempo −1 / +1 (with Shift: ±5) |
 | `O` | Overview (the performance screen) |
 | `A` | AI page |
-| `G` | Generate a new AI trio |
+| `G` | Compose a new AI piece |
 | `Shift+T` | Next theme |
 | `?` | Shortcut list |
 | `Esc` | Close the shortcut list |

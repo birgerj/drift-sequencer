@@ -39,12 +39,12 @@ src/
     pattern/             harmony-relative Pattern + resolver to MIDI notes
     generators/          one PatternGenerator per track type + registry
     engine/              LookaheadScheduler, TrackRuntime, Sequencer, LFOs, interplay
-    ensemble/            MusicVAE trio → Drift patterns, latent-space math
+    ensemble/            Claude composition: prompt, tool schema, checks → Drift patterns
     instruments/         instrument definitions (CC/NRPN maps, drum notes)
     events.ts            typed event emitter (engine → UI)
   io/midi/               Web MIDI wrapper behind a MidiOutputPort interface
   io/local/              the built-in Drift Synth (Tone.js; the Juno and Mono are AudioWorklets)
-  io/ensemble/           MusicVAE in a Web Worker
+  io/ensemble/           Claude API call from the browser, API key storage
   state/                 ProjectState schema, templates, storage + migrations
   ui/                    view layer; talks only to the Sequencer API + events
   visuals/               the visuals window (WebGL 2)
@@ -72,15 +72,21 @@ kept in its history.
 time: every track first plans its notes for a step, then listeners react
 to what the others planned.
 
-**Ensemble.** MusicVAE (`trio_4bar`) runs in a Web Worker created from an
-inline Blob, so it also works in the single-file build. TensorFlow.js and
-Magenta load from jsDelivr, and the checkpoint from Google's bucket, only
-when the user asks. Several candidates are decoded and scored
-(`scoreTrio`, with optional density taste); the best is converted to
-key-relative patterns (`trioToPatterns`, with a chord-fit setting). The
-AI page is `src/ui/views/AiView.tsx`; the controller is
-`src/ui/ensemble.ts`. Linked tracks are `external` and take queued patterns
-at 4-bar phrase starts.
+**Ensemble.** Claude composes through the Messages API, called straight
+from the browser (`anthropic-dangerous-direct-browser-access`) with the
+user's own API key, kept in `localStorage` and never in the project.
+`src/core/ensemble/composition.ts` builds the prompt (key, scale degrees,
+chords per bar, grid, parts, the user's wishes and, when continuing, the
+piece that plays), forces a `write_music` tool call whose schema limits drum
+voices to the drum track's, checks and clamps the answer
+(`parseComposition`) and turns a section into patterns (`sectionPatterns`:
+key-relative lead and bass, `chord` hits for pads, fixed drum notes).
+Sections last whole passes of the progression. The controller
+(`src/ui/ensemble.ts`) plays the form: one bar before a section ends it
+queues the next slot, and during the last pass before moving on it writes
+the next part in the background. Linked tracks are `external` and take
+queued patterns at section starts. The AI page is
+`src/ui/views/AiView.tsx`.
 
 **Drift Synth Juno.** Six voices in one AudioWorkletNode
 (`src/io/local/juno/junoProcessor.js`, plain JavaScript, written from
