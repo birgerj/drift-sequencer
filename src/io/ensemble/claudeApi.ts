@@ -60,8 +60,8 @@ export async function callTool(req: ToolCall): Promise<unknown> {
         max_tokens: req.maxTokens ?? 32000,
         system: req.system,
         tools: [req.tool],
-        tool_choice: { type: 'tool', name: req.tool.name },
-        messages: [{ role: 'user', content: req.user }],
+        // Newer models refuse a forced tool_choice; the prompt asks for the tool instead.
+        messages: [{ role: 'user', content: `${req.user}\n\nAnswer only by calling the ${req.tool.name} tool.` }],
       }),
     });
   } catch (e) {
@@ -71,15 +71,31 @@ export async function callTool(req: ToolCall): Promise<unknown> {
   const body = (await res.json().catch(() => ({}))) as {
     error?: { message?: string };
     stop_reason?: string;
-    content?: { type: string; name?: string; input?: unknown }[];
+    content?: { type: string; name?: string; input?: unknown; text?: string }[];
   };
   if (!res.ok) {
     const msg = body.error?.message ?? `HTTP ${res.status}`;
     if (res.status === 401) throw new Error('The API key was refused. Check it in the AI settings.');
     throw new Error(`Claude API: ${msg}`);
   }
-  const call = body.content?.find((c) => c.type === 'tool_use' && c.name === req.tool.name);
-  if (!call) throw new Error('Claude didn’t send any music');
   if (body.stop_reason === 'max_tokens') throw new Error('Claude’s answer was cut off. Try fewer or shorter sections.');
-  return call.input;
+  const call = body.content?.find((c) => c.type === 'tool_use' && c.name === req.tool.name);
+  if (call) return call.input;
+  // Fallback: the same JSON written as text instead of a tool call.
+  const text = (body.content ?? []).filter((c) => c.type === 'text').map((c) => c.text ?? '').join('\n');
+  const json = jsonIn(text);
+  if (json !== undefined) return json;
+  throw new Error('Claude didn’t send any music');
+}
+
+/** The outermost JSON object in a text, if it parses. */
+export function jsonIn(text: string): unknown {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start < 0 || end <= start) return undefined;
+  try {
+    return JSON.parse(text.slice(start, end + 1));
+  } catch {
+    return undefined;
+  }
 }
