@@ -114,6 +114,7 @@ export function KnobPanel({ track, instrument }: { track: TrackState; instrument
         <MotionRecorder track={track} />
 
         <div class="panel-bar">
+          {instrument.presets?.length ? <PresetPicker track={track} instrument={instrument} /> : null}
           <span class="eyebrow">Snapshots</span>
           {['A', 'B', 'C', 'D'].map((slot) => (
             <button
@@ -135,6 +136,37 @@ export function KnobPanel({ track, instrument }: { track: TrackState; instrument
         </div>
       </div>
     </div>
+  );
+}
+
+/** The instrument's ready-made sounds; "edited" once a knob moved away from the loaded preset. */
+function PresetPicker({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition }) {
+  const s = useStore();
+  const loaded = track.panel?.preset;
+  const values = track.panel?.values ?? {};
+  const edited = loaded ? Object.entries(loaded.values).some(([cc, v]) => values[cc] !== v) : false;
+  return (
+    <label class="preset-picker">
+      <span class="eyebrow">Preset</span>
+      <select
+        value={loaded?.name ?? ''}
+        aria-label="Preset"
+        onChange={(e) => {
+          const name = (e.currentTarget as HTMLSelectElement).value;
+          if (name) s.loadPanelPreset(track.id, name);
+        }}
+      >
+        {!loaded && <option value="">Choose…</option>}
+        {instrument.presets!.map((p) => (
+          <option value={p.name}>{p.name === loaded?.name && edited ? `${p.name} (edited)` : p.name}</option>
+        ))}
+      </select>
+      {loaded && edited && (
+        <button type="button" title={`Load ${loaded.name} again`} onClick={() => s.loadPanelPreset(track.id, loaded.name)}>
+          Revert
+        </button>
+      )}
+    </label>
   );
 }
 

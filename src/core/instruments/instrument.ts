@@ -10,6 +10,8 @@ export interface InstrumentDefinition {
   defaultChannel?: number;
   params: InstrumentParam[];
   triggers: InstrumentTrigger[];
+  /** Ready-made sounds for the knob panel. */
+  presets?: InstrumentPreset[];
   /** Attribution for third-party data. */
   source?: string;
 }
@@ -26,6 +28,24 @@ export type ParamTarget =
   | 'tune'
   | 'level'
   | 'fx';
+
+/** A named set of knob values; knobs it leaves out go to their default. */
+export interface InstrumentPreset {
+  name: string;
+  /** Param id → value. */
+  values: Record<string, number>;
+}
+
+/** Every CC knob's value (by CC number) for a preset: its own value, else the knob's default. */
+export function presetCcValues(instrument: InstrumentDefinition, preset: InstrumentPreset): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const p of instrument.params) {
+    if (p.msg.type !== 'cc' || p.msg.lsb !== undefined) continue;
+    const v = preset.values[p.id] ?? p.default;
+    if (v !== undefined) out[p.msg.cc] = Math.max(p.min, Math.min(p.max, Math.round(v)));
+  }
+  return out;
+}
 
 export interface InstrumentParam {
   id: string;
