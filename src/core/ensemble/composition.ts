@@ -167,7 +167,7 @@ Write music, not random notes:
 - Sections in the form must relate: A2 is a variation of A, B contrasts (other register, rhythm or density) but keeps the same character. Arrange: the accompaniment can thin out or build up between sections (fewer drum voices in an intro or breakdown, fuller in the main part).
 - Use velocity for shape: accents on the beat, softer ghost notes.
 
-Use only the scale degrees, steps and drum voices described in the request. Leave a part as an empty list when the request says it has no track.`;
+Always answer by calling the write_music tool, with no other text. Use only the scale degrees, steps and drum voices described in the request. Leave a part as an empty list when the request says it has no track.`;
 
 /** The user message: key, chords per bar, grid, parts and the musician's wishes. */
 export function composePrompt(ctx: ComposeContext): string {

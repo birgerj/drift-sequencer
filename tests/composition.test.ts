@@ -179,7 +179,7 @@ describe('Claude API call', () => {
   afterEach(() => vi.unstubAllGlobals());
   const req = { apiKey: 'sk-test', model: 'claude-sonnet-5-5', system: 's', user: 'u', tool: { name: 'write_music', description: 'd', input_schema: {} } };
 
-  it('sends the key and browser header, forces the tool and returns its input', async () => {
+  it('sends the key and browser header, offers the tool and returns its input', async () => {
     const fetch = vi.fn(async () => new Response(JSON.stringify({ stop_reason: 'tool_use', content: [{ type: 'tool_use', name: 'write_music', input: { ok: 1 } }] })));
     vi.stubGlobal('fetch', fetch);
     await expect(callTool(req)).resolves.toEqual({ ok: 1 });
@@ -187,7 +187,20 @@ describe('Claude API call', () => {
     const headers = init.headers as Record<string, string>;
     expect(headers['x-api-key']).toBe('sk-test');
     expect(headers['anthropic-dangerous-direct-browser-access']).toBe('true');
-    expect(JSON.parse(init.body as string).tool_choice).toEqual({ type: 'tool', name: 'write_music' });
+    const body = JSON.parse(init.body as string);
+    expect(body.tool_choice).toBeUndefined();
+    expect(body.tools[0].name).toBe('write_music');
+    expect(body.messages[0].content).toContain('calling the write_music tool');
+  });
+
+  it('accepts the JSON as text when Claude doesn’t call the tool', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => new Response(JSON.stringify({ stop_reason: 'end_turn', content: [{ type: 'text', text: 'Here it is:\n```json\n{"title":"X"}\n```' }] }))),
+    );
+    await expect(callTool(req)).resolves.toEqual({ title: 'X' });
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify({ stop_reason: 'end_turn', content: [{ type: 'text', text: 'Sorry.' }] }))));
+    await expect(callTool(req)).rejects.toThrow('didn’t send any music');
   });
 
   it('explains a refused key and a cut-off answer', async () => {
