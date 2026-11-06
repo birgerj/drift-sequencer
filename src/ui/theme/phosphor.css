@@ -164,3 +164,15 @@
 [data-theme='phosphor'] .panel-pages button { font-size: 17px; }
 [data-theme='phosphor'] .jump { font-size: 17px; padding: 0 10px; }
 [data-theme='phosphor'] .theme-picker button { font-size: 16px; }
+
+/* Phones: the pixel font runs large; scale it down with the dense layout. */
+@media (max-width: 820px) {
+  [data-theme='phosphor'] body { font-size: 16px; }
+  [data-theme='phosphor'] .eyebrow,
+  [data-theme='phosphor'] .field-label,
+  [data-theme='phosphor'] .slider label,
+  [data-theme='phosphor'] .jump,
+  [data-theme='phosphor'] .panel-pages button { font-size: 14px; }
+  [data-theme='phosphor'] h1,
+  [data-theme='phosphor'] .detail-head input.title-input { font-size: 22px; }
+}

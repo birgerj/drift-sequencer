@@ -67,7 +67,8 @@ export function TrackEditor({ trackId }: { trackId: string }) {
         {SECTIONS.map((x) => (
           <button type="button" role="tab" class="jump" aria-selected={tab === x.id} aria-current={tab === x.id} onClick={() => s.setTrackTab(x.id)}>
             <Icon name={x.icon} size={16} />
-            {x.label}
+            <span class="jump-label">{x.label}</span>
+            <span class="jump-short" aria-hidden="true">{x.short}</span>
             <kbd>{x.key}</kbd>
           </button>
         ))}
