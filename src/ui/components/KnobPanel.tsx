@@ -1,5 +1,5 @@
 import { useRef, useState } from 'preact/hooks';
-import type { InstrumentDefinition, InstrumentParam } from '../../core/instruments/instrument';
+import { choiceLabel, type InstrumentDefinition, type InstrumentParam } from '../../core/instruments/instrument';
 import type { TrackState } from '../../state/project';
 import { store, useLive, useStore } from '../store';
 import { Card } from './controls';
@@ -155,7 +155,7 @@ function Encoder({ track, param }: { track: TrackState; param: InstrumentParam }
   const lastTap = useRef(0);
 
   const set = (n: number) => s.setPanelValue(track.id, cc, Math.max(min, Math.min(max, n)));
-  const shown = param.bipolar ? value - Math.round((min + max + 1) / 2) : value;
+  const shown = choiceLabel(param, value) ?? (param.bipolar ? value - Math.round((min + max + 1) / 2) : value);
 
   const leds = Array.from({ length: LEDS }, (_, i) => {
     const angle = -135 + (i * 270) / (LEDS - 1);
@@ -182,7 +182,7 @@ function Encoder({ track, param }: { track: TrackState; param: InstrumentParam }
       <div class="oled" title={param.name}>
         <span class="oled-label">{param.name}</span>
         <span class="oled-line" />
-        <span class="oled-value">{stored === undefined ? '—' : shown}</span>
+        <span class={`oled-value ${typeof shown === 'string' ? 'oled-text' : ''}`}>{stored === undefined ? '—' : shown}</span>
       </div>
       <div
         class="knob"
