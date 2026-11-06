@@ -76,6 +76,8 @@ export interface PanelModule {
   title: string;
   /** Takes about twice the width of a normal module. */
   wide?: boolean;
+  /** Big panels show one group at a time, picked from a tab row. */
+  group?: string;
   widgets: PanelWidget[];
 }
 
@@ -91,6 +93,8 @@ export type PanelWidget =
   | { kind: 'xy'; x: string; y: string }
   /** Envelope graph with draggable points. A missing sustain uses `sustainLevel` (0–1). */
   | { kind: 'adsr'; attack?: string; decay?: string; sustain?: string; release?: string; sustainLevel?: number }
+  /** Narrow columns side by side, like mixer channels: knobs over a level fader. */
+  | { kind: 'strips'; strips: { title: string; params: string[]; level?: string }[] }
   /** Display only: an LFO wave from its rate (and delay). */
   | { kind: 'lfo'; rate: string; delay?: string };
 
@@ -107,6 +111,8 @@ export function widgetParams(w: PanelWidget): string[] {
       return [w.x, w.y];
     case 'adsr':
       return [w.attack, w.decay, w.sustain, w.release].filter((x): x is string => !!x);
+    case 'strips':
+      return w.strips.flatMap((s) => (s.level ? [...s.params, s.level] : s.params));
     case 'lfo':
       return [];
   }

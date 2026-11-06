@@ -9,7 +9,6 @@ import source from '../src/io/local/mono/monoProcessor.js?raw';
 import { WORKLET_MSG } from '../src/io/local/workletSynth';
 import { BUILT_IN_INSTRUMENTS } from '../src/state/instrumentLibrary';
 import { suggestInstrument } from '../src/state/rack';
-import { panelPages } from '../src/ui/components/KnobPanel';
 
 const SR = 48000;
 const def = mono as unknown as InstrumentDefinition;
@@ -100,12 +99,6 @@ describe('Drift Synth Mono: definition and CC map', () => {
     expect(monoParam(93, 64)).toBeUndefined();
   });
 
-  it('fits the panel in pages of at most 8 knobs, filter first', () => {
-    const pages = panelPages(def);
-    expect(pages[0]!.name).toBe('Filter');
-    expect(pages.every((p) => p.params.length > 0 && p.params.length <= 8)).toBe(true);
-    expect(pages.flatMap((p) => p.params)).toHaveLength(def.params.length);
-  });
 });
 
 describe('presets', () => {

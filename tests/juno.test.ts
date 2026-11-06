@@ -7,7 +7,6 @@ import source from '../src/io/local/juno/junoProcessor.js?raw';
 import { LOCAL_PORTS } from '../src/io/local/localSynths';
 import { BUILT_IN_INSTRUMENTS } from '../src/state/instrumentLibrary';
 import { suggestInstrument } from '../src/state/rack';
-import { panelPages } from '../src/ui/components/KnobPanel';
 
 const SR = 48000;
 const def = juno as unknown as InstrumentDefinition;
@@ -91,12 +90,6 @@ describe('Drift Synth Juno: definition and CC map', () => {
     expect(junoParam(LOCAL_CC.waveform, 64)).toBeUndefined();
   });
 
-  it('fits the panel in pages of at most 8 knobs, filter first', () => {
-    const pages = panelPages(def);
-    expect(pages[0]!.name).toBe('Filter');
-    expect(pages.every((p) => p.params.length > 0 && p.params.length <= 8)).toBe(true);
-    expect(pages.flatMap((p) => p.params)).toHaveLength(def.params.length);
-  });
 });
 
 describe('Drift Synth Juno: worklet', () => {
