@@ -5,7 +5,7 @@ import { noteName } from '../../core/theory/note';
 import { DEFAULT_INTERPLAY, interplayActive, type InterplaySettings } from '../../core/engine/interplay';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
-import { useState } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { Chord } from '../../core/theory/chord';
 import { DRUM_PRESETS, PRESET_GENRES, tr8sKey, TR8S_GROUP_COLORS, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
 import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS, drumIcon } from '../components/controls';
@@ -54,6 +54,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           {typeLabel(track.generator.type)} · {device?.name ?? out.portName} · ch {out.channel}
         </span>
         <div class="spacer" />
+        <TrackActions track={track} />
         <div class="detail-chords" aria-label="Progression">
           {s.project.progression.map((step, i) => (
             <ChordChip key={i} index={i} label={Chord.fromDegree(harmony.scale, step.degree, step.size ?? 3).symbol()} />
@@ -70,37 +71,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           </button>
         ))}
         <div class="spacer" />
-        <button type="button" class="jump square-jump" onClick={() => s.regenerate(track.id)} title="New pattern (N)" aria-label="New pattern (N)">
-          <Icon name="dice" size={16} />
-        </button>
-        <button
-          type="button"
-          class="jump square-jump"
-          aria-pressed={track.frozen}
-          onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })}
-          title={track.frozen ? 'Frozen — unfreeze (F)' : 'Freeze (F)'}
-          aria-label={track.frozen ? 'Unfreeze (F)' : 'Freeze (F)'}
-        >
-          <Icon name="snow" size={16} />
-        </button>
-        <button
-          type="button"
-          class="jump square-jump"
-          aria-pressed={track.muted}
-          aria-label={`Mute ${track.name} (M)`}
-          onClick={() => s.updateTrack(track.id, { muted: !track.muted })}
-        >
-          <Icon name={track.muted ? 'mute' : 'speaker'} size={16} />
-        </button>
-        <button
-          type="button"
-          class="jump square-jump"
-          aria-pressed={track.solo}
-          aria-label={`Solo ${track.name} (S)`}
-          onClick={() => s.updateTrack(track.id, { solo: !track.solo })}
-        >
-          S
-        </button>
+        <TrackActions track={track} />
       </nav>
 
       <div class="detail-body">
@@ -225,6 +196,60 @@ export function TrackEditor({ trackId }: { trackId: string }) {
   );
 }
 
+/** True on phone-sized screens, where the layout goes compact (matches the CSS breakpoint). */
+function useNarrow() {
+  const query = '(max-width: 820px)';
+  const [narrow, setNarrow] = useState(() => typeof matchMedia === 'function' && matchMedia(query).matches);
+  useEffect(() => {
+    if (typeof matchMedia !== 'function') return;
+    const m = matchMedia(query);
+    const on = () => setNarrow(m.matches);
+    m.addEventListener('change', on);
+    return () => m.removeEventListener('change', on);
+  }, []);
+  return narrow;
+}
+
+/** New pattern, freeze, mute and solo. Shown in the tab bar on wide screens, next to the title on phones. */
+function TrackActions({ track }: { track: TrackState }) {
+  const s = useStore();
+  return (
+    <div class="detail-actions">
+      <button type="button" class="jump square-jump" onClick={() => s.regenerate(track.id)} title="New pattern (N)" aria-label="New pattern (N)">
+        <Icon name="dice" size={16} />
+      </button>
+      <button
+        type="button"
+        class="jump square-jump"
+        aria-pressed={track.frozen}
+        onClick={() => s.updateTrack(track.id, { frozen: !track.frozen })}
+        title={track.frozen ? 'Frozen — unfreeze (F)' : 'Freeze (F)'}
+        aria-label={track.frozen ? 'Unfreeze (F)' : 'Freeze (F)'}
+      >
+        <Icon name="snow" size={16} />
+      </button>
+      <button
+        type="button"
+        class="jump square-jump"
+        aria-pressed={track.muted}
+        aria-label={`Mute ${track.name} (M)`}
+        onClick={() => s.updateTrack(track.id, { muted: !track.muted })}
+      >
+        <Icon name={track.muted ? 'mute' : 'speaker'} size={16} />
+      </button>
+      <button
+        type="button"
+        class="jump square-jump"
+        aria-pressed={track.solo}
+        aria-label={`Solo ${track.name} (S)`}
+        onClick={() => s.updateTrack(track.id, { solo: !track.solo })}
+      >
+        S
+      </button>
+    </div>
+  );
+}
+
 /** The most important things of a track at a glance; details live in the other tabs. */
 function TrackOverview({ track }: { track: TrackState }) {
   const s = useStore();
@@ -232,6 +257,7 @@ function TrackOverview({ track }: { track: TrackState }) {
   const out = s.trackOutput(track);
   const device = s.device(track.deviceId);
   const quick = PARAM_SCHEMA[track.generator.type].filter((c) => c.kind === 'range').slice(0, 4);
+  const narrow = useNarrow();
   const OverviewPattern = slotComponent('overviewPattern');
   const go = (tab: SectionId) => () => s.setTrackTab(tab);
   const caller = track.phrase?.answer ? s.project.tracks.find((t) => t.id === track.phrase!.answer!.from) : undefined;
@@ -243,7 +269,7 @@ function TrackOverview({ track }: { track: TrackState }) {
             (OverviewPattern && track.generator.type !== 'drums' ? (
               <OverviewPattern track={track} pattern={rt.pattern} />
             ) : (
-              <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? 200 : 160} showLabels />
+              <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? (narrow ? 150 : 200) : narrow ? 110 : 160} showLabels />
             ))}
           <div class="timing-row">
             <TrackTiming track={track} />

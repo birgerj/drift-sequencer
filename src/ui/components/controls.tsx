@@ -192,6 +192,7 @@ const PATHS: Record<string, string> = {
   wave: 'M2 12c2.5-8 5-8 7.5 0s5 8 7.5 0 3.5-5 5-2.5',
   output: 'M4 12h12M12 7l5 5-5 5M20 4v16',
   list: 'M4 6h16M4 12h16M4 18h16',
+  more: 'M5 12h.01M12 12h.01M19 12h.01',
   devices: 'M3 6h18v10H3zM7 16v3M17 16v3M7 10h1.5M11 10h1.5M15 10h2',
   folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   speaker: 'M4 9h4l5-4v14l-5-4H4zM17 8.5a5 5 0 0 1 0 7',
