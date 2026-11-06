@@ -85,10 +85,10 @@ export class Sequencer {
     this.linkEnsemble();
   }
 
-  /** Tracks the ensemble model writes don't mutate on their own. */
+  /** Tracks the AI ensemble writes don't mutate on their own. */
   private linkEnsemble(): void {
     const e = this.project.ensemble;
-    const linked = new Set(e?.z ? [e.melody, e.bass, e.drums].filter(Boolean) : []);
+    const linked = new Set(e?.linked ? [e.melody, e.bass, e.drums].filter(Boolean) : []);
     for (const [id, rt] of this.tracks) rt.external = linked.has(id);
   }
 

@@ -62,8 +62,8 @@ A lane dims while its call-and-response phrase is resting.
 - **Now playing**: the notes each track plays at this moment.
 - **Scale**: a 12-note keyboard. Light keys are in the scale; coloured
   keys are sounding now.
-- **AI ensemble**: **Generate together** writes a new AI trio, and
-  **Settings** opens the AI page. See [The AI ensemble](06-ensemble.md).
+- **AI ensemble**: the piece that plays and its section, **New piece**,
+  **Develop** (the next part, now) and **Settings**, which opens the AI page. See [The AI ensemble](06-ensemble.md).
 - **Evolution**: the last changes, by bar: *pattern mutated*, *back to the
   theme*, *next ensemble phrase* and so on.
 

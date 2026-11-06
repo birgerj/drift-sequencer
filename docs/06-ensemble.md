@@ -2,104 +2,90 @@
 
 [← Playing together](05-playing-together.md) · [Manual](README.md) · Next: [Sound and modulation →](07-sound-and-modulation.md)
 
-The **AI** page lets one AI model write melody, bass and drums *together*,
-so the parts fit: the bass leaves room for the melody and locks with the
-kick. The model is Magenta's
-[MusicVAE](https://magenta.tensorflow.org/music-vae) *trio*, which writes
-four bars at a time. Open it with **AI** in the left bar, or press `A`.
+On the **AI** page, Claude composes a lead melody with bass, pads and drums
+*together*, on your key and chords. It writes a piece the way a musician
+would: a few sections built from one motif (A, a variation A2, a contrasting
+B), played in a form such as A A2 B A. While it plays, Claude writes the next
+part of the piece, so the music develops instead of starting over. Open the
+page with **AI** in the left bar, or press `A`.
 
 ![The AI page](images/ai.png)
 
 ## Quick start
 
-1. Under **Parts**, check which tracks play the **Melody**, **Bass** and
-   **Drums**. Drift fills these in by track type. Set a part to *None* to
-   keep that track your own: *Drums: None* keeps your euclidean drums, for
-   example.
-2. Click **Load model and generate**, or press `G` anywhere in Drift. The
-   first time, Drift downloads the model (tens of MB), which needs an
-   internet connection. Your browser may keep it in its cache, but it can
-   also download it again later.
-3. Press Play. The linked tracks now play 4-bar (64-step) patterns from the
-   model.
+1. Under **Claude**, paste your API key from
+   [console.anthropic.com](https://console.anthropic.com) and click
+   **Save**. Set a spend limit there too.
+2. Under **Parts**, check which tracks play the **Melody** (lead),
+   **Bass**, **Pads** and **Drums**. Drift fills these in by track type. Set
+   a part to *None* to keep that track your own: *Drums: None* keeps your
+   euclidean drums, for example.
+3. Optionally describe what you want under **Style and wishes**.
+4. Click **New piece**, or press `G` anywhere in Drift, and press Play.
 
-While playing, a new trio starts at the next 4-bar phrase, so nothing is
-cut off. The performance screen has a small **AI ensemble** card with the
-same **Generate together** button and a link to this page.
+While playing, a new piece starts at the next section, so nothing is cut
+off, and the music keeps going while Claude writes. The performance screen
+has a small **AI ensemble** card with **New piece**, **Develop** and a link
+to this page.
 
 ![The AI card on the performance screen](images/ai-mini.png)
 
-## Model
+## Claude
 
-Shows whether the model is loaded and whether it runs on the **GPU**
-(fast) or the **CPU** (a few seconds per trio). **Unlink tracks** stops
-following the model: the tracks keep their current patterns and evolve
-with their own generators again.
+Your API key and the **Model**: *Haiku* is fast, *Sonnet* writes better
+music, *Opus* is the strongest and slowest. The key is kept in this browser
+only and sent only to Anthropic's API. It is never saved in the project, so
+exporting or sharing a project doesn't share it. Every new piece or part is
+one request on your Anthropic account.
 
-## Generate
+## Compose
 
-- **Generate together** writes a new trio.
-- **Variation** (0.1–1.5): low values are safe and repetitive, high values
-  more surprising. 0.5 is a good start.
-- **Candidates** (1, 4, 8 or 16): how many trios Drift writes each time.
-  It scores them on groove (a kick on the one, a backbeat, steady hats,
-  not too busy), a melody that moves, and a bass with some variety, and
-  plays the best one. More candidates give better results but take longer,
-  especially on the CPU.
-- **Melody** and **Drums** (*Any*, *Sparse*, *Balanced* or *Busy*): which
-  candidates you prefer. This nudges the choice; it doesn't force it.
+- **Style and wishes**: free text passed to Claude as written, e.g. *dark
+  melodic techno, a lead that sings, bass on the offbeat*.
+- **Section length**: 4, 8 or 16 bars. Longer sections give the lead room
+  for a whole melody that builds and comes home; they take longer to write.
+  Sections always last whole passes of your chord progression, so a section
+  always meets the same chords.
+- **Lead** and **Drums**: how busy they should be.
+- **New piece** starts fresh; **Develop** writes the next part of the piece
+  that plays, right away.
 
-## Fit to the chords
+## Form
 
-The model knows nothing about your chords, so Drift moves its notes into
-your key and bends some of them onto the chord that plays. **Bend onto the
-chord** sets which notes:
-
-- **Off**: only moved into the key. Lines play as the model wrote them
-  and may clash with your chords.
-- **Bar**: the first note of each bar.
-- **Half bar** (default): the start and the middle of each bar.
-- **Every beat**: the most consonant, and the furthest from the model's
-  line.
-
-Except with *Off*, the bass plays the chord root on the one. Changing this
-re-fits the current trio straight away, without the model. Because melody
-and bass are stored relative to the key, a trio also follows when you
-change the key in [Harmony](04-harmony.md).
+The piece's title and its form. The highlighted section plays now; tap
+another to play it next. **Unlink tracks** stops following the piece: the
+tracks keep their current patterns and evolve with their own generators
+again.
 
 ## Evolve
 
-- **Evolve while playing**: every **4, 8, 16 or 32 bars**, the trio
-  drifts to a nearby variation.
-- **Step size**: how far each step goes. Small steps keep it
-  recognisable.
-- **Parts that evolve**: switch a part off to keep its current pattern
-  while the others keep changing. For example, keep the drums steady and
-  let melody and bass wander.
+With **Keep composing while playing** on, Claude writes the next part of the
+piece during the last pass through the form, and it starts when the form
+comes round. **Move on after** sets how many passes that takes: more passes
+give the listener time to learn the piece. Under **Parts that change**,
+switch off a part to keep it as it is, e.g. keep the drums while the lead
+and bass move on.
 
-Linked tracks don't mutate on their own; they follow the model. **Freeze**
-a track to keep its part completely, also when you click **Generate
-together**.
+## Fit to the chords
 
-## Morph
+Claude writes for your chords, so this can stay **Off**. If you change the
+chords while a piece plays, turn it on: lead and bass notes on the start of
+each bar (or half bar, or beat) move to a tone of the chord that plays, and
+the bass plays the root on the one. Pads always play the chord that sounds.
 
-1. When you like a trio, click **Set A**.
-2. Generate until you like another one, then click **Set B**.
-3. Slide **Morph A → B** to move between them. The points in between are
-   new trios that have something of both.
+## Recent pieces
 
-## Recent trios
-
-The last twelve trios that played. Click one to bring it back exactly as
-it was. This list is kept until you reload the page. The current trio
-itself is saved with the project, so after a reload it plays without the
-model; click **Load model** to evolve it further.
+The pieces that played, so you can go back to one you liked. They are kept
+until you reload. The piece that plays is saved with the project, so after
+a reload it plays again without the API.
 
 ## Tips
 
-- If a trio is busy or flat, generate again: trios vary a lot.
+- Not happy with a piece? Click **New piece**, or add a wish such as *more
+  space in the lead* and try again.
 - Edit a part by hand on the track's *Pattern* tab. The track is then
-  frozen, so the model leaves it alone.
-- The model needs the 16-step grid in 4/4.
+  frozen, so the ensemble leaves it alone.
+- Without an internet connection the piece that plays keeps looping; it
+  just doesn't develop.
 
 Next: [Sound and modulation →](07-sound-and-modulation.md)

@@ -67,6 +67,6 @@ reopens your last project. Things to try:
 - Open **Projects** in the left bar and try another template, such as
   *Acid* or *Conversation*.
 - Open **Harmony** and click **New progression**.
-- Open **AI** and let the model write a trio (press `G`).
+- Open **AI**, add your Claude API key and let Claude compose a piece (press `G`).
 
 Next: [The performance screen →](02-performance.md)

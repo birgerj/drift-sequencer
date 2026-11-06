@@ -250,14 +250,20 @@ function drumName(track: TrackState, note: number): string | undefined {
   return track.generator.params.voices.find((v) => v.note === note)?.name;
 }
 
-/** Quick access to the AI trio while playing; everything else is on the AI page. */
+/** Quick access to the AI ensemble while playing; everything else is on the AI page. */
 function EnsembleCard() {
   const s = useStore();
   const e = s.ensemble;
   const settings = e.settings;
-  if (e.unavailable) return null;
+  const c = e.composition;
   const names = ENSEMBLE_PARTS.map(({ part }) => e.track(part)?.name).filter(Boolean).join(', ');
-  const status = e.status === 'loading' ? 'Loading model…' : e.busy ? 'Writing…' : settings.z ? `Linked: ${names || 'no tracks'}` : 'Not in use';
+  const status = e.busy
+    ? 'Composing…'
+    : settings.linked && c
+      ? `${c.title} · ${c.form[e.formIndex] ?? ''} · ${names || 'no tracks'}`
+      : !e.apiKey
+        ? 'Add a Claude API key on the AI page'
+        : 'Not in use';
   return (
     <section class="card ensemble ensemble-mini">
       <div class="row-between">
@@ -268,12 +274,19 @@ function EnsembleCard() {
       </div>
       <span class="small muted">
         {status}
-        {settings.z && settings.evolve ? ` · evolves every ${settings.everyBars} bars` : ''}
+        {settings.linked && settings.evolve ? (e.preparing ? ' · writing the next part' : e.ready ? ' · next part ready' : '') : ''}
       </span>
-      <button type="button" class="primary" disabled={e.status === 'loading' || e.busy} onClick={() => void e.generate()}>
-        <Icon name="dice" /> {e.status === 'ready' ? 'Generate together' : 'Load model and generate'}
-      </button>
-      {e.status === 'error' && <p class="hint warn">Couldn’t load the model. It needs an internet connection the first time.</p>}
+      <div class="row gap-s wrap">
+        <button type="button" class="primary" disabled={e.busy || !e.apiKey} onClick={() => void e.generate()}>
+          <Icon name="dice" /> {e.busy ? 'Composing…' : 'New piece'}
+        </button>
+        {c && (
+          <button type="button" disabled={e.busy || !e.apiKey} onClick={() => void e.develop()}>
+            Develop
+          </button>
+        )}
+      </div>
+      {e.error && <p class="hint warn">{e.error}</p>}
     </section>
   );
 }

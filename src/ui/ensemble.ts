@@ -1,215 +1,299 @@
-import { evolveLatent, randomLatent, scoreTrio, slerp, trioToPatterns, TRIO_BARS, TRIO_STEPS_PER_BAR, type TrioNote, type TrioPatterns } from '../core/ensemble/trio';
+import {
+  COMPOSE_SYSTEM,
+  composePrompt,
+  composeTool,
+  parseComposition,
+  PARTS,
+  sectionPatterns,
+  type ComposeContext,
+  type Composition,
+  type Part,
+} from '../core/ensemble/composition';
 import type { Pattern } from '../core/pattern/pattern';
+import { TR8S_NOTES } from '../core/generators/drumGenerator';
 import { Scale } from '../core/theory/scale';
-import { TrioModel } from '../io/ensemble/trioModel';
+import { callTool, DEFAULT_CLAUDE_MODEL, loadApiKey, saveApiKey } from '../io/ensemble/claudeApi';
 import type { EnsembleSettings, ProjectState, TrackState } from '../state/project';
 import type { AppStore } from './store';
 
-export const DEFAULT_ENSEMBLE: EnsembleSettings = { temperature: 0.5, evolve: true, everyBars: 8, amount: 0.35, morph: 0.5 };
+export type { Part } from '../core/ensemble/composition';
 
-export type EnsembleStatus = 'idle' | 'loading' | 'ready' | 'error';
-export type Part = 'melody' | 'bass' | 'drums';
+export const DEFAULT_ENSEMBLE: EnsembleSettings = { model: DEFAULT_CLAUDE_MODEL, style: '', evolve: true, everyLoops: 2 };
 
-/** A trio that played, so it can be brought back exactly. */
-export interface TrioMemory {
-  id: number;
-  label: string;
-  bar: number;
-  z: number[];
-  notes: TrioNote[];
-  score: number;
-}
 export const ENSEMBLE_PARTS: { part: Part; label: string }[] = [
   { part: 'melody', label: 'Melody' },
   { part: 'bass', label: 'Bass' },
+  { part: 'pads', label: 'Pads' },
   { part: 'drums', label: 'Drums' },
 ];
 
+/** A composition that played, so it can be brought back exactly. */
+export interface CompositionMemory {
+  id: number;
+  bar: number;
+  composition: Composition;
+}
+
 /**
- * Melody, bass and drums written together by MusicVAE's trio model. The
- * model only runs on request; the tracks it writes keep their patterns in
- * the project, so a reload plays them without the model.
+ * Lead, bass, pads and drums composed together by Claude. Claude writes a few
+ * sections and a form (A A2 B A); Drift plays the form section by section and,
+ * while it plays, asks Claude for the next part of the piece. The tracks keep
+ * their patterns and the composition stays in the project, so a reload plays
+ * it without the API.
  */
 export class EnsembleController {
-  status: EnsembleStatus = 'idle';
-  error = '';
   busy = false;
-  /** The last trios that played (newest first); kept for this session only. */
-  history: TrioMemory[] = [];
+  /** A follow-up is being written in the background. */
+  preparing = false;
+  error = '';
+  /** The last compositions that played (newest first); kept for this session only. */
+  history: CompositionMemory[] = [];
+  /** Slot of the form that plays now. */
+  formIndex = 0;
+  private apiKeyValue = loadApiKey();
   private nextMemory = 1;
-  private model: TrioModel | undefined;
-  private morphTimer: ReturnType<typeof setTimeout> | undefined;
+  /** Written ahead while the current piece plays. */
+  private next: Composition | undefined;
+  /** Passes through the form since the composition started. */
+  private loops = 0;
+  /** The next section is already queued (a new piece or a jump): don't advance at the next boundary. */
+  private queued = false;
+  /** Bumped by every manual request, so an older background answer is thrown away. */
+  private generation = 0;
+  private abort: AbortController | undefined;
 
   constructor(private readonly store: AppStore) {}
 
   get settings(): EnsembleSettings {
-    return this.store.project.ensemble ?? this.defaults(this.store.project);
+    const p = this.store.project;
+    return { ...this.defaults(p), ...p.ensemble };
+  }
+
+  get composition(): Composition | undefined {
+    return this.settings.composition;
   }
 
   /** Why the ensemble can't be used in this project, if it can't. */
   get unavailable(): string | undefined {
-    if (this.store.project.stepsPerBar !== TRIO_STEPS_PER_BAR) return 'The trio model writes 16th notes in 4/4; this project uses another grid.';
     return undefined;
   }
 
-  /** Backend the model runs on: 'webgl' is fast, 'cpu' works everywhere. */
-  get backend(): string {
-    return this.model?.backend ?? '';
+  get apiKey(): string {
+    return this.apiKeyValue;
   }
 
-  /** Linked track ids, missing or not. */
+  /** The next part is written and waits for the form to come round. */
+  get ready(): boolean {
+    return !!this.next;
+  }
+
+  setApiKey(key: string): void {
+    this.apiKeyValue = key.trim();
+    saveApiKey(this.apiKeyValue);
+    if (this.apiKeyValue) this.error = '';
+    this.store.notify();
+  }
+
+  /** Linked track, if the part has one. */
   track(part: Part): TrackState | undefined {
     const id = this.settings[part];
     return id ? this.store.project.tracks.find((t) => t.id === id) : undefined;
   }
 
   update(patch: Partial<EnsembleSettings>): void {
-    this.store.change((p) => ({ ...p, ensemble: { ...(p.ensemble ?? this.defaults(p)), ...patch } }));
+    this.store.change((p) => ({ ...p, ensemble: { ...this.defaults(p), ...p.ensemble, ...patch } }));
   }
 
-  /** Stop following the model: the tracks keep their pattern and mutate on their own again. */
+  /** Stop following the composition: the tracks keep their pattern and mutate on their own again. */
   unlink(): void {
-    this.update({ z: undefined });
+    this.next = undefined;
+    this.update({ linked: false });
   }
 
-  async load(): Promise<boolean> {
-    if (this.model?.ready) return true;
-    if (this.status === 'loading') return false;
-    this.status = 'loading';
+  /** A fresh piece. */
+  async generate(): Promise<void> {
+    await this.request(false);
+  }
+
+  /** The next part of the piece that plays now, right away. */
+  async develop(): Promise<void> {
+    await this.request(!!this.composition);
+  }
+
+  private async request(develop: boolean): Promise<void> {
+    if (this.busy) return;
+    if (!this.apiKey) {
+      this.error = 'Add your Claude API key first.';
+      this.store.showToast('AI ensemble: add your Claude API key on the AI page');
+      this.store.notify();
+      return;
+    }
+    const generation = ++this.generation;
+    this.abort?.abort();
+    this.preparing = false;
+    this.busy = true;
     this.error = '';
     this.store.notify();
     try {
-      this.model ??= new TrioModel();
-      await this.model.load();
-      this.status = 'ready';
-      return true;
+      const composition = await this.compose(develop ? this.composition : undefined, false);
+      if (generation !== this.generation) return;
+      this.start(composition, develop ? 'develops the piece' : 'new piece');
     } catch (e) {
-      this.model?.dispose();
-      this.model = undefined;
-      this.status = 'error';
-      this.error = e instanceof Error ? e.message : String(e);
-      return false;
+      if (generation === this.generation) this.fail(e);
     } finally {
+      if (generation === this.generation) this.busy = false;
       this.store.notify();
     }
   }
 
-  /** A fresh trio from a random point in the latent space. */
-  async generate(): Promise<void> {
-    if (!(await this.load()) || !this.model) return;
-    const zDims = this.model.zDims;
-    // Random points vary a lot in quality: decode a batch and keep the best.
-    const n = Math.max(1, Math.min(16, this.settings.candidates ?? 8));
-    await this.write(Array.from({ length: n }, () => randomLatent(zDims)), 'new trio', 'manual');
-  }
-
-  storeSlot(slot: 'a' | 'b'): void {
-    const z = this.settings.z;
-    if (z) this.update({ [slot]: [...z] });
-  }
-
-  /** Move between the stored points A and B (debounced while the slider moves). */
-  morph(t: number): void {
-    this.update({ morph: t });
-    clearTimeout(this.morphTimer);
-    this.morphTimer = setTimeout(() => void this.morphNow(t), 180);
-  }
-
-  private async morphNow(t: number): Promise<void> {
-    const { a, b } = this.settings;
-    if (!a || !b || !(await this.load())) return;
-    const z = slerp(a, b, t);
-    await this.write([z, z, z], `morph ${Math.round(t * 100)}% A→B`, 'manual');
-  }
-
-  /** Called by the store on every step: one bar before a phrase change, prepare the next step. */
+  /** Called by the store on every step: one bar before a section ends, queue the next slot of the form. */
   onStep(step: number, bar: number): void {
-    const e = this.store.project.ensemble;
-    if (!e?.evolve || !e.z || this.busy || !this.model?.ready) return;
-    const spb = this.store.project.stepsPerBar;
-    if (step % spb !== 0) return;
-    const every = Math.max(TRIO_BARS, Math.round(e.everyBars / TRIO_BARS) * TRIO_BARS);
-    // Decode during the last bar, so the result is there when the phrase starts again.
-    if ((bar + 1) % every !== 0) return;
-    const z = e.z;
-    void this.write([0, 1, 2].map(() => evolveLatent(z, e.amount)), undefined, 'evolve');
+    const e = this.settings;
+    const c = e.composition;
+    if (!e.linked || !c || step % this.store.project.stepsPerBar !== 0) return;
+    if ((bar + 1) % c.bars !== 0) return;
+    if (this.queued) {
+      this.queued = false;
+      return;
+    }
+    let index = this.formIndex + 1;
+    if (index >= c.form.length) {
+      index = 0;
+      this.loops++;
+      if (e.evolve && this.next && this.loops >= e.everyLoops) {
+        const next = this.next;
+        this.next = undefined;
+        this.start(next, 'next part', true);
+        return;
+      }
+    }
+    this.formIndex = index;
+    this.applySection(c, c.form[index]!, 'queue');
+    this.store.notify();
+    // Write the next part during the last pass, so it is there when the form comes round.
+    if (e.evolve && !this.next && !this.preparing && !this.busy && this.apiKey && this.loops >= e.everyLoops - 1) void this.prepare();
   }
 
-  /** Play an earlier trio again, exactly as it was. */
+  /** Jump to a slot of the form at the next section start. */
+  jump(index: number): void {
+    const c = this.composition;
+    if (!c || !c.form[index]) return;
+    this.formIndex = index;
+    const playing = this.store.sequencer.playing;
+    if (!this.settings.linked) this.update({ linked: true });
+    this.applySection(c, c.form[index]!, playing ? 'queue' : 'now');
+    if (playing) this.queued = true;
+    this.store.notify();
+  }
+
+  /** Play an earlier composition again, exactly as it was. */
   recall(id: number): void {
     const m = this.history.find((x) => x.id === id);
     if (!m) return;
-    this.apply(m.z, this.convert(m.notes), 'manual');
-    this.store.addLog(Math.max(0, this.store.live.bar), `Ensemble · back to ${m.label}`, this.track('melody')?.color ?? 'var(--accent)');
+    this.start(m.composition, `back to “${m.composition.title}”`, false, false);
   }
 
-  /** Re-apply the current trio with new conversion settings (e.g. chord fit), without the model. */
+  /** Re-apply the current section with new settings (e.g. chord fit), without asking Claude. */
   refit(): void {
-    const z = this.settings.z;
-    const current = z && this.history.find((m) => m.z === z);
-    if (current) this.apply(current.z, this.convert(current.notes), 'manual');
+    const c = this.composition;
+    if (c && this.settings.linked) this.applySection(c, c.form[this.formIndex] ?? c.form[0]!, 'now');
   }
 
-  /** Decode the candidates, keep the one that scores best, and hand its parts to the tracks. */
-  private async write(candidates: number[][], log: string | undefined, kind: 'manual' | 'evolve'): Promise<void> {
-    if (!this.model) return;
-    this.busy = true;
+  /** Write the next part in the background. */
+  private async prepare(): Promise<void> {
+    const generation = this.generation;
+    const current = this.composition;
+    if (!current) return;
+    this.preparing = true;
     this.store.notify();
     try {
-      const decoded = await this.model.decode(candidates, this.settings.temperature);
-      const linked = { melody: !!this.track('melody'), bass: !!this.track('bass'), drums: !!this.track('drums') };
-      const taste = { melody: this.settings.melodyDensity, drums: this.settings.drumDensity };
-      let best = 0;
-      let bestScore = -1;
-      decoded.forEach((notes, i) => {
-        const score = scoreTrio(notes, linked, taste);
-        if (score > bestScore) {
-          bestScore = score;
-          best = i;
-        }
-      });
-      const z = candidates[best]!;
-      const notes = decoded[best] ?? [];
-      this.apply(z, this.convert(notes), kind);
-      const bar = Math.max(0, this.store.live.bar);
-      const id = this.nextMemory++;
-      this.history = [{ id, label: `Trio ${id}`, bar, z, notes, score: bestScore }, ...this.history].slice(0, 12);
-      if (log) this.store.addLog(bar, `Ensemble · ${log}`, this.track('melody')?.color ?? 'var(--accent)');
+      const next = await this.compose(current, true);
+      if (generation === this.generation && this.composition === current) this.next = next;
     } catch (e) {
-      this.error = e instanceof Error ? e.message : String(e);
-      this.store.showToast(`Ensemble: ${this.error}`);
+      if (generation === this.generation) this.fail(e);
     } finally {
-      this.busy = false;
+      if (generation === this.generation) this.preparing = false;
       this.store.notify();
     }
   }
 
-  private convert(notes: TrioNote[]): TrioPatterns {
-    const project = this.store.project;
-    return trioToPatterns(notes, {
-      scale: new Scale(project.key.root, project.key.mode),
-      drumNotes: this.drumNotes(),
-      fit: this.settings.fit ?? 'half',
+  private async compose(previous: Composition | undefined, evolving: boolean): Promise<Composition> {
+    const ctx = this.context(previous, evolving);
+    this.abort = new AbortController();
+    const raw = await callTool({
+      apiKey: this.apiKey,
+      model: this.settings.model,
+      system: COMPOSE_SYSTEM,
+      user: composePrompt(ctx),
+      tool: composeTool(ctx.drumVoices),
+      signal: this.abort.signal,
     });
+    return parseComposition(raw, ctx);
   }
 
-  /** Give each linked track its part: queued for the next 4-bar phrase while playing, right away when stopped. */
-  private apply(z: number[], parts: TrioPatterns, kind: 'manual' | 'evolve'): void {
+  private context(previous: Composition | undefined, evolving: boolean): ComposeContext {
+    const p = this.store.project;
+    const e = this.settings;
+    const parts = { melody: !!this.track('melody'), bass: !!this.track('bass'), pads: !!this.track('pads'), drums: !!this.track('drums') };
+    const evolveParts = e.evolveParts ?? { melody: true, bass: true, drums: true };
+    const keep = evolving && previous ? PARTS.filter((part) => parts[part] && evolveParts[part] === false) : undefined;
+    return {
+      scale: new Scale(p.key.root, p.key.mode),
+      progression: p.progression,
+      stepsPerBar: p.stepsPerBar,
+      bpm: p.bpm,
+      parts,
+      drumVoices: Object.keys(this.drumNotes() ?? TR8S_NOTES),
+      style: e.style,
+      melodyDensity: e.melodyDensity,
+      drumDensity: e.drumDensity,
+      previous,
+      keep,
+      sectionLength: e.sectionLength ?? 8,
+    };
+  }
+
+  /**
+   * Make `composition` the one that plays and give the tracks its first
+   * section: queued for the next section start while playing, right away
+   * when stopped. `atBoundary`: called one bar before a section ends, so the
+   * queued section lands on time and the next boundary advances as usual.
+   */
+  private start(composition: Composition, log: string, atBoundary = false, remember = true): void {
+    this.next = undefined;
+    this.loops = 0;
+    this.formIndex = 0;
     const playing = this.store.sequencer.playing;
+    this.queued = playing && !atBoundary;
+    this.store.change((p) => ({ ...p, ensemble: { ...this.defaults(p), ...p.ensemble, composition, linked: true } }));
+    this.applySection(composition, composition.form[0]!, playing ? 'queue' : 'now');
+    const bar = Math.max(0, this.store.live.bar);
+    if (remember) this.history = [{ id: this.nextMemory++, bar, composition }, ...this.history].slice(0, 12);
+    this.store.addLog(bar, `Ensemble · ${log}: ${composition.title}`, this.track('melody')?.color ?? 'var(--accent)');
+  }
+
+  /** Hand each linked track its part of a section. */
+  private applySection(composition: Composition, name: string, when: 'queue' | 'now'): void {
+    const parts = sectionPatterns(composition, name, { drumNotes: this.drumNotes(), fit: this.settings.fit ?? 'off' });
     const updates = new Map<string, Pattern>();
-    const evolving = this.settings.evolveParts ?? { melody: true, bass: true, drums: true };
     for (const { part } of ENSEMBLE_PARTS) {
       const t = this.track(part);
-      if (!t || t.frozen) continue;
-      if (kind === 'evolve' && !evolving[part]) continue;
+      if (!t || t.frozen || parts[part].events.length === 0) continue;
       updates.set(t.id, parts[part]);
-      if (playing) this.store.sequencer.track(t.id)?.queuePattern(parts[part]);
+      // Queue first: the sequencer then knows the new userPattern is pending and doesn't switch right away.
+      if (when === 'queue') this.store.sequencer.track(t.id)?.queuePattern(parts[part]);
     }
+    if (updates.size === 0) return;
     this.store.change((p) => ({
       ...p,
-      ensemble: { ...(p.ensemble ?? this.defaults(p)), z },
       tracks: p.tracks.map((t) => (updates.has(t.id) ? { ...t, userPattern: updates.get(t.id) } : t)),
     }));
+  }
+
+  private fail(e: unknown): void {
+    if (e instanceof DOMException && e.name === 'AbortError') return;
+    this.error = e instanceof Error ? e.message : String(e);
+    this.store.showToast(`AI ensemble: ${this.error}`);
   }
 
   private drumNotes(): Record<string, number> | undefined {
@@ -221,6 +305,6 @@ export class EnsembleController {
   /** First guess for which track plays which part, by type. */
   private defaults(p: ProjectState): EnsembleSettings {
     const find = (...types: string[]) => p.tracks.find((t) => types.includes(t.generator.type))?.id;
-    return { ...DEFAULT_ENSEMBLE, melody: find('motif', 'arp'), bass: find('bass', 'acid'), drums: find('drums') };
+    return { ...DEFAULT_ENSEMBLE, melody: find('motif', 'arp'), bass: find('bass', 'acid'), pads: find('chords', 'drone'), drums: find('drums') };
   }
 }

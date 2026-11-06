@@ -147,7 +147,7 @@ export class AppStore {
   /** Open tab of the track detail pane; kept when switching tracks. */
   trackTab: SectionId = 'overview';
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
-  /** MusicVAE trio: melody, bass and drums from one model. */
+  /** AI ensemble: melody, bass and drums composed by Claude. */
   readonly ensemble = new EnsembleController(this);
 
   private listeners = new Set<() => void>();

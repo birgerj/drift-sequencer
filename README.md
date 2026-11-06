@@ -16,11 +16,12 @@ knobs instead of the mouse.
   answering them.
 - **One harmony for everything.** Pick a key and a chord progression, or
   let Drift write and evolve one. Every track follows it.
-- **AI ensemble.** Magenta's MusicVAE writes melody, bass and drums that
-  belong together, and drifts through variations while you play. It has its
-  own page, with settings for fit, busyness and evolution.
+- **AI ensemble.** Claude composes a lead melody with bass, pads and drums
+  on your key and chords, in sections and a form (A A2 B A), and keeps
+  writing the next part of the piece while you play. Bring your own Claude
+  API key; it stays in your browser.
 - **No account, no backend.** A web app that works offline once installed
-  (apart from the AI ensemble).
+  (apart from the AI ensemble, which calls the Claude API).
   Projects are saved in your browser.
 
 ## Open Drift
