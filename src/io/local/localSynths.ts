@@ -3,6 +3,7 @@ import type * as ToneNS from 'tone';
 import type { MidiOutputPort } from '../midi/output';
 import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrument } from './common';
 import { DrumKit } from './drumKit';
+import { HumSynth } from './hum/humSynth';
 import { JunoSynth } from './juno/junoSynth';
 import { MonoSynth } from './mono/monoSynth';
 import { PianoSynth } from './piano';
@@ -92,6 +93,7 @@ class LocalAudio {
     const lazy: [LocalKind, Instrument & { load(): Promise<void> }][] = [
       ['juno', new JunoSynth(T, this.channel(T, 0.3, 0.1))],
       ['mono', new MonoSynth(T, this.channel(T, 0.04, 0))],
+      ['hum', new HumSynth(T, this.channel(T, 0.3, 0.12))],
       // The piano's first pack downloads on its first note (or wake with 'piano').
       ['piano', new PianoSynth(T, this.channel(T, 0.3, 0))],
     ];

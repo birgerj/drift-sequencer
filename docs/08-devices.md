@@ -50,6 +50,7 @@ sounds built into Drift and play through your speakers:
 | Drift Synth Juno | Six-voice Juno-60-style polysynth with chorus, for pads, chords and leads |
 | Drift Synth Mono | Minimoog / SH-101-style mono synth: round basses without the acid squelch, and mono leads |
 | Drift Synth Piano | Sampled piano: Concert Grand, Steinway, Studio Grand or Wurlitzer |
+| Drift Synth Hum | Sung and hummed voice: "laa", "doo", "pa", "yay", "mmm" and more; leads, scat and a small choir |
 
 They react to the knobs on the [Panel](07-sound-and-modulation.md) (cutoff,
 resonance, envelope and so on) and share reverb and delay. They ignore
@@ -139,6 +140,33 @@ rings after it ends), and level, reverb and delay. The presets (such as
 Notes ring out like a real piano for a few seconds at most; there is no
 sustain pedal. Sources and licenses are in
 [public/pianos/ATTRIBUTION.md](../public/pianos/ATTRIBUTION.md).
+
+### Drift Synth Hum
+
+A voice that sings each note, made with formant synthesis (nothing to
+download). The **Syllable** switch picks what it sings:
+
+| Choice | Sings |
+| --- | --- |
+| Laa, Doo, Daa, Dee, Paa, Pee, Bah, Yay, Mah, Nah, Dum | That syllable on every note. *Dum* closes on the "m" when the note ends |
+| Mmm, Ooh, Aah | A hum or an open vowel, without a consonant |
+| Scat | A scat syllable per note: doo, daa, dee, bah, dum, paa |
+| Cycle | Pa, doo, dee, pee, yay in turn |
+| Random | Any syllable per note |
+
+The syllable is a CC like any knob, so a track's LFO can also change it.
+The other knobs: **Voice** (deep to child-like), **Consonants** (how
+strong and long they are), **Humanize** (pitch drift and small differences
+between notes), **Brightness**, **Focus** (soft to sharp, nasal formants),
+**Breath**, vibrato **depth**, **rate** and **delay**, **Scoop** (slides up
+into each note), attack, release, **Ensemble** (a stereo choir chorus for
+chords) and level, reverb and delay. Presets include *Ooh Lead*, *Scat*,
+*Pa Doo Dee*, *Lazy Doo*, *Aah Choir* and *Hum Pad*. It plays eight notes
+at once.
+
+The *Jazz ballad* template sings its melody with it; *Lo-fi*, *Ambient*
+and *Slow drift* use it for their melody or choir when no hardware plays
+that part.
 
 ## Instrument definitions
 

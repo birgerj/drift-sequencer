@@ -1,0 +1,493 @@
+{
+  "id": "drift-synth-hum",
+  "manufacturer": "Drift",
+  "device": "Synth Hum",
+  "params": [
+    {
+      "id": "syllable",
+      "name": "Syllable",
+      "section": "Voice",
+      "msg": {
+        "type": "cc",
+        "cc": 20
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 3,
+      "usage": "What each note sings. Scat picks doo/daa/dee/bah/dum per note, Cycle steps through pa doo dee pee yay, Random picks any.",
+      "choices": [
+        {
+          "upTo": 7,
+          "label": "Laa"
+        },
+        {
+          "upTo": 15,
+          "label": "Doo"
+        },
+        {
+          "upTo": 22,
+          "label": "Daa"
+        },
+        {
+          "upTo": 30,
+          "label": "Dee"
+        },
+        {
+          "upTo": 37,
+          "label": "Paa"
+        },
+        {
+          "upTo": 45,
+          "label": "Pee"
+        },
+        {
+          "upTo": 52,
+          "label": "Bah"
+        },
+        {
+          "upTo": 60,
+          "label": "Yay"
+        },
+        {
+          "upTo": 67,
+          "label": "Mah"
+        },
+        {
+          "upTo": 75,
+          "label": "Nah"
+        },
+        {
+          "upTo": 82,
+          "label": "Mmm"
+        },
+        {
+          "upTo": 90,
+          "label": "Ooh"
+        },
+        {
+          "upTo": 97,
+          "label": "Aah"
+        },
+        {
+          "upTo": 105,
+          "label": "Dum"
+        },
+        {
+          "upTo": 112,
+          "label": "Scat"
+        },
+        {
+          "upTo": 120,
+          "label": "Cycle"
+        },
+        {
+          "upTo": 127,
+          "label": "Random"
+        }
+      ]
+    },
+    {
+      "id": "voice",
+      "name": "Voice",
+      "section": "Voice",
+      "msg": {
+        "type": "cc",
+        "cc": 21
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 64,
+      "usage": "Formant size: deep (left) to child-like (right)."
+    },
+    {
+      "id": "articulation",
+      "name": "Consonants",
+      "short": "Cons.",
+      "section": "Voice",
+      "msg": {
+        "type": "cc",
+        "cc": 24
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 80,
+      "usage": "How strong and long the consonants are."
+    },
+    {
+      "id": "humanize",
+      "name": "Humanize",
+      "short": "Human",
+      "section": "Voice",
+      "msg": {
+        "type": "cc",
+        "cc": 26
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 50,
+      "usage": "Pitch drift and small differences between notes."
+    },
+    {
+      "id": "brightness",
+      "name": "Brightness",
+      "short": "Bright",
+      "section": "Tone",
+      "msg": {
+        "type": "cc",
+        "cc": 74
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterCutoff",
+      "default": 70
+    },
+    {
+      "id": "focus",
+      "name": "Focus",
+      "section": "Tone",
+      "msg": {
+        "type": "cc",
+        "cc": 71
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "filterResonance",
+      "default": 64,
+      "usage": "Formant sharpness: soft and wide to sharp and nasal."
+    },
+    {
+      "id": "breath",
+      "name": "Breath",
+      "section": "Tone",
+      "msg": {
+        "type": "cc",
+        "cc": 23
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 40
+    },
+    {
+      "id": "vib-depth",
+      "name": "Vibrato depth",
+      "short": "Vib",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 77
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "lfoDepth",
+      "default": 55
+    },
+    {
+      "id": "vib-rate",
+      "name": "Vibrato rate",
+      "short": "Rate",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 76
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "lfoRate",
+      "default": 60
+    },
+    {
+      "id": "vib-delay",
+      "name": "Vibrato delay",
+      "short": "Delay",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 78
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 45
+    },
+    {
+      "id": "scoop",
+      "name": "Scoop",
+      "section": "Pitch",
+      "msg": {
+        "type": "cc",
+        "cc": 25
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 45,
+      "usage": "Slides up into each note from below."
+    },
+    {
+      "id": "attack",
+      "name": "Attack",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 73
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envAttack",
+      "default": 30
+    },
+    {
+      "id": "release",
+      "name": "Release",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 72
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "envRelease",
+      "default": 55
+    },
+    {
+      "id": "vca-level",
+      "name": "Level",
+      "section": "Amp",
+      "msg": {
+        "type": "cc",
+        "cc": 7
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "level",
+      "default": 110
+    },
+    {
+      "id": "ensemble",
+      "name": "Ensemble",
+      "short": "Choir",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 93
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "default": 35,
+      "usage": "Stereo choir chorus."
+    },
+    {
+      "id": "reverb-send",
+      "name": "Reverb send",
+      "short": "Reverb",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 91
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 40
+    },
+    {
+      "id": "delay-send",
+      "name": "Delay send",
+      "short": "Delay",
+      "section": "Effects",
+      "msg": {
+        "type": "cc",
+        "cc": 94
+      },
+      "min": 0,
+      "max": 127,
+      "bipolar": false,
+      "target": "fx",
+      "default": 16
+    }
+  ],
+  "triggers": [],
+  "presets": [
+    {
+      "name": "Laa Lead",
+      "values": {}
+    },
+    {
+      "name": "Ooh Lead",
+      "values": {
+        "syllable": 86,
+        "attack": 45,
+        "release": 75,
+        "vib-depth": 62,
+        "vib-delay": 62,
+        "breath": 34,
+        "ensemble": 30,
+        "reverb-send": 55
+      }
+    },
+    {
+      "name": "Scat",
+      "values": {
+        "syllable": 109,
+        "articulation": 100,
+        "scoop": 58,
+        "humanize": 72,
+        "breath": 45,
+        "vib-depth": 42,
+        "vib-delay": 55,
+        "attack": 18,
+        "release": 40,
+        "ensemble": 0,
+        "reverb-send": 42,
+        "delay-send": 10
+      }
+    },
+    {
+      "name": "Pa Doo Dee",
+      "values": {
+        "syllable": 116,
+        "articulation": 105,
+        "attack": 12,
+        "release": 38,
+        "vib-depth": 35,
+        "scoop": 30,
+        "ensemble": 20
+      }
+    },
+    {
+      "name": "Lazy Doo",
+      "values": {
+        "syllable": 12,
+        "brightness": 50,
+        "breath": 55,
+        "scoop": 65,
+        "humanize": 85,
+        "vib-depth": 40,
+        "release": 50,
+        "ensemble": 15,
+        "delay-send": 30
+      }
+    },
+    {
+      "name": "Aah Choir",
+      "values": {
+        "syllable": 94,
+        "attack": 80,
+        "release": 92,
+        "ensemble": 112,
+        "vib-depth": 38,
+        "humanize": 85,
+        "breath": 48,
+        "focus": 50,
+        "reverb-send": 85,
+        "vca-level": 100
+      }
+    },
+    {
+      "name": "Hum Pad",
+      "values": {
+        "syllable": 79,
+        "attack": 82,
+        "release": 96,
+        "ensemble": 95,
+        "brightness": 46,
+        "vib-depth": 30,
+        "humanize": 80,
+        "reverb-send": 75,
+        "vca-level": 104
+      }
+    }
+  ],
+  "panel": [
+    {
+      "title": "Syllable",
+      "wide": true,
+      "widgets": [
+        {
+          "kind": "switch",
+          "param": "syllable"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "voice",
+            "articulation",
+            "humanize"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Tone",
+      "widgets": [
+        {
+          "kind": "knobs",
+          "params": [
+            "brightness",
+            "focus",
+            "breath"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Vibrato",
+      "widgets": [
+        {
+          "kind": "lfo",
+          "rate": "vib-rate",
+          "delay": "vib-delay"
+        },
+        {
+          "kind": "knobs",
+          "params": [
+            "vib-depth",
+            "vib-rate",
+            "vib-delay",
+            "scoop"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Envelope",
+      "widgets": [
+        {
+          "kind": "adsr",
+          "attack": "attack",
+          "release": "release",
+          "sustainLevel": 1
+        }
+      ]
+    },
+    {
+      "title": "Amp · Effects",
+      "widgets": [
+        {
+          "kind": "sliders",
+          "params": [
+            "vca-level",
+            "ensemble",
+            "reverb-send",
+            "delay-send"
+          ]
+        }
+      ]
+    }
+  ],
+  "source": "Built-in Drift Synth (formant voice AudioWorklet)"
+}
