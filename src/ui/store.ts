@@ -90,7 +90,6 @@ export type View =
   | { name: 'track'; trackId: string }
   | { name: 'templates' }
   | { name: 'instruments' }
-  | { name: 'setup' }
   | { name: 'harmony' };
 
 export interface LogEntry {

@@ -23,37 +23,28 @@
 
 ## Connect your synths
 
+No synths at hand? Skip this: every track plays a built-in synth (*Lead*,
+*Bass*, *Pad*, *Drums*, *Juno*, *Mono*, *Piano* or *Hum*), picked on its
+**Output** tab. They play through your speakers, also in Safari and on
+iPhone and iPad.
+
+External synths and drum machines need Web MIDI: Chrome or Edge on a
+computer or Android. Safari and browsers on iPhone and iPad don't have it.
+
 1. Connect your synths over USB and switch them on.
-2. Click **Connect MIDI** in the left bar and allow MIDI access. Next time
-   Drift reconnects by itself.
-3. Click **Set up devices** in the banner on the performance screen. You
-   can also get there later from **Devices → Setup wizard**.
+2. Open **Devices** and click **Connect MIDI**; allow MIDI access. Next
+   time Drift reconnects by itself.
+3. Drift lists the connected ports that aren't set up yet. Click **Add
+   all**: it guesses what each one plays (drum machine, bass, pad, lead),
+   gives the drum machine channel 10 and MIDI clock, and picks its
+   instrument definition where it knows it.
+4. Check each device: its **Channel**, its **Instrument (CC map)** and
+   **Used for** (Lead, Bass, Pad / chords, Drums). Templates send each part
+   to the device used for it. See [Devices](08-devices.md).
 
-![Set up your gear](images/setup.png)
-
-The setup page has a card for each role: **Lead** (melodies and
-arpeggios), **Bass**, **Pad / chords** (chords and drones) and **Drums**.
-For each one:
-
-- Pick the **MIDI port**. Drift guesses ports for you where it can.
-- Set the **Channel**: 1 by default, 10 for drums.
-- Optionally give it a **Name** and choose its **Instrument (CC map)**, so
-  Drift knows its knobs. See [Devices](08-devices.md).
-- Turn on **Send clock** for the device that should follow Drift's tempo,
-  usually the drum machine. Here you pick one; under
-  [Devices](08-devices.md) several devices can receive clock.
-
-Then click **Save devices**. Every project and template uses these
-devices, so switching templates never loses your setup. Lead and pad can
-share one synth: pick the same port with another channel (multitimbral),
-or the same channel.
-
-> **No synths at hand?** Pick the *Drift Synth Lead*, *Bass*, *Pad* and
-> *Drums* ports. They are sounds built into Drift and play through your
-> computer's speakers. *Drift Synth Juno* is an extra Juno-60-style
-> polysynth for chords and leads, *Drift Synth Mono* a Moog-style
-> bass that is rounder than the 303-style *Bass*, and *Drift Synth Piano*
-> a sampled piano.
+Your devices are shared by every project and template, so switching
+templates never loses your setup. One synth can play several parts: give
+it several roles, or add it twice on different channels (multitimbral).
 
 ## Play
 

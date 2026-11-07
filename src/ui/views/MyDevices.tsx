@@ -1,7 +1,7 @@
 import { slotComponent } from "../theme/slots";
 import { inputForDevice } from "../../state/rack";
 import { useState } from "preact/hooks";
-import { DEVICE_ROLES, newDevice, suggestInstrument } from "../../state/rack";
+import { DEVICE_ROLES, devicesFromPorts, newDevice, suggestInstrument } from "../../state/rack";
 import { ChannelFinder } from "../components/ChannelFinder";
 import { Card, Icon, Select, Stepper, Toggle } from "../components/controls";
 import { useStore } from "../store";
@@ -37,34 +37,67 @@ export function MyDevices() {
     });
   };
 
+  const fresh = devicesFromPorts(s.hardwarePorts, s.rack, instruments);
+  const addConnected = () => {
+    s.setRack({ devices: [...s.rack.devices, ...fresh] }, true);
+    s.showToast(
+      `Added ${fresh.length} device${fresh.length === 1 ? "" : "s"}. Tracks now play them by role.`,
+    );
+  };
+
   return (
     <>
       <Card
         title="My devices"
         actions={
-          <>
-            <button type="button" onClick={() => s.go({ name: "setup" })}>
-              Setup wizard
-            </button>
+          s.midi.supported ? (
             <button type="button" onClick={add}>
               <Icon name="plus" /> Device
             </button>
-          </>
+          ) : undefined
         }
       >
-        {s.rack.devices.length === 0 && (
+        <p class="hint">
+          External MIDI synths and drum machines. Every track can also play a
+          built-in synth, picked on its Output tab.
+        </p>
+        {!s.midi.supported && (
+          <p class="hint warn">
+            This browser has no Web MIDI (Safari and every browser on iPhone
+            and iPad), so it can't reach external synths. Use Chrome or Edge on
+            a computer or Android for hardware; the built-in synths play
+            everywhere.
+          </p>
+        )}
+        {s.midi.supported && !s.midi.connected && (
           <div class="empty">
-            <p>
-              No devices yet. The setup wizard maps your synths and drum machine
-              in one go.
-            </p>
+            <p>Connect your synths over USB, switch them on and allow MIDI access.</p>
             <button
               type="button"
               class="primary"
-              onClick={() => s.go({ name: "setup" })}
+              onClick={() => void s.connectMidi()}
             >
-              Set up your gear
+              Connect MIDI
             </button>
+          </div>
+        )}
+        {s.midi.connected && s.hardwarePorts.length === 0 && (
+          <p class="warn">
+            No MIDI outputs found. Check the USB cable and that the device is
+            switched on.
+          </p>
+        )}
+        {fresh.length > 0 && (
+          <div class="empty">
+            <p>
+              Connected, not set up yet: {fresh.map((d) => d.portName).join(", ")}.
+            </p>
+            <button type="button" class="primary" onClick={addConnected}>
+              <Icon name="plus" /> Add {fresh.length === 1 ? "it" : `all ${fresh.length}`}
+            </button>
+            <p class="small">
+              Drift guesses what each one is used for; change it below.
+            </p>
           </div>
         )}
         <div class="devices-list">
@@ -172,7 +205,7 @@ export function MyDevices() {
                   />
                 </div>
                 <div class="field">
-                  <span class="field-label">Used for</span>
+                  <span class="field-label">Used for (templates send these parts here)</span>
                   <div class="chips">
                     {DEVICE_ROLES.map(({ role, label }) => (
                       <button

@@ -72,29 +72,20 @@ export function Instruments() {
         <h1>Devices</h1>
       </div>
 
-      <div class="phone-only devices-extras">
-        <ClockSelect />
-        {pwa.canInstall && (
-          <button type="button" onClick={() => void pwa.install()}>
-            <Icon name="download" size={16} /> Install app
-          </button>
-        )}
-      </div>
-
-      {!s.midi.connected && (
-        <Card>
-          <div class="connect-row">
-            <p class="hint">Hardware synths: connect them over USB and allow MIDI access. The built-in synths play without it.</p>
-            <button type="button" class="primary" onClick={() => void s.connectMidi()}>
-              Connect MIDI
+      {(s.rack.devices.length > 0 || s.hardwarePorts.length > 0 || pwa.canInstall) && (
+        <div class="phone-only devices-extras">
+          <ClockSelect />
+          {pwa.canInstall && (
+            <button type="button" onClick={() => void pwa.install()}>
+              <Icon name="download" size={16} /> Install app
             </button>
-          </div>
-        </Card>
+          )}
+        </div>
       )}
 
       <MyDevices />
 
-      <MidiMonitor />
+      {s.midi.supported && <MidiMonitor />}
 
       <div class="editor-grid">
         <div class="col wide">

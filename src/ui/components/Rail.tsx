@@ -126,7 +126,6 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
             view={{ name: "instruments" }}
             icon="devices"
             label="Devices"
-            also={["setup"]}
             cls="nav-devices"
           />
           <button
@@ -247,6 +246,8 @@ export function ClockSelect() {
       </label>
     );
   }
+  // Clock only goes to hardware; without any, there is nothing to pick.
+  if (s.hardwarePorts.length === 0) return null;
   const target = p.clock.sendTo[0] ?? "";
   return (
     <label class="rail-clock">
@@ -259,7 +260,7 @@ export function ClockSelect() {
         }}
       >
         <option value="">Off</option>
-        {[...new Set([target, ...s.ports].filter(Boolean))].map((n) => (
+        {[...new Set([target, ...s.hardwarePorts].filter((n) => n && !isLocalPort(n)))].map((n) => (
           <option value={n}>{n}</option>
         ))}
       </select>

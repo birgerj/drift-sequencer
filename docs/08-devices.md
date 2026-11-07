@@ -10,9 +10,14 @@ one by role, so switching templates keeps your setup.
 
 ## My devices
 
-**Setup wizard** reopens the quick setup from
-[Getting started](01-getting-started.md). **+ Device** adds a device by
-hand. Each device has:
+My devices holds only external hardware; the built-in synths are picked
+per track on its Output tab. In a browser without Web MIDI (Safari, iPhone,
+iPad) Drift says so here: only the built-in synths play there.
+
+**Connect MIDI** asks for MIDI access. Connected ports that aren't set up
+yet are listed with **Add all**, which guesses each device's role, channel
+and clock (see [Getting started](01-getting-started.md)). **+ Device** adds
+one by hand. Each device has:
 
 - **MIDI port** and **Channel** (1–16). The dot shows whether the port is
   connected.
