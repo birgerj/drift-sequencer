@@ -93,6 +93,8 @@ export class Tunnel {
   private hemi!: THREE.HemisphereLight;
   private cars: Car[] = [];
   private flares: Flare[] = [];
+  /** Car lamp materials with their full colour, dimmed together to breathe with the beat. */
+  private lamps: { mat: THREE.MeshBasicMaterial; full: THREE.Color }[] = [];
 
   private cam = 0;
   private time = 0;
@@ -177,6 +179,11 @@ export class Tunnel {
     this.updateTraffic(dt);
     this.hemi.color.copy(this.hA).lerp(this.hB, 0.5).multiplyScalar(0.6).addScalar(0.25);
     this.hemi.intensity = 0.18 + i.pad * 0.25;
+    // Car lights breathe softly once per beat (slower and shallower when stopped).
+    const breath = 0.5 + 0.5 * Math.cos(2 * Math.PI * (i.playing ? i.beats : this.time * 0.4));
+    const lampLevel = 1 - (i.playing ? 0.35 : 0.15) * (1 - breath);
+    for (const l of this.lamps) l.mat.color.copy(l.full).multiplyScalar(lampLevel);
+    for (const l of this.oncomingLights) l.intensity *= lampLevel;
     this.bloom.strength = 0.75 + i.kick * 0.35 + i.energy * 0.2;
     this.composer.render(dt);
   }
@@ -209,7 +216,7 @@ export class Tunnel {
     for (let i = 0; i < 160; i++) {
       const t = (i / 160) * Math.PI * 2;
       const r = 900 + 70 * Math.sin(5 * t) + 32 * Math.sin(11 * t + 1.3);
-      ctrl.push(new THREE.Vector3(Math.cos(t) * r, 3.5 * Math.sin(3 * t) + 1.5 * Math.sin(8 * t), Math.sin(t) * r));
+      ctrl.push(new THREE.Vector3(Math.cos(t) * r, 5 * Math.sin(6 * t) + 1.8 * Math.sin(14 * t + 0.7), Math.sin(t) * r));
     }
     const curve = new THREE.CatmullRomCurve3(ctrl, true, 'centripetal');
     curve.arcLengthDivisions = 6000;
@@ -506,6 +513,7 @@ export class Tunnel {
     const additive = { map: glow, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
     const glowW = new THREE.MeshBasicMaterial({ ...additive, color: new THREE.Color(1.6, 1.5, 1.3) });
     const glowR = new THREE.MeshBasicMaterial({ ...additive, color: new THREE.Color(1.4, 0.05, 0.02) });
+    this.lamps = [head, tail, glowW, glowR].map((mat) => ({ mat, full: mat.color.clone() }));
     const PAINT = [0xb8bcc0, 0x1a1c1f, 0x2b3f63, 0x7a1c1c, 0xe4e4e0, 0x50565c, 0x1d4a3a, 0x8b6d3c];
 
     const makeCar = (kind: 'car' | 'suv' | 'truck'): THREE.Group => {
