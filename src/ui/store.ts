@@ -27,11 +27,16 @@ import {
   effectiveInstrumentId,
   effectiveOutput,
   inputForDevice,
+  loadBuiltInAliases,
   loadRack,
+  releaseBuiltIns,
   resolveProject,
   roleForType,
   roleOf,
+  saveBuiltInAliases,
   saveRack,
+  splitBuiltIns,
+  type BuiltInAliases,
   type Rack,
   type RackDevice,
 } from '../state/rack';
@@ -136,8 +141,10 @@ export class AppStore {
 
   project: ProjectState;
   sequencer: Sequencer;
-  /** The user's hardware setup, shared by all projects on this device. */
-  rack: Rack = loadRack();
+  /** The user's hardware setup, shared by all projects on this device. Built-in synths aren't in it. */
+  rack: Rack;
+  /** Built-ins that used to be rack devices, so older projects keep playing them. */
+  private builtInAliases: BuiltInAliases;
   /** How templates pick instruments (see AppSettings.instruments). */
   instrumentChoice: 'best' | 'role' = loadSettings().instruments ?? 'best';
   view: View = { name: 'performance' };
@@ -173,6 +180,14 @@ export class AppStore {
   private visualsTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor() {
+    // Built-in synths used to be "My devices" entries; tracks now pick them directly.
+    const split = splitBuiltIns(loadRack());
+    this.rack = split.rack;
+    this.builtInAliases = { ...loadBuiltInAliases(), ...split.aliases };
+    if (Object.keys(split.aliases).length) {
+      saveRack(this.rack);
+      saveBuiltInAliases(this.builtInAliases);
+    }
     this.project = assignDevices(this.fromTemplate('deep-house'), this.rack);
     this.sequencer = this.createSequencer(this.project);
     onKitStatus((k) => {
@@ -504,6 +519,11 @@ export class AppStore {
     this.updateTrack(trackId, { motions });
   }
 
+  /** Connected MIDI outputs, without the built-in synths: what "My devices" can use. */
+  get hardwarePorts(): string[] {
+    return this.ports.filter((p) => !isLocalPort(p));
+  }
+
   portAvailable(name: string): boolean {
     return this.ports.includes(name);
   }
@@ -574,7 +594,7 @@ export class AppStore {
     const wasPlaying = this.sequencer.playing;
     this.sequencer.stop();
     // Tracks pick up this device's synths by role (templates, imports, old projects).
-    const project = assignDevices(normalizeDrums(incoming), this.rack);
+    const project = assignDevices(releaseBuiltIns(normalizeDrums(incoming), this.builtInAliases), this.rack);
     this.project = project;
     this.sequencer = this.createSequencer(project);
     this.live.step = -1;
@@ -925,10 +945,12 @@ export class AppStore {
   // ---------- rack ----------
 
   /** Replace the device setup; `reassign` re-picks every track's device by role. */
-  setRack(rack: Rack, reassign = false): void {
+  setRack(next: Rack, reassign = false): void {
+    // Built-ins never become devices: tracks on one play it directly.
+    const { rack, aliases } = splitBuiltIns(next);
     this.rack = rack;
     saveRack(rack);
-    const assigned = assignDevices(this.project, rack, reassign);
+    const assigned = assignDevices(releaseBuiltIns(this.project, aliases), rack, reassign);
     if (assigned !== this.project) this.change(() => assigned);
     else {
       this.sequencer.update(this.engineView());
