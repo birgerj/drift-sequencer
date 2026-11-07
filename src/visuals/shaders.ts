@@ -647,6 +647,8 @@ export const SCENES = [
   { id: 'warp', name: 'Warp', source: null },
   // Drawn with three.js (tunnel3d.ts).
   { id: 'tunnel', name: 'Tunnel', source: null },
+  // Drawn with three.js (sorter3d.ts).
+  { id: 'sorter', name: 'Sorter', source: null },
   { id: 'kaleido', name: 'Kaleido', source: KALEIDO },
   { id: 'pulse', name: 'Pulse', source: null },
 ] as const;
