@@ -11,7 +11,7 @@ Press `?` in Drift to see this list.
 | `Space` | Play / stop |
 | `1`–`9` | Select a track |
 | `↑` `↓` | Previous / next track |
-| `Q` `W` `E` `R` `T` `Y` | Track tabs: Overview, Pattern, Generator, Panel, Modulation, Output |
+| `W` `E` `R` `T` `Y` | Track tabs: Pattern, Generator, Panel, Modulation, Output |
 | `M` / `S` | Mute / solo the selected track |
 | `N` | New pattern |
 | `F` | Freeze / unfreeze |

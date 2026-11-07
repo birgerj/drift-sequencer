@@ -5,12 +5,11 @@ import { cycleTheme } from './theme/theme';
 
 /** Tabs of the track detail pane, in order, with their shortcut keys. */
 export const SECTIONS = [
-  { id: 'overview', label: 'Overview', short: 'Over', icon: 'list', key: 'Q' },
-  { id: 'pattern', label: 'Pattern', short: 'Patt', icon: 'grid', key: 'W' },
-  { id: 'generator', label: 'Generator', short: 'Gen', icon: 'sliders', key: 'E' },
+  { id: 'pattern', label: 'Pattern', short: 'Pattern', icon: 'grid', key: 'W' },
+  { id: 'generator', label: 'Generator', short: 'Generator', icon: 'sliders', key: 'E' },
   { id: 'panel', label: 'Panel', short: 'Panel', icon: 'knob', key: 'R' },
-  { id: 'modulation', label: 'Modulation', short: 'Mod', icon: 'wave', key: 'T' },
-  { id: 'output', label: 'Output', short: 'Out', icon: 'output', key: 'Y' },
+  { id: 'modulation', label: 'Modulation', short: 'Modulation', icon: 'wave', key: 'T' },
+  { id: 'output', label: 'Output', short: 'Output', icon: 'output', key: 'Y' },
 ] as const;
 
 export type SectionId = (typeof SECTIONS)[number]['id'];
@@ -20,7 +19,7 @@ export const SHORTCUT_HELP: { keys: string; action: string }[] = [
   { keys: 'Space', action: 'Play / stop' },
   { keys: '1 – 9', action: 'Select track 1–9' },
   { keys: '↑  ↓', action: 'Previous / next track' },
-  { keys: 'Q W E R T Y', action: 'Track tabs: Overview, Pattern, Generator, Panel, Modulation, Output' },
+  { keys: 'W E R T Y', action: 'Track tabs: Pattern, Generator, Panel, Modulation, Output' },
   { keys: 'M  S', action: 'Mute / solo the selected track' },
   { keys: 'N', action: 'New pattern' },
   { keys: 'F', action: 'Freeze / unfreeze' },

@@ -39,6 +39,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
   const editable = track.generator.type === 'drums' || track.generator.type === 'motif' || track.generator.type === 'acid';
   const harmony = s.sequencer.currentHarmony;
   const tab = s.trackTab;
+  const ThemedPattern = slotComponent('patternDisplay');
 
   return (
     <div class="track-detail" style={{ '--accent': track.color }}>
@@ -78,8 +79,6 @@ export function TrackEditor({ trackId }: { trackId: string }) {
       </nav>
 
       <div class="detail-body">
-        {tab === 'overview' && <TrackOverview track={track} />}
-
         {tab === 'pattern' && (
         <div class="detail-section span-all">
           <Card
@@ -105,7 +104,12 @@ export function TrackEditor({ trackId }: { trackId: string }) {
             {editable ? (
               <PatternEditor track={track} />
             ) : (
-              rt && <PatternView track={track} pattern={rt.pattern} harmony={harmony} height={180} showLabels />
+              rt &&
+              (ThemedPattern ? (
+                <ThemedPattern track={track} pattern={rt.pattern} />
+              ) : (
+                <PatternView track={track} pattern={rt.pattern} harmony={harmony} height={180} showLabels />
+              ))
             )}
             <div class="variations">
               <span class="eyebrow">Variations</span>
@@ -236,89 +240,6 @@ function TrackActions({ track }: { track: TrackState }) {
         S
       </button>
     </div>
-  );
-}
-
-/** The most important things of a track at a glance; details live in the other tabs. */
-function TrackOverview({ track }: { track: TrackState }) {
-  const s = useStore();
-  const rt = s.sequencer.track(track.id);
-  const out = s.trackOutput(track);
-  const device = s.device(track.deviceId);
-  const quick = PARAM_SCHEMA[track.generator.type].filter((c) => c.kind === 'range').slice(0, 4);
-  const narrow = useNarrow();
-  const OverviewPattern = slotComponent('overviewPattern');
-  const go = (tab: SectionId) => () => s.setTrackTab(tab);
-  const caller = track.phrase?.answer ? s.project.tracks.find((t) => t.id === track.phrase!.answer!.from) : undefined;
-  return (
-    <>
-      <div class="detail-section span-2">
-        <Card title="Pattern" actions={<button type="button" class="ghost" onClick={go('pattern')}>Edit <Icon name="grid" size={16} /></button>}>
-          {rt &&
-            (OverviewPattern && track.generator.type !== 'drums' ? (
-              <OverviewPattern track={track} pattern={rt.pattern} />
-            ) : (
-              <PatternView track={track} pattern={rt.pattern} harmony={s.sequencer.currentHarmony} height={track.generator.type === 'drums' ? (narrow ? 150 : 200) : narrow ? 110 : 160} showLabels />
-            ))}
-          <div class="timing-row">
-            <TrackTiming track={track} />
-            {track.generator.type !== 'drums' && (
-              <div class="field">
-                <span class="field-label">Octave</span>
-                <OctaveControl track={track} compact />
-              </div>
-            )}
-          </div>
-        </Card>
-      </div>
-      <div class="detail-section">
-        <Card title="Sound" actions={<button type="button" class="ghost" onClick={go('generator')}>All <Icon name="sliders" size={16} /></button>}>
-          {quick.map((c) => (
-            <ParamControl control={c} track={track} />
-          ))}
-          {quick.length === 0 && <p class="hint">Set the voices under Generator.</p>}
-        </Card>
-      </div>
-      <div class="detail-section span-all overview-facts">
-        <button type="button" class="fact" onClick={go('output')}>
-          <Icon name="output" size={18} />
-          <span>
-            <small>Output</small>
-            <b>{device?.name ?? out.portName}</b>
-            <span class={s.portAvailable(out.portName) ? 'muted' : 'warn'}>
-              ch {out.channel}
-              {s.portAvailable(out.portName) ? '' : ' · not connected'}
-            </span>
-          </span>
-        </button>
-        <button type="button" class="fact" onClick={go('modulation')}>
-          <Icon name="wave" size={18} />
-          <span>
-            <small>Modulation</small>
-            <b>{track.modulations.length === 0 ? 'None' : `${track.modulations.filter((m) => m.enabled).length} LFO active`}</b>
-            <span class="muted">{track.modulations.map((m) => m.label).join(', ') || 'Add an LFO'}</span>
-          </span>
-        </button>
-        <button type="button" class="fact" onClick={go('modulation')}>
-          <Icon name="list" size={18} />
-          <span>
-            <small>Call &amp; response</small>
-            <b>{!track.phrase ? 'Always plays' : track.phrase.role === 'call' ? 'Call' : caller ? `Answers ${caller.name}` : 'Response'}</b>
-            <span class="muted">{track.phrase ? `${track.phrase.bars} bar phrases` : 'Off'}</span>
-          </span>
-        </button>
-        <button type="button" class="fact" onClick={go('generator')}>
-          <Icon name={TYPE_ICONS[track.generator.type] ?? 'motif'} size={18} />
-          <span>
-            <small>Evolves</small>
-            <b>{track.frozen ? 'Frozen' : `Every ${track.mutationIntervalBars} bar${track.mutationIntervalBars === 1 ? '' : 's'}`}</b>
-            <span class="muted">
-              {track.memory?.every ? `Returns to ${track.memory.mode === 'theme' ? 'theme' : 'earlier'} after ${track.memory.every}` : typeLabel(track.generator.type)}
-            </span>
-          </span>
-        </button>
-      </div>
-    </>
   );
 }
 

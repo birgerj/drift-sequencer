@@ -91,7 +91,6 @@
 [data-theme='hifi'] .detail-head,
 [data-theme='hifi'] .jump-bar,
 [data-theme='hifi'] .lane,
-[data-theme='hifi'] .fact,
 [data-theme='hifi'] .panel-bar,
 [data-theme='hifi'] .encoder,
 [data-theme='hifi'] .page-head,
@@ -113,14 +112,12 @@
 [data-theme='hifi'] .detail-head { padding: 10px 14px; margin-top: 6px; }
 [data-theme='hifi'] .jump-bar { position: sticky; padding: 8px 12px; margin: 6px 0 10px; border-bottom: 0; }
 [data-theme='hifi'] .page-head { padding: 10px 14px; margin-top: 6px; }
-[data-theme='hifi'] .panel-bar,
-[data-theme='hifi'] .fact { box-shadow: var(--metal-edge); }
+[data-theme='hifi'] .panel-bar { box-shadow: var(--metal-edge); }
 
 /* Engraved labels */
 [data-theme='hifi'] .eyebrow,
 [data-theme='hifi'] .field-label,
 [data-theme='hifi'] .slider label,
-[data-theme='hifi'] .fact small,
 [data-theme='hifi'] .rail-readout small,
 [data-theme='hifi'] .rail-clock span,
 [data-theme='hifi'] .theme-picker > span {
@@ -305,9 +302,6 @@
 
 /* ---------- misc ---------- */
 
-[data-theme='hifi'] .fact { color: var(--accent); }
-[data-theme='hifi'] .fact > span { color: var(--text); }
-[data-theme='hifi'] .fact b { text-transform: uppercase; letter-spacing: 0.08em; }
 [data-theme='hifi'] .in-dot.on { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
 [data-theme='hifi'] .rail-flag { border-radius: 2px; }
 [data-theme='hifi'] .monitor li { font-size: 13px; color: #ffb547; text-shadow: var(--amber-glow); background: #0d0a04; }

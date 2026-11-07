@@ -73,7 +73,6 @@
 [data-theme='modular'] .card,
 [data-theme='modular'] .rail,
 [data-theme='modular'] .lane,
-[data-theme='modular'] .fact,
 [data-theme='modular'] .panel-bar,
 [data-theme='modular'] .encoder,
 [data-theme='modular'] .detail-head,
@@ -91,14 +90,11 @@
 [data-theme='modular'] .jump-bar { padding: 8px 18px; margin: 4px 0 8px; border-bottom: 0; }
 /* Alternate a few module colours, like a mixed case. */
 [data-theme='modular'] .detail-body > .detail-section:nth-child(3n + 2) .card { background: var(--screws), #24272c; }
-[data-theme='modular'] .overview-facts .fact:nth-child(2) { background: var(--screws), #3a1f33; }
-[data-theme='modular'] .overview-facts .fact:nth-child(3) { background: var(--screws), #1f2f3a; }
 
 /* Silk-screen labels */
 [data-theme='modular'] .eyebrow,
 [data-theme='modular'] .field-label,
 [data-theme='modular'] .slider label,
-[data-theme='modular'] .fact small,
 [data-theme='modular'] .rail-readout small,
 [data-theme='modular'] .rail-clock span,
 [data-theme='modular'] .theme-picker > span { text-transform: uppercase; letter-spacing: var(--label-spacing); font-weight: 600; color: var(--muted); font-size: 11px; }
@@ -106,7 +102,6 @@
 [data-theme='modular'] .title-input,
 [data-theme='modular'] .rail-project,
 [data-theme='modular'] .rail-name b,
-[data-theme='modular'] .fact b,
 [data-theme='modular'] .lane-name { text-transform: uppercase; letter-spacing: 0.16em; font-weight: 700; }
 [data-theme='modular'] body { font-size: 16px; }
 
