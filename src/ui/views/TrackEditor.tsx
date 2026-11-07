@@ -1,23 +1,21 @@
 import { instrumentForLocalPort, isLocalPort, LOCAL_PORTS } from '../../io/local/ports';
 import { slotComponent } from '../theme/slots';
-import type { DrumParams, DrumVoice } from '../../core/generators/drumGenerator';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
-import { noteName } from '../../core/theory/note';
-import { DEFAULT_INTERPLAY, interplayActive, type InterplaySettings } from '../../core/engine/interplay';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
 import { newId, type CcModulation, type LfoShape, type TrackState } from '../../state/project';
 import { useState } from 'preact/hooks';
 import { useNarrow } from '../useNarrow';
 import { Chord } from '../../core/theory/chord';
-import { DRUM_PRESETS, PRESET_GENRES, tr8sKey, TR8S_GROUP_COLORS, TR8S_VOICE_ORDER } from '../../core/generators/drumPresets';
-import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS, drumIcon } from '../components/controls';
+import { DRUM_PRESETS, PRESET_GENRES } from '../../core/generators/drumPresets';
+import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS } from '../components/controls';
 import { KnobPanel } from '../components/KnobPanel';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
 import { TrackTiming } from '../components/TrackTiming';
 import { PatternEditor } from '../components/PatternEditor';
 import { PatternView } from '../components/PatternView';
-import { PARAM_SCHEMA, TRACK_TYPES, typeLabel, type Control } from '../paramSchema';
+import { typeLabel } from '../paramSchema';
+import { GeneratorTab } from './GeneratorTab';
 import { SECTIONS, type SectionId } from '../shortcuts';
 import { useLive, useStore } from '../store';
 
@@ -130,42 +128,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
 
 )}
 
-        {tab === 'generator' && (
-        <div class="detail-section span-all tab-columns">
-          <Card title="Generator">
-            <div class="type-chips" role="radiogroup" aria-label="Track type">
-              {TRACK_TYPES.map((t) => (
-                <button
-                  type="button"
-                  role="radio"
-                  class="type-chip"
-                  aria-checked={track.generator.type === t.type}
-                  title={t.description}
-                  onClick={() => s.setTrackType(track.id, t.type)}
-                >
-                  <Icon name={TYPE_ICONS[t.type] ?? 'motif'} size={16} />
-                  {t.label}
-                </button>
-              ))}
-            </div>
-            <div class="param-grid">
-              {PARAM_SCHEMA[track.generator.type].map((c) => (
-                <ParamControl control={c} track={track} />
-              ))}
-              <Segmented
-                label="Mutate every (bars)"
-                value={track.mutationIntervalBars}
-                options={[1, 2, 4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
-                onChange={(mutationIntervalBars) => s.updateTrack(track.id, { mutationIntervalBars })}
-              />
-            </div>
-          </Card>
-          <FeelCard track={track} />
-          <ListenCard track={track} />
-          {track.generator.type === 'drums' && <DrumVoices track={track} instrument={instrument} />}
-        </div>
-
-)}
+        {tab === 'generator' && <GeneratorTab track={track} instrument={instrument} />}
 
         {tab === 'panel' && (
           <div class="detail-section span-all">
@@ -280,120 +243,6 @@ function MotionPreview({ values, color }: { values: number[]; color: string }) {
     <svg class="motion-preview" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
       <path d={d} fill="none" stroke={color} stroke-width="2" vector-effect="non-scaling-stroke" />
     </svg>
-  );
-}
-
-/** Humanize, kick awareness and melody memory. */
-function FeelCard({ track }: { track: TrackState }) {
-  const s = useStore();
-  const h = track.humanize ?? { timing: 0, velocity: 0, layBack: 0 };
-  const setH = (patch: Partial<typeof h>) => s.updateTrack(track.id, { humanize: { ...h, ...patch } });
-  const memory = track.memory ?? { every: 0, mode: 'theme' as const };
-  const bassLike = track.generator.type === 'bass' || track.generator.type === 'acid';
-  const pct = (x: number) => `${Math.round(x * 100)}%`;
-  return (
-    <Card title="Feel">
-      <div class="param-grid">
-        <Slider label="Timing drift" value={h.timing} min={0} max={1} step={0.01} format={(x) => `±${Math.round(x * 18)} ms`} color={track.color} onInput={(timing) => setH({ timing })} />
-        <Slider label="Velocity drift" value={h.velocity} min={0} max={1} step={0.01} format={pct} color={track.color} onInput={(velocity) => setH({ velocity })} />
-        <Slider label="Lay back" value={h.layBack} min={0} max={1} step={0.01} format={(x) => `${Math.round(x * 25)} ms`} color={track.color} onInput={(layBack) => setH({ layBack })} />
-        {bassLike && (
-          <Segmented
-            label="Kick drum"
-            value={track.kickMode ?? 'off'}
-            options={[
-              { value: 'off', label: 'Ignore' },
-              { value: 'avoid', label: 'Make room' },
-              { value: 'duck', label: 'Duck' },
-            ]}
-            onChange={(kickMode) => s.updateTrack(track.id, { kickMode })}
-          />
-        )}
-        <Segmented
-          label="Melody memory · return after"
-          value={memory.every}
-          options={[0, 2, 3, 4, 6].map((n) => ({ value: n, label: n === 0 ? 'Never' : `${n} changes` }))}
-          onChange={(every) => s.updateTrack(track.id, { memory: { ...memory, every } })}
-        />
-        {memory.every > 0 && (
-          <Segmented
-            label="Return to"
-            value={memory.mode}
-            options={[
-              { value: 'theme', label: 'The theme' },
-              { value: 'recall', label: 'An earlier variation' },
-            ]}
-            onChange={(mode) => s.updateTrack(track.id, { memory: { ...memory, mode } })}
-          />
-        )}
-      </div>
-      <p class="hint">
-        {bassLike && track.kickMode === 'avoid' ? 'Bass notes that land on a kick move to the next step, if it is free. ' : ''}
-        {bassLike && track.kickMode === 'duck' ? 'Bass notes on a kick play softer, like sidechain. ' : ''}
-        {memory.every > 0
-          ? `After ${memory.every} changes the track comes back to ${memory.mode === 'theme' ? 'its theme (the pattern it started with)' : 'one of its earlier variations'}, then evolves again.`
-          : 'Timing and velocity drift make a track sound played rather than programmed.'}
-      </p>
-    </Card>
-  );
-}
-
-/** Interplay: this track reacts to what other tracks play on the same step. */
-function ListenCard({ track }: { track: TrackState }) {
-  const s = useStore();
-  const settings = track.interplay ?? DEFAULT_INTERPLAY;
-  const set = (patch: Partial<InterplaySettings>) => s.updateTrack(track.id, { interplay: { ...settings, ...patch } });
-  const others = s.project.tracks.filter((t) => t.id !== track.id);
-  const drums = track.generator.type === 'drums';
-  const names = settings.listenTo.map((id) => others.find((t) => t.id === id)?.name).filter(Boolean).join(' and ');
-  const toggle = (id: string) =>
-    set({ listenTo: settings.listenTo.includes(id) ? settings.listenTo.filter((x) => x !== id) : [...settings.listenTo, id] });
-  const active = interplayActive(track.interplay);
-  return (
-    <Card title="Listens to">
-      <div class="chips" role="group" aria-label="Tracks to listen to">
-        {others.map((t) => (
-          <button type="button" class="chip" style={{ '--accent': t.color }} aria-pressed={settings.listenTo.includes(t.id)} onClick={() => toggle(t.id)}>
-            {t.name}
-          </button>
-        ))}
-        {others.length === 0 && <span class="hint">Add another track first.</span>}
-      </div>
-      {settings.listenTo.length > 0 && (
-        <div class="param-grid">
-          <Segmented
-            label="Rhythm"
-            value={settings.rhythm}
-            options={[
-              { value: 'free', label: 'Own rhythm' },
-              { value: 'space', label: 'Make room' },
-              { value: 'lock', label: 'Play along' },
-            ]}
-            onChange={(rhythm) => set({ rhythm })}
-          />
-          {!drums && (
-            <Toggle
-              label="Different note"
-              description="On the beat, pick a chord tone they aren’t playing"
-              checked={settings.otherTone}
-              onChange={(otherTone) => set({ otherTone })}
-            />
-          )}
-          <Slider label="Strength" value={settings.amount} min={0} max={1} step={0.05} format={(x) => `${Math.round(x * 100)}%`} color={track.color} onInput={(amount) => set({ amount })} />
-        </div>
-      )}
-      <p class="hint">
-        {!active
-          ? 'Pick tracks to listen to. This track then reacts to what they play, live — also after they change.'
-          : [
-              settings.rhythm === 'space' ? `Rests where ${names} play${settings.listenTo.length > 1 ? '' : 's'}.` : '',
-              settings.rhythm === 'lock' ? `Plays together with ${names} and rests in between.` : '',
-              settings.otherTone && !drums ? `On the beat it avoids the note ${names} ${settings.listenTo.length > 1 ? 'play' : 'plays'}.` : '',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-      </p>
-    </Card>
   );
 }
 
@@ -533,111 +382,6 @@ function OutputCard({ track }: { track: TrackState }) {
 function variationName(i: number): string {
   if (i === 0) return 'A';
   return `A${i}`;
-}
-
-function ParamControl({ control: c, track }: { control: Control; track: TrackState }) {
-  const s = useStore();
-  const params = track.generator.params as unknown as Record<string, unknown>;
-  const value = params[c.key];
-  switch (c.kind) {
-    case 'range':
-      return (
-        <Slider
-          label={c.label}
-          value={Number(value ?? c.min)}
-          min={c.min}
-          max={c.max}
-          step={c.step}
-          format={c.format}
-          color={track.color}
-          onInput={(v) => s.setTrackParam(track.id, c.key, v)}
-        />
-      );
-    case 'toggle':
-      return <Toggle label={c.label} description={c.description} checked={Boolean(value)} onChange={(v) => s.setTrackParam(track.id, c.key, v)} />;
-    case 'choice':
-      return (
-        <Segmented
-          label={c.label}
-          value={value as string | number}
-          options={c.options}
-          onChange={(v) => s.setTrackParam(track.id, c.key, v)}
-        />
-      );
-  }
-}
-
-function DrumVoices({ track, instrument }: { track: TrackState; instrument: InstrumentDefinition | undefined }) {
-  const s = useStore();
-  const params = track.generator.params as DrumParams;
-  const setVoices = (voices: DrumVoice[]) => s.setTrackParam(track.id, 'voices', voices);
-  const update = (i: number, patch: Partial<DrumVoice>) => setVoices(params.voices.map((v, j) => (j === i ? { ...v, ...patch } : v)));
-  const triggers = (instrument?.triggers ?? []).filter((t, i, all) => all.findIndex((x) => x.note === t.note) === i);
-  const noteOptions = (current: number) => {
-    const opts = triggers.map((t) => ({ value: t.note, label: `${t.name} (${t.note})` }));
-    if (!opts.some((o) => o.value === current)) opts.unshift({ value: current, label: `${noteName(current)} (${current})` });
-    return opts;
-  };
-  return (
-    <Card
-      title="Drum voices"
-      actions={
-        <>
-          {params.voices.length < TR8S_VOICE_ORDER.length && (
-            <button type="button" onClick={() => s.addAllTr8sVoices(track.id)}>
-              <Icon name="plus" /> All TR-8S lanes
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => setVoices([...params.voices, { name: 'NEW', note: 37, pulses: 3, rotate: 0, probability: 0.7, velocity: 90 }])}
-          >
-            <Icon name="plus" /> Voice
-          </button>
-        </>
-      }
-    >
-      <div class="voices">
-        {params.voices.map((v, i) => (
-          <div class="voice">
-            <div class="row gap-s wrap">
-              <span class="voice-icon" style={tr8sKey(v.note) ? { '--accent': TR8S_GROUP_COLORS[tr8sKey(v.note)!] } : undefined}>
-                <Icon name={drumIcon(v.name, v.note)} size={22} />
-              </span>
-              <input
-                class="voice-name mono"
-                aria-label="Voice name"
-                value={v.name}
-                maxLength={6}
-                onChange={(e) => update(i, { name: (e.target as HTMLInputElement).value })}
-              />
-              <Select hideLabel label={`${v.name} note`} value={v.note} options={noteOptions(v.note)} onChange={(note) => update(i, { note })} />
-              <div class="spacer" />
-              <button type="button" class="square" aria-label={`Remove ${v.name}`} onClick={() => setVoices(params.voices.filter((_, j) => j !== i))}>
-                <Icon name="trash" />
-              </button>
-            </div>
-            <div class="voice-sliders">
-              <Slider compact label="Hits per bar" value={v.pulses} min={0} max={16} step={1} color={track.color} onInput={(pulses) => update(i, { pulses })} />
-              <Slider compact label="Rotate" value={v.rotate} min={0} max={15} step={1} color={track.color} onInput={(rotate) => update(i, { rotate })} />
-              <Slider
-                compact
-                label="Chance"
-                value={v.probability}
-                min={0}
-                max={1}
-                step={0.01}
-                format={(x) => `${Math.round(x * 100)}%`}
-                color={track.color}
-                onInput={(probability) => update(i, { probability })}
-              />
-              <Slider compact label="Velocity" value={v.velocity} min={1} max={127} step={1} color={track.color} onInput={(velocity) => update(i, { velocity })} />
-            </div>
-          </div>
-        ))}
-      </div>
-    </Card>
-  );
 }
 
 function CallResponse({ track }: { track: TrackState }) {

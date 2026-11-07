@@ -32,7 +32,7 @@ progression. Five tabs, each with a key:
 | Tab | Key | What's on it |
 | --- | --- | --- |
 | **Pattern** | `W` | Length, speed and octave; draw and edit the pattern; drum presets; variations. |
-| **Generator** | `E` | Track type and all its settings, Feel, Listens to, drum voices. |
+| **Generator** | `E` | Track type, a preview, and the same modules for every type: Notes, Rhythm, Dynamics, Evolution, Feel and Listens to. Drums get their voices instead of Notes and Rhythm. |
 | **Panel** | `R` | The synth's knobs. See [Sound and modulation](07-sound-and-modulation.md). |
 | **Modulation** | `T` | LFOs, recorded motions, and call and response. |
 | **Output** | `Y` | Which device the track plays on; **Delete track**. |
@@ -115,20 +115,42 @@ note on the step before it.
 
 ## Drum voices
 
-Drum tracks have a **Drum voices** card on the *Generator* tab. Each
-voice is a euclidean rhythm:
+Drum tracks have a **Voices** card at the top of the *Generator* tab, one
+row per voice. Each voice is a euclidean rhythm, drawn as a ring and as a
+lane of 16 steps; steps that only play by chance are dimmer.
 
 ![Drum voices](images/drums-generator.png)
 
-- **Hits per bar** (0–16), spread as evenly as possible over the bar.
+- **Hits** (0–16), spread as evenly as possible over the bar.
 - **Rotate** (0–15) shifts the rhythm.
-- **Chance**: how likely each hit is to play.
-- **Velocity**.
+- **Chance**: how likely each hit is to play. Drag sideways or use the arrow keys.
+- **Velocity**, the same way.
+- Tap the ring to mute a voice.
 
 **+ Voice** adds a voice. **+ All TR-8S lanes** adds a lane for every
 TR-8S instrument. Each voice has a name (up to six characters) and a note,
 chosen from the drum machine's instrument definition; the trash button
 removes it.
+
+## The generator modules
+
+Every track type shows the same modules in the same order, so a setting is
+always in the same place. A module with nothing to set for a type stays as
+an empty frame.
+
+| Module | What's in it |
+| --- | --- |
+| **Notes** | Which pitches: melody style, range, leaps, fifths, octaves, direction… |
+| **Rhythm** | When it plays: density, rate, rests, gate, slides, pulses… |
+| **Dynamics** | How hard: velocity and its variation as one bar (the dot is the velocity, the band the variation), accents. |
+| **Evolution** | How it changes: mutation, **Mutate every (bars)**, rhythm lock, ratchets, conditions. |
+| **Feel** | Timing drift, velocity drift, lay back, kick drum and melody memory. |
+| **Listens to** | Tracks this one reacts to. |
+
+The control follows the kind of value: percentages are knobs (drag up or
+down, Shift for fine, or use the arrow keys), a few whole numbers are a row
+of buttons, the melody range is a ladder of scale degrees, and pulses per
+bar are blocks you tap.
 
 ## Output
 

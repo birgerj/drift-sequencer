@@ -229,12 +229,12 @@ function useDoubleTap(onDouble: () => void) {
 const ARC_START = -135;
 const ARC_SWEEP = 270;
 
-function polar(r: number, deg: number): [number, number] {
+export function polar(r: number, deg: number): [number, number] {
   const a = ((deg - 90) * Math.PI) / 180;
   return [24 + Math.cos(a) * r, 24 + Math.sin(a) * r];
 }
 
-function arc(r: number, from: number, to: number): string {
+export function arc(r: number, from: number, to: number): string {
   if (to - from < 0.001) return '';
   const a = ARC_START + from * ARC_SWEEP;
   const b = ARC_START + to * ARC_SWEEP;
