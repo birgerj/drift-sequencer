@@ -15,6 +15,7 @@ import { generateProgression, varyProgression, type ProgressionStyle } from '../
 import { Scale } from '../core/theory/scale';
 import { isLocalPort } from '../io/local/localSynths';
 import { onKitStatus } from '../io/local/sampleKits';
+import { onPianoStatus } from '../io/local/samplePianos';
 import { MidiHub } from '../io/midi/midiHub';
 import { MidiGuideClient } from '../io/midiGuideClient';
 import { BUILT_IN_INSTRUMENTS, IndexedDbInstrumentStore, InstrumentLibrary, type InstalledInstrument } from '../state/instrumentLibrary';
@@ -167,6 +168,11 @@ export class AppStore {
       if (k.state === 'loading') this.showToast(`Loading ${k.name} kit…`);
       else if (k.state === 'ready') this.showToast(`${k.name} kit loaded.`);
       else if (k.state === 'error') this.showToast(`${k.name} kit could not be downloaded; the synth kit keeps playing. (${k.error})`);
+    });
+    onPianoStatus((p) => {
+      if (p.state === 'loading') this.showToast(`Loading ${p.name} piano…`);
+      else if (p.state === 'ready') this.showToast(`${p.name} piano loaded.`);
+      else if (p.state === 'error') this.showToast(`${p.name} piano could not be downloaded. (${p.error})`);
     });
   }
 

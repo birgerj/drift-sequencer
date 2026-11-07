@@ -1,0 +1,187 @@
+{
+  "id": "wurli",
+  "name": "Wurlitzer",
+  "description": "Wurlitzer EP200 electric piano",
+  "source": "Greg Sullivan E-Pianos, sfz by sfzinstruments (github.com/sfzinstruments/GregSullivan.E-Pianos)",
+  "license": "CC BY 3.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/3.0/",
+  "layers": [
+    {
+      "hivel": 84,
+      "zones": [
+        {
+          "lo": 21,
+          "hi": 36,
+          "key": 33,
+          "tune": -5,
+          "file": "1-33.flac"
+        },
+        {
+          "lo": 37,
+          "hi": 42,
+          "key": 40,
+          "tune": -4,
+          "file": "1-40.flac"
+        },
+        {
+          "lo": 43,
+          "hi": 48,
+          "key": 45,
+          "tune": -2,
+          "file": "1-45.flac"
+        },
+        {
+          "lo": 49,
+          "hi": 53,
+          "key": 51,
+          "tune": -9,
+          "file": "1-51.flac"
+        },
+        {
+          "lo": 54,
+          "hi": 58,
+          "key": 56,
+          "tune": -8,
+          "file": "1-56.flac"
+        },
+        {
+          "lo": 59,
+          "hi": 63,
+          "key": 61,
+          "tune": 4,
+          "file": "1-61.flac"
+        },
+        {
+          "lo": 64,
+          "hi": 68,
+          "key": 66,
+          "tune": 7,
+          "file": "1-66.flac"
+        },
+        {
+          "lo": 69,
+          "hi": 75,
+          "key": 71,
+          "tune": -5,
+          "file": "1-71.flac"
+        },
+        {
+          "lo": 76,
+          "hi": 82,
+          "key": 79,
+          "tune": -8,
+          "file": "1-79.flac"
+        },
+        {
+          "lo": 83,
+          "hi": 88,
+          "key": 85,
+          "tune": 6,
+          "file": "1-85.flac"
+        },
+        {
+          "lo": 89,
+          "hi": 108,
+          "key": 92,
+          "tune": 2,
+          "file": "1-92.flac"
+        }
+      ]
+    },
+    {
+      "hivel": 127,
+      "zones": [
+        {
+          "lo": 21,
+          "hi": 34,
+          "key": 33,
+          "tune": -5,
+          "file": "2-33.flac"
+        },
+        {
+          "lo": 35,
+          "hi": 38,
+          "key": 36,
+          "tune": -7,
+          "file": "2-36.flac"
+        },
+        {
+          "lo": 39,
+          "hi": 44,
+          "key": 41,
+          "tune": -6,
+          "file": "2-41.flac"
+        },
+        {
+          "lo": 45,
+          "hi": 49,
+          "key": 47,
+          "tune": -8,
+          "file": "2-47.flac"
+        },
+        {
+          "lo": 50,
+          "hi": 54,
+          "key": 52,
+          "tune": -2,
+          "file": "2-52.flac"
+        },
+        {
+          "lo": 55,
+          "hi": 58,
+          "key": 56,
+          "tune": -8,
+          "file": "2-56.flac"
+        },
+        {
+          "lo": 59,
+          "hi": 62,
+          "key": 61,
+          "tune": 2,
+          "file": "2-61.flac"
+        },
+        {
+          "lo": 63,
+          "hi": 65,
+          "key": 64,
+          "tune": -3,
+          "file": "2-64.flac"
+        },
+        {
+          "lo": 66,
+          "hi": 70,
+          "key": 67,
+          "tune": 3,
+          "file": "2-67.flac"
+        },
+        {
+          "lo": 71,
+          "hi": 76,
+          "key": 73,
+          "tune": -1,
+          "file": "2-73.flac"
+        },
+        {
+          "lo": 77,
+          "hi": 82,
+          "key": 79,
+          "tune": -7,
+          "file": "2-79.flac"
+        },
+        {
+          "lo": 83,
+          "hi": 88,
+          "key": 85,
+          "file": "2-85.flac"
+        },
+        {
+          "lo": 89,
+          "hi": 108,
+          "key": 92,
+          "file": "2-92.flac"
+        }
+      ]
+    }
+  ],
+  "gain": 0.715
+}
