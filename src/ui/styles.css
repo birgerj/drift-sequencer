@@ -1000,6 +1000,8 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 }
 
 .vis-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.vis-scene-ctl { flex-basis: 100%; padding-bottom: 6px; margin-bottom: 2px; border-bottom: 1px solid var(--line-2); }
+.vis-hud .vis-action { border-style: dashed; }
 .vis-close { position: absolute; top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); min-height: 40px; padding: 0 14px; font-size: 13px; background: rgba(11, 12, 15, 0.75); border-color: var(--line-2); backdrop-filter: blur(8px); transition: opacity 0.3s; z-index: 2; }
 .visuals-root.idle .vis-close { opacity: 0; pointer-events: none; }
 @media (max-width: 820px) {

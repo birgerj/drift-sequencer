@@ -28,4 +28,14 @@ export interface Scene3D {
   note(color: RGB, pitch: number, vel: number, durS: number): void;
   /** Overlay text the scene wants shown, or empty. */
   caption?(): string;
+  /** Scene-specific controls shown in the HUD while this scene is active. */
+  controls?(): SceneControl[];
+  /** Toggle (boolean), choice (option value) or action (true) from the HUD. */
+  setControl?(id: string, value: boolean | string): void;
 }
+
+/** A scene control: an on/off switch, a choice that cycles through options, or a one-shot action. */
+export type SceneControl =
+  | { kind: 'toggle'; id: string; label: string; title: string; value: boolean }
+  | { kind: 'choice'; id: string; label: string; title: string; value: string; options: { value: string; label: string }[] }
+  | { kind: 'action'; id: string; label: string; title: string };
