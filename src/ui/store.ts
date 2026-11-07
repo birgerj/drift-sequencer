@@ -43,7 +43,8 @@ import {
   serializeProject,
   type ProjectSummary,
 } from '../state/storage';
-import { createProject, createTrack, templateSounds, TRACK_COLORS } from '../state/templates';
+import { createProject, createTrack, emptyProject, templateSounds, TRACK_COLORS } from '../state/templates';
+import { wipeAllData } from '../state/db';
 
 import type { SectionId } from './shortcuts';
 import { toEpoch, VisualsLink } from '../visuals/link';
@@ -111,6 +112,19 @@ type Pending =
  * Application state + actions. The UI calls actions and re-renders on
  * change; it never touches the engine directly.
  */
+const START_EMPTY_KEY = 'drift.startEmpty';
+
+/** True once after "Reset everything": start without tracks. */
+function takeStartEmpty(): boolean {
+  try {
+    const on = sessionStorage.getItem(START_EMPTY_KEY) === '1';
+    sessionStorage.removeItem(START_EMPTY_KEY);
+    return on;
+  } catch {
+    return false;
+  }
+}
+
 export class AppStore {
   readonly midi = new MidiHub();
   readonly midiGuide = new MidiGuideClient();
@@ -187,7 +201,8 @@ export class AppStore {
   async init(): Promise<void> {
     const { lastProjectId } = loadSettings();
     const stored = lastProjectId ? await this.repo.load(lastProjectId).catch(() => undefined) : undefined;
-    if (stored) this.open(stored);
+    if (takeStartEmpty()) this.open(emptyProject());
+    else if (stored) this.open(stored);
     else {
       // First run: remember the starter project so work survives a reload.
       saveSettings({ lastProjectId: this.project.id });
@@ -579,6 +594,24 @@ export class AppStore {
     if (this.instrumentChoice !== 'best') return project;
     const defs = this.instruments.length ? this.instruments.map((i) => i.definition) : BUILT_IN_INSTRUMENTS;
     return assignBestFit(project, this.rack, defs, templateSounds(templateId));
+  }
+
+  newEmpty(): void {
+    this.open(emptyProject());
+  }
+
+  /** Delete everything stored on this device and reload into an empty project. */
+  async resetEverything(): Promise<void> {
+    this.sequencer.stop();
+    clearTimeout(this.saveTimer);
+    this.saveTimer = undefined;
+    await wipeAllData().catch(() => undefined);
+    try {
+      sessionStorage.setItem(START_EMPTY_KEY, '1');
+    } catch {
+      // Without sessionStorage the app starts from the default template.
+    }
+    location.reload();
   }
 
   setInstrumentChoice(choice: 'best' | 'role'): void {

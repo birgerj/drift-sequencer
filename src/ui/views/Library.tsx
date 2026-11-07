@@ -1,6 +1,3 @@
-import { NOTE_NAMES, parsePitchClass } from '../../core/theory/note';
-import { Chord } from '../../core/theory/chord';
-import { Scale } from '../../core/theory/scale';
 import { TEMPLATES } from '../../state/templates';
 import { Card, Icon, Segmented } from '../components/controls';
 import { useStore } from '../store';
@@ -53,25 +50,21 @@ export function Library() {
           : 'Each part plays on the device you set up for its role under Devices.'}
       </p>
       <div class="template-grid">
-        {TEMPLATES.map((t) => {
-          const scale = new Scale(parsePitchClass(t.key), t.mode);
-          const prog = t.progression.map((p) => Chord.fromDegree(scale, p.degree, p.size ?? 3).symbol()).join(' – ');
-          return (
-            <button type="button" class="template-card" onClick={() => s.newFromTemplate(t.id)}>
-              <div class="row-between">
-                <b>{t.name}</b>
-                <span class="mono muted">{t.bpm} bpm</span>
-              </div>
-              <span class="muted small">{t.genre}</span>
-              <span>
-                {NOTE_NAMES[scale.root]} {t.mode}
-              </span>
-              <span class="small">{t.description}</span>
-              <span class="mono muted small">{prog}</span>
-              <span class="hint">{t.tracks.map((x) => x.name).join(' · ')}</span>
-            </button>
-          );
-        })}
+        {TEMPLATES.map((t) => (
+          <button type="button" class="template-card" onClick={() => s.newFromTemplate(t.id)}>
+            <span class="template-head">
+              <b>{t.name}</b>
+              <span class="mono muted small">{t.bpm} bpm</span>
+            </span>
+            <span class="muted small">{t.description}</span>
+          </button>
+        ))}
+        <button type="button" class="template-card" onClick={() => s.newEmpty()}>
+          <span class="template-head">
+            <b>Empty</b>
+          </span>
+          <span class="muted small">No tracks; build it up yourself.</span>
+        </button>
       </div>
 
       <Card title="Saved on this device">
@@ -97,6 +90,20 @@ export function Library() {
             </li>
           ))}
         </ul>
+      </Card>
+
+      <Card title="Reset">
+        <p class="hint">Deletes everything Drift keeps on this device — projects, devices, imported instruments and settings — and starts empty.</p>
+        <button
+          type="button"
+          class="danger"
+          onClick={() => {
+            if (confirm('Delete all projects, devices, instruments and settings on this device and start empty? This cannot be undone.'))
+              void s.resetEverything();
+          }}
+        >
+          <Icon name="trash" /> Reset everything
+        </button>
       </Card>
     </div>
   );
