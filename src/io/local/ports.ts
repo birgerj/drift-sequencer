@@ -3,7 +3,7 @@
  * the parts of the app that only need to know which ports are built in
  * (without loading any audio code).
  */
-export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums' | 'juno' | 'mono' | 'piano';
+export type LocalKind = 'lead' | 'bass' | 'pad' | 'drums' | 'juno' | 'mono' | 'piano' | 'hum';
 
 export const LOCAL_PORTS: Record<LocalKind, string> = {
   lead: 'Drift Synth Lead',
@@ -13,6 +13,7 @@ export const LOCAL_PORTS: Record<LocalKind, string> = {
   juno: 'Drift Synth Juno',
   mono: 'Drift Synth Mono',
   piano: 'Drift Synth Piano',
+  hum: 'Drift Synth Hum',
 };
 
 export function isLocalPort(name: string): boolean {
@@ -28,6 +29,7 @@ export const LOCAL_INSTRUMENT_IDS: Record<LocalKind, string> = {
   juno: 'drift-synth-juno',
   mono: 'drift-synth-mono',
   piano: 'drift-synth-piano',
+  hum: 'drift-synth-hum',
 };
 
 /** The built-in port for an instrument definition id, if it is a built-in. */
