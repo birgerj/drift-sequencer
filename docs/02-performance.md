@@ -24,7 +24,7 @@ The left bar is always there, on every screen.
   to that track. Muted tracks are dimmed. **+ Add track** adds a new
   Motif track and opens it.
 - **Clock out**: which device receives MIDI clock and start/stop, or *Off*.
-- **Overview**, **Harmony**, **AI**, **Projects**, **Devices**: the main
+- **Overview**, **Harmony**, **Projects**, **Devices**: the main
   screens.
 - **Visuals** opens the visuals window (see below). **Shortcuts** shows
   the [keyboard shortcuts](10-shortcuts.md).
@@ -62,10 +62,8 @@ A lane dims while its call-and-response phrase is resting.
 - **Now playing**: the notes each track plays at this moment.
 - **Scale**: a 12-note keyboard. Light keys are in the scale; coloured
   keys are sounding now.
-- **AI ensemble**: the piece that plays and its section, **New piece**,
-  **Develop** (the next part, now) and **Settings**, which opens the AI page. See [The AI ensemble](06-ensemble.md).
 - **Evolution**: the last changes, by bar: *pattern mutated*, *back to the
-  theme*, *next ensemble phrase* and so on.
+  theme* and so on.
 
 ## Visuals
 

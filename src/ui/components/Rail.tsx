@@ -129,7 +129,6 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
             label="Overview"
           />
           <NavButton view={{ name: "harmony" }} icon="music" label="Harmony" />
-          <NavButton view={{ name: "ai" }} icon="spark" label="AI" />
           <NavButton
             view={{ name: "templates" }}
             icon="folder"

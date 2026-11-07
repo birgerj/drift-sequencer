@@ -46,7 +46,9 @@ function migrate(p: Record<string, unknown>): ProjectState {
     current = m(current);
     version++;
   }
-  return { ...current, schemaVersion: SCHEMA_VERSION } as unknown as ProjectState;
+  // Settings of the removed AI ensemble aren't carried along.
+  const { ensemble: _removed, ...rest } = current;
+  return { ...rest, schemaVersion: SCHEMA_VERSION } as unknown as ProjectState;
 }
 
 function validate(p: ProjectState): void {

@@ -3,7 +3,6 @@ import type { InterplaySettings } from '../core/engine/interplay';
 import type { DeviceRole } from './rack';
 import type { GeneratorConfig } from '../core/generators/registry';
 import type { Pattern, Register } from '../core/pattern/pattern';
-import type { Composition } from '../core/ensemble/composition';
 import type { ProgressionStep } from '../core/theory/harmony';
 import type { ProgressionStyle } from '../core/theory/progressionGenerator';
 import type { PitchClass } from '../core/theory/note';
@@ -147,42 +146,12 @@ export interface ProjectState {
     /** 'vary' swaps one chord; 'new' writes a whole new progression. */
     mode: 'vary' | 'new';
   };
-  /** AI ensemble: lead, bass, pads and drums composed together by Claude. */
-  ensemble?: EnsembleSettings;
   clock: {
     /** Port names that receive MIDI clock + start/stop (e.g. the TR-8S). */
     sendTo: string[];
   };
   tracks: TrackState[];
   updatedAt: string;
-}
-
-export interface EnsembleSettings {
-  melody?: string;
-  bass?: string;
-  pads?: string;
-  drums?: string;
-  /** Claude model id. */
-  model: string;
-  /** The musician's wishes, passed to Claude as written. */
-  style: string;
-  /** Wanted section length in bars (whole passes of the progression). */
-  sectionLength?: number;
-  /** Let Claude write the next part of the piece while it plays. */
-  evolve: boolean;
-  /** Ask for the next part after this many passes through the form. */
-  everyLoops: number;
-  /** The linked tracks follow the composition while this is set. */
-  linked?: boolean;
-  /** What Claude wrote last; kept with the project, so a reload plays it without the API. */
-  composition?: Composition;
-  /** Preferred busyness, passed to Claude. */
-  melodyDensity?: 'sparse' | 'balanced' | 'busy';
-  drumDensity?: 'sparse' | 'balanced' | 'busy';
-  /** Bend notes on strong steps onto the chord that actually plays (see sectionPatterns). */
-  fit?: 'off' | 'bar' | 'half' | 'beat';
-  /** Parts that change when the piece moves on; the others keep what they play now. */
-  evolveParts?: { melody: boolean; bass: boolean; pads?: boolean; drums: boolean };
 }
 
 export function newId(): string {

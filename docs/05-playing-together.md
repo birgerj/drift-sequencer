@@ -1,6 +1,6 @@
 # Playing together
 
-[← Harmony](04-harmony.md) · [Manual](README.md) · Next: [The AI ensemble →](06-ensemble.md)
+[← Harmony](04-harmony.md) · [Manual](README.md) · Next: [Sound and modulation →](07-sound-and-modulation.md)
 
 Tracks can do more than play next to each other: they can sound played
 by hand, make room for each other, and take turns.
@@ -66,4 +66,4 @@ If the calling track still plays all the time, the card offers **Make
 
 The *Conversation* template shows this in action.
 
-Next: [The AI ensemble →](06-ensemble.md)
+Next: [Sound and modulation →](07-sound-and-modulation.md)

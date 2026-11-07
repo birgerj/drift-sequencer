@@ -1,6 +1,6 @@
 # Sound and modulation
 
-[← The AI ensemble](06-ensemble.md) · [Manual](README.md) · Next: [Devices →](08-devices.md)
+[← Playing together](05-playing-together.md) · [Manual](README.md) · Next: [Devices →](08-devices.md)
 
 Drift can also turn your synth's knobs: from an on-screen panel, with
 LFOs, or by looping knob movements you record.

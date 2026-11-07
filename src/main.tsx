@@ -8,6 +8,13 @@ import { initTheme } from './ui/theme/theme';
 
 initTheme();
 
+// The AI ensemble was removed; don't leave its Claude API key behind in this browser.
+try {
+  localStorage.removeItem('drift.claudeApiKey');
+} catch {
+  /* storage blocked */
+}
+
 const root = document.getElementById('app');
 if (root && location.hash === VISUALS_HASH) {
   // The visuals window: no MIDI, no store, just drawing.
