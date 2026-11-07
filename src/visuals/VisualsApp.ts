@@ -1,6 +1,7 @@
 import { CHANNEL, type VisualTrack, type VisualsMessage } from './protocol';
 import { SCENES, VERTEX } from './shaders';
 import type { Scene3D } from './scene3d';
+import { Arena } from './arena3d';
 import { Tunnel } from './tunnel3d';
 import { Warp } from './warp3d';
 
@@ -38,7 +39,7 @@ const EV_CAP = [8, 4, 4];
 /** Scenes that show notes as things in the world instead of particles. */
 const WORLD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
 /** Scenes rendered with three.js on their own canvas. */
-const THREE_FACTORIES: Record<string, () => Scene3D> = { tunnel: () => new Tunnel(), warp: () => new Warp() };
+const THREE_FACTORIES: Record<string, () => Scene3D> = { tunnel: () => new Tunnel(), warp: () => new Warp(), pulse: () => new Arena() };
 const THREE_SCENES = new Set<string>(Object.keys(THREE_FACTORIES));
 /** Scenes that place notes in the world rather than as overlay particles. */
 const inWorld = (id: string) => WORLD_SCENES.has(id) || THREE_SCENES.has(id);
@@ -521,6 +522,7 @@ export function startVisuals(root: HTMLElement): void {
     resize();
     const t3 = THREE_SCENES.has(scene) ? get3d(scene) : undefined;
     for (const s3 of scenes3d.values()) s3.canvas.hidden = s3 !== t3;
+    if (t3 !== controlsFor) buildSceneControls(t3);
     if (t3) {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       t3.resize(viewW(), viewH(), dpr * Math.min(1, scale + 0.2));
@@ -576,14 +578,16 @@ export function startVisuals(root: HTMLElement): void {
     const W = overlay.width;
     const H = overlay.height;
     ctx.globalCompositeOperation = 'source-over';
-    if (scene === 'pulse') {
+    // Without WebGL, Pulse falls back to flashes drawn on the overlay.
+    const flatPulse = scene === 'pulse' && !t3;
+    if (flatPulse) {
       ctx.fillStyle = `rgba(4, 5, 8, ${Math.min(1, dt * 6)})`;
       ctx.fillRect(0, 0, W, H);
     } else {
       ctx.clearRect(0, 0, W, H);
     }
     ctx.globalCompositeOperation = 'lighter';
-    if (scene === 'pulse') {
+    if (flatPulse) {
       const [r, g, b] = cols[2]!.map((x) => Math.round(x * 255));
       ctx.fillStyle = `rgba(${r},${g},${b},${kick * 0.18})`;
       ctx.fillRect(0, 0, W, H);
@@ -705,7 +709,39 @@ export function startVisuals(root: HTMLElement): void {
   const optionsRow = document.createElement('div');
   optionsRow.className = 'vis-row';
   optionsRow.append(notesBtn, strobeBtn, autoBtn, todBtn, fullBtn);
-  hud.append(scenesRow, spacer(), speedWrap, spacer(), optionsRow);
+  // Controls of the active 3D scene (Pulse: lights, lasers, pyro…), rebuilt when the scene changes.
+  const sceneCtlRow = document.createElement('div');
+  sceneCtlRow.className = 'vis-row vis-scene-ctl';
+  sceneCtlRow.hidden = true;
+  let controlsFor: Scene3D | undefined | null = null;
+  function buildSceneControls(s3: Scene3D | undefined) {
+    controlsFor = s3;
+    const list = s3?.controls?.() ?? [];
+    sceneCtlRow.hidden = list.length === 0;
+    sceneCtlRow.replaceChildren(
+      ...list.map((c) => {
+        if (c.kind === 'toggle') {
+          const b = button(c.label, c.title, () => {
+            s3?.setControl?.(c.id, !c.value);
+            buildSceneControls(s3);
+          });
+          b.setAttribute('aria-pressed', String(c.value));
+          return b;
+        }
+        if (c.kind === 'choice') {
+          const i = Math.max(0, c.options.findIndex((o) => o.value === c.value));
+          return button(`${c.label}: ${c.options[i]?.label ?? ''}`, `${c.title} (tap to change)`, () => {
+            s3?.setControl?.(c.id, c.options[(i + 1) % c.options.length]!.value);
+            buildSceneControls(s3);
+          });
+        }
+        const b = button(c.label, c.title, () => s3?.setControl?.(c.id, true));
+        b.classList.add('vis-action');
+        return b;
+      }),
+    );
+  }
+  hud.append(sceneCtlRow, scenesRow, spacer(), speedWrap, spacer(), optionsRow);
   root.append(closeBtn);
   function setSpeed(v: number) {
     speed = Math.max(0.05, Math.min(1.5, Math.round(v * 100) / 100));
