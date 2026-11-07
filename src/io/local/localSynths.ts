@@ -1,3 +1,4 @@
+import { OutputRoute } from './backgroundAudio';
 import type * as ToneNS from 'tone';
 import type { MidiOutputPort } from '../midi/output';
 import { channelCc, expRange, LOCAL_CC, midiHz, norm, type Channel, type Instrument } from './common';
@@ -26,6 +27,7 @@ class LocalAudio {
   private delay!: ToneNS.ToneAudioNode;
   /** Instruments that load something on first use: a worklet or samples. */
   private lazy = new Map<LocalKind, { load(): Promise<void> }>();
+  private route: OutputRoute | undefined;
 
   get ready(): boolean {
     return this.instruments.size > 0;
@@ -41,7 +43,10 @@ class LocalAudio {
       this.build(T);
     });
     return this.loading
-      .then(() => this.T!.start())
+      .then(() => {
+        this.route?.wake();
+        return this.T!.start();
+      })
       .then(() => Promise.all(kinds.map((k) => this.lazy.get(k)?.load())))
       .then(() => undefined)
       .catch(() => undefined);
@@ -67,7 +72,11 @@ class LocalAudio {
   }
 
   private build(T: typeof ToneNS): void {
-    const limiter = new T.Limiter(-1).toDestination();
+    const limiter = new T.Limiter(-1);
+    const raw = T.getContext().rawContext as unknown as AudioContext;
+    const bus = raw.createGain();
+    limiter.connect(bus);
+    this.route = new OutputRoute(raw, bus);
     this.master = new T.Gain(0.8).connect(limiter);
     const reverb = new T.Reverb({ decay: 3.5, preDelay: 0.02, wet: 1 });
     reverb.connect(this.master);

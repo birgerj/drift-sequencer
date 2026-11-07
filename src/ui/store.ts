@@ -45,6 +45,7 @@ import {
 } from '../state/storage';
 import { createProject, createTrack, emptyProject, templateSounds, TRACK_COLORS } from '../state/templates';
 import { wipeAllData } from '../state/db';
+import { initMediaSession, updateMediaSession } from './mediaSession';
 
 import type { SectionId } from './shortcuts';
 import { toEpoch, VisualsLink } from '../visuals/link';
@@ -214,6 +215,10 @@ export class AppStore {
     document.addEventListener('visibilitychange', () => {
       this.sequencer.setBackground(document.hidden);
       if (document.hidden && this.saveTimer) this.flushSave();
+    });
+    initMediaSession({
+      play: () => void (this.sequencer.playing ? undefined : this.togglePlay()),
+      pause: () => void (this.sequencer.playing ? this.togglePlay() : undefined),
     });
     window.addEventListener('pagehide', () => {
       if (this.saveTimer) this.flushSave();
@@ -551,6 +556,7 @@ export class AppStore {
       }),
       ev.on('transport', ({ playing }) => {
         void keepAwake(playing);
+        updateMediaSession(this.project.name, playing);
         this.notify();
       }),
       ev.on('skipped', ({ gapMs }) => {
