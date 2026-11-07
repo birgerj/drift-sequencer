@@ -24,15 +24,14 @@ harmony*, so a melody keeps its shape while following the chords. See
 
 ## The track editor
 
-![The track editor](images/lead-overview.png)
+![The track editor](images/track-pattern.png)
 
 The header shows the track name (click it to rename) and the chord
-progression. Six tabs, each with a key:
+progression. Five tabs, each with a key:
 
 | Tab | Key | What's on it |
 | --- | --- | --- |
-| **Overview** | `Q` | The pattern, its length and speed, the main knobs, and a summary of output, modulation, call and response, and how the track evolves. |
-| **Pattern** | `W` | Draw and edit the pattern; drum presets; variations. |
+| **Pattern** | `W` | Length, speed and octave; draw and edit the pattern; drum presets; variations. |
 | **Generator** | `E` | Track type and all its settings, Feel, Listens to, drum voices. |
 | **Panel** | `R` | The synth's knobs. See [Sound and modulation](07-sound-and-modulation.md). |
 | **Modulation** | `T` | LFOs, recorded motions, and call and response. |
@@ -47,7 +46,7 @@ Buttons on the right of the tabs:
 
 ## Length, speed and octave
 
-On the *Overview* and *Pattern* tabs:
+On the *Pattern* tab:
 
 - **Length (steps)**: 8, 16, 32 or 64 sixteenth notes (`←` `→`). A
   longer pattern repeats the current one; a shorter one cuts it.

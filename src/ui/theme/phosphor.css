@@ -75,7 +75,6 @@
 [data-theme='phosphor'] .rail { border-right: 1px solid var(--line); background: transparent; }
 [data-theme='phosphor'] .card,
 [data-theme='phosphor'] .lane,
-[data-theme='phosphor'] .fact,
 [data-theme='phosphor'] .panel-bar,
 [data-theme='phosphor'] .encoder,
 [data-theme='phosphor'] .harmony-strip { background: transparent; border: 1px solid var(--line-2); box-shadow: inset 0 0 30px rgba(57, 255, 122, 0.05); }
@@ -86,8 +85,7 @@
 [data-theme='phosphor'] h1,
 [data-theme='phosphor'] .title-input,
 [data-theme='phosphor'] .rail-project,
-[data-theme='phosphor'] .rail-name b,
-[data-theme='phosphor'] .fact b { text-transform: uppercase; font-weight: 400; }
+[data-theme='phosphor'] .rail-name b { text-transform: uppercase; font-weight: 400; }
 [data-theme='phosphor'] h1,
 [data-theme='phosphor'] .title-input { font-size: 34px; }
 [data-theme='phosphor'] .hint { font-size: 17px; }

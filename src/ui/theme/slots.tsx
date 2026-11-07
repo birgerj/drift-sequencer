@@ -13,8 +13,8 @@ import { currentTheme } from './theme';
 export interface SlotProps {
   /** Meters under the transport in the rail. */
   railMeters: Record<string, never>;
-  /** Pattern display on a melodic track's Overview tab. */
-  overviewPattern: { track: TrackState; pattern: Pattern };
+  /** Pattern display on the Pattern tab, for tracks whose pattern can't be drawn (arps, chords, drones…). */
+  patternDisplay: { track: TrackState; pattern: Pattern };
   /** Hero at the top of the Harmony page. */
   harmonyHero: Record<string, never>;
   /** Decoration in each device card on the Devices page. */
@@ -25,10 +25,10 @@ export type SlotName = keyof SlotProps;
 type SlotMap = { [K in SlotName]?: ComponentType<SlotProps[K]> };
 
 const SLOTS: Record<string, SlotMap> = {
-  hifi: { railMeters: VuMeters, overviewPattern: LedLadder, harmonyHero: HarmonyTuner, deviceDecor: DeviceJacks },
-  modular: { overviewPattern: SliderSequencer, deviceDecor: DeviceJacks },
-  tide: { overviewPattern: TideWave },
-  phosphor: { overviewPattern: ScopeTrace },
+  hifi: { railMeters: VuMeters, patternDisplay: LedLadder, harmonyHero: HarmonyTuner, deviceDecor: DeviceJacks },
+  modular: { patternDisplay: SliderSequencer, deviceDecor: DeviceJacks },
+  tide: { patternDisplay: TideWave },
+  phosphor: { patternDisplay: ScopeTrace },
 };
 
 /** The active theme's component for a slot, if it has one. */

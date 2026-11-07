@@ -144,7 +144,7 @@ export class AppStore {
   /** Keyboard shortcut overlay. */
   shortcutsOpen = false;
   /** Open tab of the track detail pane; kept when switching tracks. */
-  trackTab: SectionId = 'overview';
+  trackTab: SectionId = 'pattern';
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
 
   private listeners = new Set<() => void>();
