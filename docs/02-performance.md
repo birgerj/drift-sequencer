@@ -80,6 +80,11 @@ projector.
 - In **Flyover**, **City** and **Coast**: time of day (`T`): *Dusk*
   (golden hour, or blue hour in the city), *Night*, or *Dusk ↔ Night*,
   which slowly turns from one to the other and back.
+- **Tunnel** is a realistic motorway tunnel: two lanes each way, traffic
+  in both directions and ceiling lights in the colours of the chord. A
+  light pulse runs ahead of you on every beat, kick and snare make the
+  lights flare, and lead and pad notes light up a stretch of ceiling
+  ahead in the track's colour (higher notes further away).
 
 In most scenes **Notes** shows notes as particles. In **Flyover**,
 **City** and **Coast** they happen in the world instead, in the track's

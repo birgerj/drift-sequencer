@@ -323,26 +323,6 @@ void main() {
 }
 `;
 
-/** Classic demo tunnel; rings race towards you on every beat. */
-export const TUNNEL = HEADER + `
-void main() {
-  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
-  float a = atan(uv.y, uv.x);
-  float r = length(uv);
-  float z = uTravel * 0.6 + 0.35 / max(r, 0.02);
-  float twist = a + (0.1 + uModLead * 0.6) * sin(uTime * 0.3) + 0.6 / max(r, 0.05) * 0.1 * sin(uBar * 0.2);
-  vec2 tuv = vec2(twist * 3.0 / 3.14159, z);
-  float tex = fbm(tuv * vec2(2.0, 1.0));
-  float bands = smoothstep(0.45, 0.5, abs(fract(z * 0.5 - uBeat * 0.5) - 0.5));
-  vec3 col = mix(uCol0 * 0.4, uCol1, tex * tex) * (0.2 + 0.8 * tex);
-  col += uCol2 * bands * (0.3 + uKick * 2.0);
-  col += uCol1 * smoothstep(0.02, 0.0, abs(fract(twist * 4.0 / 3.14159) - 0.5) - 0.47) * uHat;
-  col *= smoothstep(0.0, 0.25, r) * (1.0 + uSnare * 0.6 + uBass * 0.5);
-  col += uCol2 * uKick * 0.25 * exp(-r * 4.0);
-  outColor = vec4(pow(tonemap(col * 1.6), vec3(1.15)), 1.0);
-}
-`;
-
 /** Kaleidoscope of plasma; slices and colours follow the chords. */
 export const KALEIDO = HEADER + `
 void main() {
@@ -954,7 +934,8 @@ export const SCENES = [
   { id: 'coast', name: 'Coast', source: COAST },
   { id: 'synthwave', name: 'Synthwave', source: SYNTHWAVE },
   { id: 'warp', name: 'Warp', source: WARP },
-  { id: 'tunnel', name: 'Tunnel', source: TUNNEL },
+  // Drawn with three.js (tunnel3d.ts), not a fragment shader.
+  { id: 'tunnel', name: 'Tunnel', source: null },
   { id: 'kaleido', name: 'Kaleido', source: KALEIDO },
   { id: 'pulse', name: 'Pulse', source: null },
 ] as const;

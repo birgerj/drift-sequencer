@@ -1,5 +1,6 @@
 import { CHANNEL, type VisualTrack, type VisualsMessage } from './protocol';
 import { SCENES, VERTEX } from './shaders';
+import { Tunnel } from './tunnel3d';
 
 type SceneId = (typeof SCENES)[number]['id'];
 
@@ -34,6 +35,10 @@ const MAX_EV = 24;
 const EV_CAP = [8, 4, 4];
 /** Scenes that show notes as things in the world instead of particles. */
 const WORLD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
+/** Scenes rendered with three.js on their own canvas. */
+const THREE_SCENES = new Set<string>(['tunnel']);
+/** Scenes that place notes in the world rather than as overlay particles. */
+const inWorld = (id: string) => WORLD_SCENES.has(id) || THREE_SCENES.has(id);
 
 type TimeOfDay = 'dusk' | 'night' | 'cycle';
 const TOD_ORDER: TimeOfDay[] = ['dusk', 'night', 'cycle'];
@@ -208,12 +213,12 @@ export function startVisuals(root: HTMLElement): void {
       for (const n of msg.notes) {
         if (DRUM.kick.includes(n)) {
           kick = Math.max(kick, 0.6 + v * 0.4);
-          if (showNotes && !WORLD_SCENES.has(scene)) particles.push({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: H * 0.05, life: 1, decay: 1.8, color: track.color, kind: 'ring' });
+          if (showNotes && !inWorld(scene)) particles.push({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: H * 0.05, life: 1, decay: 1.8, color: track.color, kind: 'ring' });
         } else if (DRUM.snare.includes(n)) {
           snare = Math.max(snare, 0.5 + v * 0.5);
         } else if (DRUM.hat.includes(n)) {
           hat = Math.max(hat, 0.4 + v * 0.6);
-          if (showNotes && !WORLD_SCENES.has(scene)) {
+          if (showNotes && !inWorld(scene)) {
             for (let i = 0; i < 3; i++) {
               particles.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, r: 1.5 + Math.random() * 2.5, life: 1, decay: 5, color: '#ffffff', kind: 'spark' });
             }
@@ -231,6 +236,13 @@ export function startVisuals(root: HTMLElement): void {
       if (role === 'pad') padHoldUntil = Math.max(padHoldUntil, now + msg.dur);
     }
     if (!showNotes) return;
+    if (scene === 'tunnel') {
+      if (role !== 'bass') {
+        const pn = Math.max(0, Math.min(1, (Math.max(...msg.notes) - 24) / 72));
+        tunnel?.note(rgbOf(track.color), pn, v, msg.dur / 1000);
+      }
+      return;
+    }
     if (WORLD_SCENES.has(scene)) {
       spawnWorld(track, role, msg.notes, v, msg.dur, now);
       return;
@@ -422,6 +434,20 @@ export function startVisuals(root: HTMLElement): void {
   window.visualViewport?.addEventListener('scroll', fitViewport);
   resize();
 
+  let tunnel: Tunnel | undefined;
+  let tunnelFailed = false;
+  function getTunnel(): Tunnel | undefined {
+    if (tunnel || tunnelFailed) return tunnel;
+    try {
+      tunnel = new Tunnel();
+      root.insertBefore(tunnel.canvas, overlay);
+    } catch (err) {
+      console.error(err);
+      tunnelFailed = true;
+    }
+    return tunnel;
+  }
+
   const ctx = overlay.getContext('2d')!;
   const start = performance.now();
   let last = start;
@@ -466,7 +492,7 @@ export function startVisuals(root: HTMLElement): void {
 
     if (auto && playing && bar - lastAutoBar >= 32) {
       lastAutoBar = bar;
-      const list = SCENES.filter((x) => x.source).map((x) => x.id);
+      const list = SCENES.filter((x) => x.source || THREE_SCENES.has(x.id)).map((x) => x.id);
       setScene(list[(list.indexOf(scene as (typeof list)[number]) + 1) % list.length]!);
     }
 
@@ -481,7 +507,16 @@ export function startVisuals(root: HTMLElement): void {
     todValue += (todTarget - todValue) * (1 - Math.exp(-dt * 0.8));
 
     resize();
-    const p = program(scene);
+    const t3 = THREE_SCENES.has(scene) ? getTunnel() : undefined;
+    if (tunnel) tunnel.canvas.hidden = !t3;
+    if (t3) {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      t3.resize(viewW(), viewH(), dpr * Math.min(1, scale + 0.2));
+      const stepFrac = Math.min(1, (now - lastStep.at) / stepMs);
+      const beats = playing ? (bar * stepsPerBar + (lastStep.step % stepsPerBar) + stepFrac) / 4 : sceneTime * 0.5;
+      t3.render({ dt, beats, playing, kick, snare, hat, energy, bass: env.bass, pad: env.pad, cols, travelSpeed: travelSpeed });
+    }
+    const p = t3 ? undefined : program(scene);
     if (gl && p) {
       gl.viewport(0, 0, gl3.width, gl3.height);
       gl.useProgram(p);
