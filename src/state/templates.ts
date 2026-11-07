@@ -200,6 +200,11 @@ const pad = (name = 'Pad', o: PartOptions = {}) =>
 const arp = (name: string, notes: string, o: PartOptions = {}) =>
   part(name, 'arp', 'tone', notes, { prefer: PREFER.seq, sounds: { 'drift-synth-juno': 'Poly Pluck' }, output: { portName: 'Lead synth', channel: 4 }, ...o, params: { mutation: 0.1, ...o.params } });
 
+/** For background music: changes every 16 bars, small steps, back to the theme often. */
+function calm(t: TrackSpec, mutation = 0.06): TrackSpec {
+  return { ...t, mutationIntervalBars: 16, memory: { every: 2, mode: 'theme' }, params: { ...t.params, mutation } };
+}
+
 const FILL_MT = '................ ............f.f.';
 const FILL_LT = '................ .............f.f';
 const CRASH = 'C............... ................';
@@ -608,6 +613,80 @@ export const TEMPLATES: TemplateSpec[] = [
         prefer: PREFER.pad,
         sounds: { 'drift-synth-juno': 'Glass Pad' },
       },
+    ],
+  },
+  {
+    id: 'deep-focus',
+    name: 'Deep focus',
+    genre: 'House',
+    description: 'Calm deep house for working: soft groove, warm chords, felt keys; changes slowly.',
+    bpm: 114,
+    swing: 0.08,
+    key: 'D',
+    mode: 'dorian',
+    // Dm9 · Am7 · Fmaj7 · C — four bars each, so the harmony breathes.
+    progression: [
+      { degree: 0, bars: 4, size: 5 },
+      { degree: 4, bars: 4, size: 4 },
+      { degree: 2, bars: 4, size: 4 },
+      { degree: 6, bars: 4, size: 3 },
+    ],
+    tracks: [
+      calm(
+        drums(
+          {
+            BD: 'x...x...x...x... x...x...x...x...',
+            CH: 'g.o.g.o.g.o.g.o. g.o.g.o.g.o.g.og',
+            OH: '..g...g...g...g. ..g...g...g...g.',
+            RS: '......o......... ..........o...?.',
+            LT: '.......g........ ...............g',
+          },
+          32,
+          { evolve: ['CH', 'RS', 'LT'], humanize: { timing: 0.15, velocity: 0.25, layBack: 0.15 } },
+        ),
+        0.1,
+      ),
+      calm(
+        bass('0 - - . . . 0 . . . 4 - . . . . | 0 - - . . . 0 . . . 2 - . 1 . .', {
+          velocity: 84,
+          gate: 0.85,
+          prefer: ['drift-synth-mono', 'roland-tb-03', 'drift-synth-bass'],
+          sounds: { 'drift-synth-mono': 'Round Moog' },
+          modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'sine', periodBars: 32, min: 30, max: 60 }],
+        }),
+      ),
+      chords('Chords', '. . . c - . . . . . c - . . . . | . . . c - . . . . . . . . . . .', {
+        velocity: 64,
+        gate: 0.6,
+        params: { gate: 0.6 },
+        sounds: { 'drift-synth-juno': 'Hollow Chords' },
+        humanize: { timing: 0.15, velocity: 0.2, layBack: 0.2 },
+        modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'sine', periodBars: 64, min: 25, max: 75 }],
+      }),
+      calm(
+        lead(
+          'Keys',
+          '. . . . . . . . 4 - - - 2 - - - | . . . . . . . . . . . . . . . . | . . . . . . . . 4 - - - 5 - 4 - | 2 - - - - - - - . . . . . . . .',
+          {
+            velocity: 70,
+            gate: 0.95,
+            prefer: ['drift-synth-piano', 'korg-wavestate', 'asm-hydrasynth', 'drift-synth-juno'],
+            sounds: { 'drift-synth-piano': 'Felt Piano', 'drift-synth-juno': 'Warm Lead' },
+            humanize: { timing: 0.25, velocity: 0.3, layBack: 0.3 },
+          },
+        ),
+      ),
+      calm(
+        arp('Arp', "_0 . . 2 . . 1' . _0 . . 2 . . 0' . | _0 . . 2 . . 1' . . . 2' . 1' . . .", {
+          velocity: 56,
+          gate: 0.5,
+          // Without hardware it shares the felt piano with the keys (both soft, polyphonic).
+          prefer: ['korg-wavestate', 'asm-hydrasynth', 'drift-synth-piano'],
+          sounds: { 'drift-synth-piano': 'Felt Piano' },
+          modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'triangle', periodBars: 32, min: 25, max: 70 }],
+        }),
+      ),
+      pad('Pad', { velocity: 42, sounds: { 'drift-synth-juno': 'Juno Strings' }, modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'sine', periodBars: 64, min: 30, max: 70 }] }),
     ],
   },
   {
