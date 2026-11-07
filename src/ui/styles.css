@@ -1031,6 +1031,10 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 .gen-type-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
 .gen-type-row > .eyebrow { margin: 0; }
 .gen-type-desc { flex: 1 1 200px; }
+.gen-written { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 14px; border-radius: var(--radius); border: 1px solid color-mix(in srgb, var(--accent) 50%, var(--line)); background: color-mix(in srgb, var(--accent) 8%, var(--surface)); color: var(--accent); }
+.gen-written p { flex: 1 1 260px; margin: 0; font-size: 13px; color: var(--text-2); }
+.gen-written b { color: var(--text); font-weight: 600; }
+.gen-written button { flex: 0 0 auto; }
 .gen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; align-items: stretch; }
 .gen-module .card-head .hint, .gen-preview .card-head .hint { margin: 0; font-size: 12px; }
 .gen-module.gen-empty { background: transparent; border-style: dashed; }
