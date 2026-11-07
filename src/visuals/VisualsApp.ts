@@ -610,7 +610,7 @@ export function startVisuals(root: HTMLElement): void {
     lastAutoBar = bar;
     sync();
   });
-  const todBtn = button('', 'Time of day in Coast (T)', () => {
+  const todBtn = button('', 'Time of day in Flyover, City and Coast (T)', () => {
     tod = TOD_ORDER[(TOD_ORDER.indexOf(tod) + 1) % TOD_ORDER.length]!;
     sync();
   });
@@ -663,7 +663,7 @@ export function startVisuals(root: HTMLElement): void {
     autoBtn.setAttribute('aria-pressed', String(auto));
     speedText.textContent = `Speed ${Math.round(speed * 100)}%`;
     todBtn.textContent = TOD_LABEL[tod];
-    todBtn.hidden = scene !== 'coast';
+    todBtn.hidden = !WORLD_SCENES.has(scene);
     save({ scene, notes: showNotes, strobe, auto, speed, tod });
   }
   sync();
@@ -721,7 +721,7 @@ interface Settings {
   auto: boolean;
   /** 0.05 (very slow) .. 1.5; scales travel and scene animation. */
   speed: number;
-  /** Coast's time of day. */
+  /** Time of day in Flyover, City and Coast. */
   tod: TimeOfDay;
 }
 

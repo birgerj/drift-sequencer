@@ -77,7 +77,8 @@ projector.
 - **Speed** (`[` `]`), **Notes** (`N`), **Strobe** (`S`) and **Auto**
   (`A`, a new scene every 32 bars).
 - **Fullscreen** (`F`).
-- In **Coast**: time of day (`T`): *Dusk*, *Night*, or *Dusk ↔ Night*,
+- In **Flyover**, **City** and **Coast**: time of day (`T`): *Dusk*
+  (golden hour, or blue hour in the city), *Night*, or *Dusk ↔ Night*,
   which slowly turns from one to the other and back.
 
 In most scenes **Notes** shows notes as particles. In **Flyover**,
