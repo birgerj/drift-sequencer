@@ -1,9 +1,69 @@
 import type { TrackType } from '../core/generators/types';
 
+/** Where a control sits on the Generator tab. Every type uses the same order. */
+export type ControlGroup = 'notes' | 'rhythm' | 'dynamics' | 'evolution';
+
+interface ControlBase {
+  key: string;
+  label: string;
+  /** Defaults to the group listed in GROUP_OF, else 'notes'. */
+  group?: ControlGroup;
+  /** Only shown when this returns true for the current params. */
+  when?: (params: Record<string, unknown>) => boolean;
+}
+
 export type Control =
-  | { kind: 'range'; key: string; label: string; min: number; max: number; step: number; format: (v: number) => string }
-  | { kind: 'toggle'; key: string; label: string; description: string }
-  | { kind: 'choice'; key: string; label: string; options: { value: string | number; label: string }[] };
+  | (ControlBase & { kind: 'range'; min: number; max: number; step: number; format: (v: number) => string })
+  | (ControlBase & { kind: 'toggle'; description: string })
+  | (ControlBase & { kind: 'choice'; options: { value: string | number; label: string }[] });
+
+/** Group per parameter key (the same key means the same thing in every type). */
+const GROUP_OF: Record<string, ControlGroup> = {
+  style: 'notes',
+  rangeDegrees: 'notes',
+  maxLeap: 'notes',
+  chordToneBias: 'notes',
+  octaveJumpChance: 'notes',
+  fifthChance: 'notes',
+  octaveUpChance: 'notes',
+  octaveDownChance: 'notes',
+  noteVariety: 'notes',
+  direction: 'notes',
+  octaves: 'notes',
+  follow: 'notes',
+  density: 'rhythm',
+  offbeat: 'rhythm',
+  slideChance: 'rhythm',
+  gate: 'rhythm',
+  restChance: 'rhythm',
+  rate: 'rhythm',
+  pulses: 'rhythm',
+  velocity: 'dynamics',
+  velocityVariation: 'dynamics',
+  accentChance: 'dynamics',
+  mutation: 'evolution',
+  rhythmLock: 'evolution',
+  ratchetChance: 'evolution',
+  conditionChance: 'evolution',
+};
+
+export function controlGroup(c: Control): ControlGroup {
+  return c.group ?? GROUP_OF[c.key] ?? 'notes';
+}
+
+/** How a control is drawn: the widget follows the kind of value. */
+export type Widget = 'knob' | 'steps' | 'ladder' | 'pulses' | 'gate' | 'toggle' | 'choice';
+
+export function controlWidget(c: Control): Widget {
+  if (c.kind === 'toggle') return 'toggle';
+  if (c.kind === 'choice') return 'choice';
+  if (c.key === 'rangeDegrees') return 'ladder';
+  if (c.key === 'pulses') return 'pulses';
+  if (c.key === 'gate') return 'gate';
+  // A handful of whole numbers: one button each.
+  if (c.step >= 1 && c.max - c.min + 1 <= 8) return 'steps';
+  return 'knob';
+}
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 const int = (v: number) => String(Math.round(v));
@@ -87,13 +147,14 @@ export const PARAM_SCHEMA: Record<TrackType, Control[]> = {
     {
       kind: 'choice',
       key: 'style',
+      group: 'rhythm',
       label: 'Style',
       options: [
         { value: 'sustain', label: 'Sustain' },
         { value: 'pulse', label: 'Pulse' },
       ],
     },
-    { kind: 'range', key: 'pulses', label: 'Pulses per bar', min: 1, max: 8, step: 1, format: int },
+    { kind: 'range', key: 'pulses', label: 'Pulses per bar', min: 1, max: 8, step: 1, format: int, when: (p) => p.style === 'pulse' },
     { kind: 'range', key: 'gate', label: 'Gate', min: 0.1, max: 1, step: 0.01, format: pct },
     mutation,
     velocity,
