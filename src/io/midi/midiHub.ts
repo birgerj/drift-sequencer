@@ -9,6 +9,11 @@ import { WebMidiService } from './webMidiService';
 export class MidiHub implements MidiPortResolver {
   readonly web = new WebMidiService();
 
+  /** False in browsers without Web MIDI (Safari, iOS): only the built-in synths play. */
+  get supported(): boolean {
+    return WebMidiService.isSupported();
+  }
+
   /** True once Web MIDI is connected; the local ports are always there. */
   get connected(): boolean {
     return this.web.connected;

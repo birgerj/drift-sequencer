@@ -9,7 +9,6 @@ import { HarmonyEditor } from './views/HarmonyEditor';
 import { Instruments } from './views/Instruments';
 import { Library } from './views/Library';
 import { Performance } from './views/Performance';
-import { Setup } from './views/Setup';
 import { TrackEditor } from './views/TrackEditor';
 
 function usePwa() {
@@ -34,7 +33,6 @@ export function App() {
         {v.name === 'templates' && <Library />}
         {v.name === 'instruments' && <Instruments />}
         {v.name === 'harmony' && <HarmonyEditor />}
-        {v.name === 'setup' && <Setup />}
       </main>
       {s.shortcutsOpen && <ShortcutHelp />}
       {pwaState.updateReady && (

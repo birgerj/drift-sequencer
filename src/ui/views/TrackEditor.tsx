@@ -373,7 +373,7 @@ function OutputCard({ track }: { track: TrackState }) {
         </p>
       )}
       {!device && !builtIn && hasDevices && <p class="warn small">No device chosen — this track uses its own port setting.</p>}
-      <button type="button" class="link" onClick={() => s.go({ name: hasDevices ? 'instruments' : 'setup' })}>
+      <button type="button" class="link" onClick={() => s.go({ name: 'instruments' })}>
         {hasDevices ? 'Edit my devices…' : 'Set up external synths…'}
       </button>
     </Card>

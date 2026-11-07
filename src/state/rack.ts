@@ -234,6 +234,33 @@ export function guessPorts(ports: string[]): Partial<Record<DeviceRole, string>>
   return guess;
 }
 
+/**
+ * Devices for connected hardware ports that aren't in the rack yet, with
+ * their roles guessed from the port names (drum machine, bass synth, pad
+ * synth, the rest as lead) and their instrument definition suggested. The
+ * drum machine gets channel 10, and clock when no device sends it yet.
+ */
+export function devicesFromPorts(ports: string[], rack: Rack, instruments: InstrumentDefinition[]): RackDevice[] {
+  const used = new Set(rack.devices.map((d) => d.portName));
+  const fresh = ports.filter((p) => !used.has(p) && !isLocalPort(p));
+  const guess = guessPorts(fresh);
+  const hasRole = (role: DeviceRole) => rack.devices.some((d) => d.roles.includes(role));
+  const hasClock = rack.devices.some((d) => d.clock);
+  return fresh.map((portName) => {
+    const roles = (Object.keys(guess) as DeviceRole[]).filter((r) => guess[r] === portName && !hasRole(r));
+    const suggestion = suggestInstrument(portName, instruments);
+    const drums = roles.includes('drums');
+    return newDevice({
+      portName,
+      name: suggestion?.device ?? portName,
+      channel: drums ? 10 : 1,
+      roles,
+      clock: drums && !hasClock,
+      ...(suggestion ? { instrumentId: suggestion.id } : {}),
+    });
+  });
+}
+
 /** Find a definition whose device name appears in the port name. */
 export function suggestInstrument(portName: string, instruments: InstrumentDefinition[]): InstrumentDefinition | undefined {
   const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, '');

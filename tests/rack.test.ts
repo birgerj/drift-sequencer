@@ -4,6 +4,7 @@ import { RecordingOutput, StaticPortResolver } from '../src/io/midi/output';
 import { BUILT_IN_INSTRUMENTS } from '../src/state/instrumentLibrary';
 import {
   assignDevices,
+  devicesFromPorts,
   guessPorts,
   loadBuiltInAliases,
   loadRack,
@@ -148,5 +149,25 @@ describe('output labels', () => {
     expect(outputLabel('Hydrasynth', 2, 'Hydra')).toBe('Hydra · ch 2');
     expect(outputLabel('TR-8S', 10)).toBe('TR-8S · ch 10');
     expect(builtInShortName('Drift Synth Juno')).toBe('Juno');
+  });
+});
+
+describe('adding connected devices', () => {
+  it('makes a device per new hardware port, with guessed roles, drum channel and clock', () => {
+    const made = devicesFromPorts(['Hydrasynth', 'TB-03', 'TR-8S', 'wavestate', 'Drift Synth Juno'], { devices: [] }, BUILT_IN_INSTRUMENTS);
+    const by = (port: string) => made.find((d) => d.portName === port)!;
+    expect(made.map((d) => d.portName)).toEqual(['Hydrasynth', 'TB-03', 'TR-8S', 'wavestate']);
+    expect(by('TR-8S')).toMatchObject({ roles: ['drums'], channel: 10, clock: true, instrumentId: 'roland-tr-8s' });
+    expect(by('TB-03').roles).toEqual(['bass']);
+    expect(by('wavestate').roles).toEqual(['pad']);
+    expect(by('Hydrasynth')).toMatchObject({ roles: ['lead'], clock: false, instrumentId: 'asm-hydrasynth' });
+  });
+
+  it('skips ports already set up and roles already taken', () => {
+    const existing: Rack = { devices: [newDevice({ name: 'TR-8S', portName: 'TR-8S', channel: 10, roles: ['drums'], clock: true })] };
+    const made = devicesFromPorts(['TR-8S', 'TR-6S', 'minilogue xd'], existing, BUILT_IN_INSTRUMENTS);
+    expect(made.map((d) => d.portName)).toEqual(['TR-6S', 'minilogue xd']);
+    expect(made.find((d) => d.portName === 'TR-6S')).toMatchObject({ roles: [], clock: false });
+    expect(made.find((d) => d.portName === 'minilogue xd')!.roles).toContain('lead');
   });
 });
