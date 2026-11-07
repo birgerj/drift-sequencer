@@ -534,7 +534,7 @@ function Modulations({ track, instrument }: { track: TrackState; instrument: Ins
           <Segmented
             label="Cycle (bars)"
             value={m.periodBars}
-            options={[1, 2, 4, 8, 16].map((b) => ({ value: b, label: String(b) }))}
+            options={[1, 2, 4, 8, 16, 32, 64].map((b) => ({ value: b, label: String(b) }))}
             onChange={(periodBars) => update(m.id, { periodBars })}
           />
           <div class="voice-sliders">
