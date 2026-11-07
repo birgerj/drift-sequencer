@@ -783,6 +783,23 @@ export const TEMPLATES: TemplateSpec[] = [
   },
 ];
 
+/** A project with no tracks: C minor, 120 bpm, one chord. */
+export function emptyProject(): ProjectState {
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    id: newId(),
+    name: 'Empty',
+    bpm: 120,
+    swing: 0,
+    stepsPerBar: 16,
+    key: { root: parsePitchClass('C'), mode: 'aeolian' },
+    progression: [{ degree: 0, bars: 4 }],
+    clock: { sendTo: [] },
+    tracks: [],
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export function createProject(templateId: string): ProjectState {
   const t = TEMPLATES.find((x) => x.id === templateId) ?? TEMPLATES[0]!;
   return {

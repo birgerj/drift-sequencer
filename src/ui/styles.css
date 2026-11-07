@@ -298,9 +298,12 @@ button.readout { padding: 0 0 0 14px; }
 .chord-big { font-size: 22px; }
 .progression { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
 
-.template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
-.template-card { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; padding: 16px; text-align: left; background: var(--surface); border-color: var(--line); border-radius: var(--radius); }
-.template-card b { font-size: 18px; }
+.template-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.template-card { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 2px; min-height: 0; padding: 8px 12px; text-align: left; background: var(--surface); border-color: var(--line); border-radius: var(--radius); }
+.template-card b { font-size: 15px; }
+.template-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.template-card .small { line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.template-head .small { display: inline; }
 
 .project-list, .device-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
 .project-list li, .device-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--line); }
@@ -884,7 +887,10 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .page-head { gap: 6px; }
   .title-input { font-size: 17px; }
   .section-title { font-size: 15px; }
-  .type-card, .template-card { padding: 8px; min-height: 0; }
+  .type-card { padding: 8px; min-height: 0; }
+  .template-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+  .template-card { padding: 6px 10px; }
+  .template-card b { font-size: 14px; }
   .project-list li, .device-list li { padding: 2px 0; }
   .big-action { min-height: 40px; padding: 0 16px; font-size: 14px; }
 }

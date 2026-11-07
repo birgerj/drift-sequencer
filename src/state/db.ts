@@ -19,3 +19,20 @@ export function openDriftDb(): Promise<IDBDatabase> {
   });
   return db;
 }
+
+/** Empty every store and forget all of Drift's local settings (`drift.*` in localStorage). */
+export async function wipeAllData(): Promise<void> {
+  const d = await openDriftDb();
+  const stores = [...d.objectStoreNames];
+  await new Promise<void>((resolve, reject) => {
+    const tx = d.transaction(stores, 'readwrite');
+    for (const name of stores) tx.objectStore(name).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  try {
+    for (const key of Object.keys(localStorage)) if (key.startsWith('drift.')) localStorage.removeItem(key);
+  } catch {
+    // Storage blocked: nothing stored there either.
+  }
+}
