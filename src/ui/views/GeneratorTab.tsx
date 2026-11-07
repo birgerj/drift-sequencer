@@ -60,6 +60,19 @@ export function GeneratorTab({ track, instrument }: { track: TrackState; instrum
         <span class="hint gen-type-desc">{current?.description}</span>
       </div>
 
+      {track.userPattern && (
+        <div class="gen-written" role="status">
+          <Icon name="snow" size={18} />
+          <p>
+            <b>This track plays a written pattern</b> — from the template or your own edits. Most settings here only shape
+            generated patterns, so you won’t hear them until you switch.
+          </p>
+          <button type="button" onClick={() => s.regenerate(track.id)}>
+            <Icon name="dice" /> Use generated pattern
+          </button>
+        </div>
+      )}
+
       {drums ? <DrumVoices track={track} instrument={instrument} /> : <Preview track={track} />}
 
       <div class="gen-grid">
