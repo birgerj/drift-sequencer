@@ -33,7 +33,13 @@ interface WorldEvent {
 const MAX_EV = 24;
 const EV_CAP = [8, 4, 4];
 /** Scenes that show notes as things in the world instead of particles. */
-const WORLD_SCENES = new Set<string>(['flyover', 'city']);
+const WORLD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
+
+type TimeOfDay = 'dusk' | 'night' | 'cycle';
+const TOD_ORDER: TimeOfDay[] = ['dusk', 'night', 'cycle'];
+const TOD_LABEL: Record<TimeOfDay, string> = { dusk: 'Dusk', night: 'Night', cycle: 'Dusk ↔ Night' };
+/** Coast's shoreline, matching coastX in the shader. */
+const coastX = (z: number) => 2.5 * Math.sin(z * 0.045) + 1.2 * Math.sin(z * 0.13 + 1.0);
 
 const colorCache = new Map<string, [number, number, number]>();
 let colorCtx: CanvasRenderingContext2D | null | undefined;
@@ -122,6 +128,7 @@ export function startVisuals(root: HTMLElement): void {
   const evB = new Float32Array(MAX_EV * 4);
   const evC = new Float32Array(MAX_EV * 3);
   const rings = new Float32Array(16);
+  let leadCol: [number, number, number] = [1, 0.9, 0.7];
 
   const settings = load();
   let scene: SceneId = settings.scene;
@@ -129,6 +136,9 @@ export function startVisuals(root: HTMLElement): void {
   let strobe = settings.strobe;
   let auto = settings.auto;
   let speed = settings.speed;
+  let tod: TimeOfDay = TOD_ORDER.includes(settings.tod) ? settings.tod : 'dusk';
+  /** 0 dusk .. 1 night, eased so switching fades over a few seconds. */
+  let todValue = tod === 'night' ? 1 : 0;
   let lastAutoBar = 0;
 
   const receive = (msg: VisualsMessage) => {
@@ -254,7 +264,24 @@ export function startVisuals(root: HTMLElement): void {
     const r = Math.random;
     let x: number, z: number, life: number;
     let side = r() < 0.5 ? -1 : 1;
-    if (scene === 'city') {
+    if (kind === 0) leadCol = rgbOf(track.color);
+    if (scene === 'coast') {
+      const cz = travel * 1.5;
+      if (kind === 0) {
+        z = cz + 14 + r() * 26;
+        x = coastX(z) - 7 - r() * 16;
+        life = 2.6;
+      } else if (kind === 1) {
+        z = cz + 9 + r() * 12;
+        x = 0;
+        life = 2.8;
+      } else {
+        z = cz + 18 + r() * 22;
+        x = coastX(z) - 4 - r() * 14;
+        life = Math.min(9, dur + 2.5);
+      }
+      side = 0;
+    } else if (scene === 'city') {
       const cz = travel * 2;
       if (kind === 0) {
         z = (Math.floor((cz + 10 + r() * 16) / 4) + 0.5) * 4;
@@ -449,6 +476,9 @@ export function startVisuals(root: HTMLElement): void {
     travelSpeed += (targetSpeed - travelSpeed) * (1 - Math.exp(-dt * 0.8));
     travel += dt * travelSpeed;
     sceneTime += dt * (0.35 + 0.65 * speed);
+    // Cycle: dusk to night and back in about three minutes.
+    const todTarget = tod === 'night' ? 1 : tod === 'dusk' ? 0 : 0.5 - 0.5 * Math.cos((now / 1000) * ((2 * Math.PI) / 180));
+    todValue += (todTarget - todValue) * (1 - Math.exp(-dt * 0.8));
 
     resize();
     const p = program(scene);
@@ -480,6 +510,8 @@ export function startVisuals(root: HTMLElement): void {
       gl.uniform3fv(u('uCol2'), cols[2]!);
       gl.uniform1f(u('uBarPhase'), barPhase);
       if (WORLD_SCENES.has(scene)) uploadWorld(p, now);
+      gl.uniform1f(u('uTod'), todValue);
+      gl.uniform3fv(u('uLeadCol'), leadCol);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl3.hidden = false;
     } else {
@@ -578,6 +610,10 @@ export function startVisuals(root: HTMLElement): void {
     lastAutoBar = bar;
     sync();
   });
+  const todBtn = button('', 'Time of day in Coast (T)', () => {
+    tod = TOD_ORDER[(TOD_ORDER.indexOf(tod) + 1) % TOD_ORDER.length]!;
+    sync();
+  });
   const fullBtn = button('Fullscreen', 'Fullscreen (F)', () => toggleFullscreen());
   // On phones (and in the installed app) there is no window chrome to close the visuals with.
   const closeBtn = button('Close', 'Close visuals (Esc)', () => closeVisuals());
@@ -600,7 +636,7 @@ export function startVisuals(root: HTMLElement): void {
   scenesRow.append(...sceneButtons);
   const optionsRow = document.createElement('div');
   optionsRow.className = 'vis-row';
-  optionsRow.append(notesBtn, strobeBtn, autoBtn, fullBtn);
+  optionsRow.append(notesBtn, strobeBtn, autoBtn, todBtn, fullBtn);
   hud.append(scenesRow, spacer(), speedWrap, spacer(), optionsRow);
   root.append(closeBtn);
   function setSpeed(v: number) {
@@ -626,7 +662,9 @@ export function startVisuals(root: HTMLElement): void {
     strobeBtn.setAttribute('aria-pressed', String(strobe));
     autoBtn.setAttribute('aria-pressed', String(auto));
     speedText.textContent = `Speed ${Math.round(speed * 100)}%`;
-    save({ scene, notes: showNotes, strobe, auto, speed });
+    todBtn.textContent = TOD_LABEL[tod];
+    todBtn.hidden = scene !== 'coast';
+    save({ scene, notes: showNotes, strobe, auto, speed, tod });
   }
   sync();
 
@@ -667,6 +705,7 @@ export function startVisuals(root: HTMLElement): void {
     else if (e.key === 'n' || e.key === 'N') notesBtn.click();
     else if (e.key === 's' || e.key === 'S') strobeBtn.click();
     else if (e.key === 'a' || e.key === 'A') autoBtn.click();
+    else if (e.key === 't' || e.key === 'T') todBtn.click();
     else if (e.key === '[') setSpeed(speed - 0.05);
     else if (e.key === ']') setSpeed(speed + 0.05);
     else if (e.key === 'Escape' && !document.fullscreenElement) closeVisuals();
@@ -682,12 +721,18 @@ interface Settings {
   auto: boolean;
   /** 0.05 (very slow) .. 1.5; scales travel and scene animation. */
   speed: number;
+  /** Coast's time of day. */
+  tod: TimeOfDay;
 }
 
 function load(): Settings {
-  const fallback: Settings = { scene: 'flyover', notes: true, strobe: false, auto: false, speed: 0.4 };
+  const fallback: Settings = { scene: 'flyover', notes: true, strobe: false, auto: false, speed: 0.4, tod: 'dusk' };
   try {
-    return { ...fallback, ...(JSON.parse(localStorage.getItem('drift.visuals') ?? '{}') as Partial<Settings>) };
+    const s = { ...fallback, ...(JSON.parse(localStorage.getItem('drift.visuals') ?? '{}') as Partial<Settings>) };
+    // Coast replaced Ocean.
+    if ((s.scene as string) === 'ocean') s.scene = 'coast';
+    if (!SCENES.some((x) => x.id === s.scene)) s.scene = fallback.scene;
+    return s;
   } catch {
     return fallback;
   }
