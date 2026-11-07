@@ -4,6 +4,7 @@ import type { Scene3D } from './scene3d';
 import { Arena } from './arena3d';
 import { Tunnel } from './tunnel3d';
 import { Warp } from './warp3d';
+import { City } from './city3d';
 
 type SceneId = (typeof SCENES)[number]['id'];
 
@@ -21,7 +22,7 @@ interface Particle {
 
 type Role = 'bass' | 'lead' | 'pad';
 
-/** A note that happens inside the Flyover or City world (see EVENTS in shaders.ts). */
+/** A note that happens inside the Flyover or Coast world (see EVENTS in shaders.ts). */
 interface WorldEvent {
   x: number;
   /** Pitch 0..1; scenes use it for height. */
@@ -37,9 +38,16 @@ interface WorldEvent {
 const MAX_EV = 24;
 const EV_CAP = [8, 4, 4];
 /** Scenes that show notes as things in the world instead of particles. */
-const WORLD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
+const WORLD_SCENES = new Set<string>(['flyover', 'coast']);
+/** Scenes with a time-of-day setting. */
+const TOD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
 /** Scenes rendered with three.js on their own canvas. */
-const THREE_FACTORIES: Record<string, () => Scene3D> = { tunnel: () => new Tunnel(), warp: () => new Warp(), pulse: () => new Arena() };
+const THREE_FACTORIES: Record<string, () => Scene3D> = {
+  tunnel: () => new Tunnel(),
+  warp: () => new Warp(),
+  pulse: () => new Arena(),
+  city: () => new City(),
+};
 const THREE_SCENES = new Set<string>(Object.keys(THREE_FACTORIES));
 /** Scenes that place notes in the world rather than as overlay particles. */
 const inWorld = (id: string) => WORLD_SCENES.has(id) || THREE_SCENES.has(id);
@@ -241,9 +249,10 @@ export function startVisuals(root: HTMLElement): void {
     }
     if (!showNotes) return;
     if (THREE_SCENES.has(scene)) {
-      if (role !== 'bass') {
+      const s3 = scenes3d.get(scene);
+      if (s3 && (role !== 'bass' || s3.bass)) {
         const pn = Math.max(0, Math.min(1, (Math.max(...msg.notes) - 24) / 72));
-        scenes3d.get(scene)?.note(rgbOf(track.color), pn, v, msg.dur / 1000);
+        s3.note(rgbOf(track.color), pn, v, msg.dur / 1000, role);
       }
       return;
     }
@@ -297,21 +306,6 @@ export function startVisuals(root: HTMLElement): void {
         life = Math.min(9, dur + 2.5);
       }
       side = 0;
-    } else if (scene === 'city') {
-      const cz = travel * 2;
-      if (kind === 0) {
-        z = (Math.floor((cz + 10 + r() * 16) / 4) + 0.5) * 4;
-        x = side * 3.98;
-        life = Math.min(4, Math.max(0.7, dur + 0.5));
-      } else if (kind === 1) {
-        x = -1.3;
-        z = cz + 38 + r() * 10;
-        life = 7;
-      } else {
-        x = side * 12;
-        z = cz + 18 + r() * 20;
-        life = Math.min(9, dur + 2.5);
-      }
     } else {
       const d = kind === 0 ? 6 + r() * 8 : kind === 1 ? 9 + r() * 6 : 10 + r() * 10;
       z = travel + d;
@@ -528,7 +522,7 @@ export function startVisuals(root: HTMLElement): void {
       t3.resize(viewW(), viewH(), dpr * Math.min(1, scale + 0.2));
       const stepFrac = Math.min(1, (now - lastStep.at) / stepMs);
       const beats = playing ? (bar * stepsPerBar + (lastStep.step % stepsPerBar) + stepFrac) / 4 : sceneTime * 0.5;
-      t3.render({ dt, beats, playing, kick, snare, hat, energy, bass: env.bass, pad: env.pad, cols, travelSpeed: travelSpeed });
+      t3.render({ dt, beats, playing, kick, snare, hat, energy, bass: env.bass, pad: env.pad, cols, travelSpeed, bar: playing ? barF : undefined, tod: todValue });
       const c = t3.caption?.() ?? '';
       if (c !== caption) {
         caption = c;
@@ -767,7 +761,7 @@ export function startVisuals(root: HTMLElement): void {
     autoBtn.setAttribute('aria-pressed', String(auto));
     speedText.textContent = `Speed ${Math.round(speed * 100)}%`;
     todBtn.textContent = TOD_LABEL[tod];
-    todBtn.hidden = !WORLD_SCENES.has(scene);
+    todBtn.hidden = !TOD_SCENES.has(scene);
     save({ scene, notes: showNotes, strobe, auto, speed, tod });
   }
   sync();
