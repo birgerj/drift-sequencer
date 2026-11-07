@@ -606,18 +606,14 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
 /* ---------- compact phone layout ----------
    Wide screens: rail on the left. Phones: a slim transport bar on top, tracks as a
    scrolling chip strip, the main views in a tab bar at the bottom, and the rest
-   (devices, clock, visuals, install) in a "More" sheet. */
+   (Overview, Harmony, Projects, Devices, Visuals). Clock out and install live on Devices. */
 
 .detail-actions { display: flex; align-items: center; gap: 6px; }
 .detail-head .detail-actions { display: none; }
-.rail-nav .nav-more { display: none; }
-
-.sheet-scrim { position: fixed; inset: 0; z-index: 70; background: var(--scrim); display: flex; align-items: flex-end; }
-.sheet { width: 100%; background: linear-gradient(var(--surface), var(--surface)), var(--bg); border-top: 1px solid var(--line-2); border-radius: 18px 18px 0 0; padding: 8px 12px max(16px, env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 6px; box-shadow: var(--shadow-pop); }
-.sheet-handle { width: 40px; height: 4px; border-radius: 2px; background: var(--line-2); align-self: center; margin-bottom: 6px; }
-.sheet-item { justify-content: flex-start; gap: 12px; min-height: 48px; background: transparent; border-color: transparent; font-weight: 500; }
-.sheet .rail-clock { padding: 4px 8px 0; }
-.sheet .rail-clock select { min-height: 44px; }
+.rail-nav .nav-visuals { display: none; }
+.phone-only { display: none; }
+.devices-extras { flex-direction: column; gap: 8px; padding: 10px 12px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+.devices-extras > button { justify-content: center; }
 
 @media (max-width: 820px) {
   /* Shell: fixed-height column; only the detail area scrolls. */
@@ -661,7 +657,9 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .rail-state:has(.rail-now) { display: none; }
   .rail .rail-add { flex: 0 0 auto; width: 40px; min-height: 40px; padding: 0; gap: 0; border-radius: 20px; font-size: 0; }
 
-  /* Bottom tab bar. The tab bar and More sheet are position: fixed inside the rail, so the
+  .phone-only { display: flex; }
+
+  /* Bottom tab bar. The tab bar is position: fixed inside the rail, so the
      rail must not create a containing block (themes add backdrop-filter, filter or transform). */
   .rail { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; filter: none !important; transform: none !important; }
   .rail-bottom { display: contents; }
@@ -679,8 +677,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
     background: linear-gradient(var(--rail-bg), var(--rail-bg)), var(--bg);
     border-top: 1px solid var(--line);
   }
-  .rail-nav .nav-devices { display: none; }
-  .rail-nav .nav-more { display: flex; }
+  .rail-nav .nav-visuals { display: flex; }
   .rail-nav button { min-height: 52px; border: 0; border-radius: 10px; color: var(--muted); }
   .rail-nav button[aria-current='true'] { background: transparent; color: var(--accent); }
   .toast { bottom: calc(72px + env(safe-area-inset-bottom)); }
@@ -889,7 +886,6 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .section-title { font-size: 15px; }
   .type-card, .template-card { padding: 8px; min-height: 0; }
   .project-list li, .device-list li { padding: 2px 0; }
-  .sheet-item { min-height: 40px; }
   .big-action { min-height: 40px; padding: 0 16px; font-size: 14px; }
 }
 

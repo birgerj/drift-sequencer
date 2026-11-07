@@ -1,4 +1,3 @@
-import { useState } from "preact/hooks";
 import { slotComponent } from "../theme/slots";
 import { NOTE_NAMES } from "../../core/theory/note";
 import type { TrackState } from "../../state/project";
@@ -18,8 +17,6 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
       : "001.1",
   );
   const chord = useLive((l) => (playing ? l.chord : ""));
-  // Phones: Devices, clock, visuals and install move into a "More" sheet.
-  const [moreOpen, setMoreOpen] = useState(false);
   const bpm = (delta: number) =>
     s.change((x) => ({
       ...x,
@@ -143,14 +140,11 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
           />
           <button
             type="button"
-            class="nav-more"
-            aria-haspopup="dialog"
-            aria-expanded={moreOpen}
-            aria-current={s.view.name === "instruments" || s.view.name === "setup"}
-            onClick={() => setMoreOpen(true)}
+            class="nav-visuals"
+            onClick={() => s.openVisuals()}
           >
-            <Icon name="more" size={18} />
-            <span>More</span>
+            <Icon name="eye" size={18} />
+            <span>Visuals</span>
           </button>
         </nav>
         <button type="button" class="rail-help" onClick={() => s.openVisuals()}>
@@ -164,64 +158,7 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
           <Icon name="keyboard" size={16} /> Shortcuts <kbd>?</kbd>
         </button>
       </div>
-      {moreOpen && (
-        <MoreSheet canInstall={canInstall} onClose={() => setMoreOpen(false)} />
-      )}
     </aside>
-  );
-}
-
-/** Phones only: the things that don't fit in the bottom tab bar. */
-function MoreSheet({
-  canInstall,
-  onClose,
-}: {
-  canInstall: boolean;
-  onClose: () => void;
-}) {
-  const s = useStore();
-  const go = (view: View) => {
-    s.go(view);
-    onClose();
-  };
-  return (
-    <div class="sheet-scrim" onClick={onClose}>
-      <div
-        class="sheet"
-        role="dialog"
-        aria-modal="true"
-        aria-label="More"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div class="sheet-handle" aria-hidden="true" />
-        <button type="button" class="sheet-item" onClick={() => go({ name: "instruments" })}>
-          <Icon name="devices" size={18} /> Devices
-        </button>
-        <button
-          type="button"
-          class="sheet-item"
-          onClick={() => {
-            s.openVisuals();
-            onClose();
-          }}
-        >
-          <Icon name="eye" size={18} /> Visuals
-        </button>
-        {canInstall && (
-          <button
-            type="button"
-            class="sheet-item"
-            onClick={() => {
-              void pwa.install();
-              onClose();
-            }}
-          >
-            <Icon name="download" size={18} /> Install app
-          </button>
-        )}
-        <ClockSelect />
-      </div>
-    </div>
   );
 }
 
@@ -287,7 +224,8 @@ function RailTrack({ track, index }: { track: TrackState; index: number }) {
   );
 }
 
-function ClockSelect() {
+/** MIDI clock destination. In the rail on wide screens, on the Devices page on phones. */
+export function ClockSelect() {
   const s = useStore();
   const p = s.project;
   if (s.rack.devices.length > 0) {

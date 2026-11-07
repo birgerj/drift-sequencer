@@ -5,6 +5,8 @@ import type { MidiGuideDevice } from '../../io/midiGuideClient';
 import { Card, Icon } from '../components/controls';
 import { useStore } from '../store';
 import { MyDevices } from './MyDevices';
+import { ClockSelect } from '../components/Rail';
+import { pwa } from '../pwa';
 
 export function Instruments() {
   const s = useStore();
@@ -68,6 +70,15 @@ export function Instruments() {
           <Icon name="back" /> Performance
         </button>
         <h1>Devices</h1>
+      </div>
+
+      <div class="phone-only devices-extras">
+        <ClockSelect />
+        {pwa.canInstall && (
+          <button type="button" onClick={() => void pwa.install()}>
+            <Icon name="download" size={16} /> Install app
+          </button>
+        )}
       </div>
 
       <MyDevices />
