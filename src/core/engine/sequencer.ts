@@ -24,7 +24,7 @@ export interface SequencerEvents extends Record<string, unknown> {
   step: { step: number; bar: number; timeMs: number };
   chord: { bar: number; chord: Chord };
   note: { trackId: string; notes: MidiNote[]; velocity: number; timeMs: number; durationMs: number };
-  mutation: { trackId: string; bar: number; kind: 'mutation' | 'theme' | 'recall' | 'ensemble' };
+  mutation: { trackId: string; bar: number; kind: 'mutation' | 'theme' | 'recall' };
   /** An LFO value as it is sent, for displays (0..127). */
   lfo: { trackId: string; index: number; cc: number; value: number; timeMs: number };
   transport: { playing: boolean };
@@ -82,14 +82,6 @@ export class Sequencer {
       },
     });
     for (const t of project.tracks) this.tracks.set(t.id, new TrackRuntime(t, project.stepsPerBar));
-    this.linkEnsemble();
-  }
-
-  /** Tracks the AI ensemble writes don't mutate on their own. */
-  private linkEnsemble(): void {
-    const e = this.project.ensemble;
-    const linked = new Set(e?.linked ? [e.melody, e.bass, e.drums].filter(Boolean) : []);
-    for (const [id, rt] of this.tracks) rt.external = linked.has(id);
   }
 
   get playing(): boolean {
@@ -135,10 +127,7 @@ export class Sequencer {
       else {
         const prev = rt.config;
         rt.config = t;
-        if (t.userPattern && t.userPattern !== prev.userPattern) {
-          // A pattern already queued for the next phrase isn't switched to early.
-          if (rt.pending !== t.userPattern) rt.setPattern(t.userPattern);
-        }
+        if (t.userPattern && t.userPattern !== prev.userPattern) rt.setPattern(t.userPattern);
         else if (prev.generator !== t.generator && needsRegenerate(prev.generator, t.generator, !!t.userPattern)) rt.regenerate(t.seed);
         else if (
           !t.userPattern &&
@@ -150,7 +139,6 @@ export class Sequencer {
         }
       }
     }
-    this.linkEnsemble();
   }
 
   /** Call when the page is hidden/visible; hidden pages get a longer lookahead. */

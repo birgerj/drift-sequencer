@@ -20,8 +20,6 @@ Press `?` in Drift to see this list.
 | `Shift+←` `Shift+→` | Speed slower / faster |
 | `,` `.` | Tempo −1 / +1 (with Shift: ±5) |
 | `O` | Overview (the performance screen) |
-| `A` | AI page |
-| `G` | Compose a new AI piece |
 | `Shift+T` | Next theme |
 | `?` | Shortcut list |
 | `Esc` | Close the shortcut list |

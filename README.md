@@ -16,12 +16,7 @@ knobs instead of the mouse.
   answering them.
 - **One harmony for everything.** Pick a key and a chord progression, or
   let Drift write and evolve one. Every track follows it.
-- **AI ensemble.** Claude composes a lead melody with bass, pads and drums
-  on your key and chords, in sections and a form (A A2 B A), and keeps
-  writing the next part of the piece while you play. Bring your own Claude
-  API key; it stays in your browser.
-- **No account, no backend.** A web app that works offline once installed
-  (apart from the AI ensemble, which calls the Claude API).
+- **No account, no backend.** A web app that works offline once installed.
   Projects are saved in your browser.
 
 ## Open Drift
@@ -31,8 +26,7 @@ knobs instead of the mouse.
 - **As an app:** choose *Install app* in Drift's left bar, or the install
   icon in Chrome's address bar.
 - **As one file:** download [`standalone/index.html`](standalone/index.html)
-  and double-click it. No install needed; only the AI ensemble needs the
-  internet.
+  and double-click it. No install needed.
 
 ## Manual
 
@@ -42,7 +36,6 @@ The full manual, with screenshots, is in **[docs/](docs/README.md)**:
 [tracks](docs/03-tracks.md),
 [harmony](docs/04-harmony.md),
 [playing together](docs/05-playing-together.md),
-[the AI ensemble](docs/06-ensemble.md),
 [sound and modulation](docs/07-sound-and-modulation.md),
 [devices](docs/08-devices.md),
 [projects](docs/09-projects.md),

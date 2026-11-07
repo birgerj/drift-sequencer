@@ -19,7 +19,7 @@
 | --- | --- |
 | [birgerj.github.io/drift-sequencer](https://birgerj.github.io/drift-sequencer/) | Quickest start. |
 | **Install app** in the left bar (or the install icon in Chrome's address bar) | Drift in its own window. It starts without internet once installed and updates itself; when a new version is ready you'll see *A new version of Drift is ready* with a **Reload** button. |
-| Download [`standalone/index.html`](../standalone/index.html) and double-click it | Nothing to install: the whole app is in that one file. It plays offline; only the AI ensemble (and the fonts of some themes) need the internet. |
+| Download [`standalone/index.html`](../standalone/index.html) and double-click it | Nothing to install: the whole app is in that one file. It plays offline; only the fonts of some themes need the internet. |
 
 ## Connect your synths
 
@@ -68,6 +68,5 @@ reopens your last project. Things to try:
 - Open **Projects** in the left bar and try another template, such as
   *Acid* or *Conversation*.
 - Open **Harmony** and click **New progression**.
-- Open **AI**, add your Claude API key and let Claude compose a piece (press `G`).
 
 Next: [The performance screen →](02-performance.md)

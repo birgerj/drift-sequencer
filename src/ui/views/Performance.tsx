@@ -4,7 +4,6 @@ import { Chord } from '../../core/theory/chord';
 import { NOTE_NAMES, noteName, pitchClassOf } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
 import { Icon, Slider } from '../components/controls';
-import { ENSEMBLE_PARTS } from '../ensemble';
 import { OctaveControl } from '../components/OctaveControl';
 import { RATE_LABELS } from '../components/TrackTiming';
 import { PatternView } from '../components/PatternView';
@@ -40,7 +39,6 @@ export function Performance() {
         <aside class="side">
           <NowPlaying />
           <ScaleStrip />
-          <EnsembleCard />
           <Evolution />
         </aside>
       </div>
@@ -248,47 +246,6 @@ function ScaleStrip() {
 function drumName(track: TrackState, note: number): string | undefined {
   if (track.generator.type !== 'drums') return undefined;
   return track.generator.params.voices.find((v) => v.note === note)?.name;
-}
-
-/** Quick access to the AI ensemble while playing; everything else is on the AI page. */
-function EnsembleCard() {
-  const s = useStore();
-  const e = s.ensemble;
-  const settings = e.settings;
-  const c = e.composition;
-  const names = ENSEMBLE_PARTS.map(({ part }) => e.track(part)?.name).filter(Boolean).join(', ');
-  const status = e.busy
-    ? 'Composing…'
-    : settings.linked && c
-      ? `${c.title} · ${c.form[e.formIndex] ?? ''} · ${names || 'no tracks'}`
-      : !e.apiKey
-        ? 'Add a Claude API key on the AI page'
-        : 'Not in use';
-  return (
-    <section class="card ensemble ensemble-mini">
-      <div class="row-between">
-        <h2 class="eyebrow">AI ensemble</h2>
-        <button type="button" class="ghost small" onClick={() => s.go({ name: 'ai' })}>
-          Settings <Icon name="sliders" size={14} />
-        </button>
-      </div>
-      <span class="small muted">
-        {status}
-        {settings.linked && settings.evolve ? (e.preparing ? ' · writing the next part' : e.ready ? ' · next part ready' : '') : ''}
-      </span>
-      <div class="row gap-s wrap">
-        <button type="button" class="primary" disabled={e.busy || !e.apiKey} onClick={() => void e.generate()}>
-          <Icon name="dice" /> {e.busy ? 'Composing…' : 'New piece'}
-        </button>
-        {c && (
-          <button type="button" disabled={e.busy || !e.apiKey} onClick={() => void e.develop()}>
-            Develop
-          </button>
-        )}
-      </div>
-      {e.error && <p class="hint warn">{e.error}</p>}
-    </section>
-  );
 }
 
 function Evolution() {

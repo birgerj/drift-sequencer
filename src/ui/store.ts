@@ -44,7 +44,6 @@ import {
   type ProjectSummary,
 } from '../state/storage';
 import { createProject, createTrack, templateSounds, TRACK_COLORS } from '../state/templates';
-import { EnsembleController } from './ensemble';
 
 import type { SectionId } from './shortcuts';
 import { toEpoch, VisualsLink } from '../visuals/link';
@@ -85,8 +84,7 @@ export type View =
   | { name: 'templates' }
   | { name: 'instruments' }
   | { name: 'setup' }
-  | { name: 'harmony' }
-  | { name: 'ai' };
+  | { name: 'harmony' };
 
 export interface LogEntry {
   id: number;
@@ -148,8 +146,6 @@ export class AppStore {
   /** Open tab of the track detail pane; kept when switching tracks. */
   trackTab: SectionId = 'overview';
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
-  /** AI ensemble: melody, bass and drums composed by Claude. */
-  readonly ensemble = new EnsembleController(this);
 
   private listeners = new Set<() => void>();
   private pending: Pending[] = [];
@@ -521,7 +517,6 @@ export class AppStore {
         // Animation frames pause in a hidden tab; don't let the display queue grow.
         if (this.pending.length > 2000) this.pending.splice(0, this.pending.length - 1000);
         this.pending.push({ at: timeMs, kind: 'step', step, bar });
-        this.ensemble.onStep(step, bar);
         this.visuals?.send({ t: 'step', step, bar, at: toEpoch(timeMs) });
       }),
       ev.on('chord', ({ chord }) => {
@@ -536,7 +531,7 @@ export class AppStore {
       ev.on('mutation', ({ trackId, bar, kind }) => {
         const t = this.project.tracks.find((x) => x.id === trackId);
         const text =
-          kind === 'theme' ? 'back to the theme' : kind === 'recall' ? 'recalls an earlier variation' : kind === 'ensemble' ? 'next ensemble phrase' : 'pattern mutated';
+          kind === 'theme' ? 'back to the theme' : kind === 'recall' ? 'recalls an earlier variation' : 'pattern mutated';
         if (t) this.addLog(bar, `${t.name} · ${text}`, t.color);
       }),
       ev.on('transport', ({ playing }) => {

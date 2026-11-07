@@ -27,8 +27,7 @@ export function cycleDrumCell(pattern: Pattern, step: number, note: number, velo
 }
 
 /**
- * The note editors work in chord-relative degrees. Key-relative lines (the
- * ensemble writes those) are rewritten against the chord each note falls on,
+ * The note editors work in chord-relative degrees. Key-relative lines are rewritten against the chord each note falls on,
  * so they show up in the grid and sound the same. Notes that were fitted to
  * the chord land on the matching chord tone (7-note scales).
  */
