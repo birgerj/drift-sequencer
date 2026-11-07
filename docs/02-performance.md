@@ -85,6 +85,12 @@ projector.
   light pulse runs ahead of you on every beat, kick and snare make the
   lights flare, and lead and pad notes light up a stretch of ceiling
   ahead in the track's colour (higher notes further away).
+- **Warp** is a journey through space. You cruise towards a planet with
+  its moons (Saturn, an ocean world, a desert planet, an ice giant) while
+  comets, ships and shooting stars pass by; at the end of every 16 bars
+  you jump through hyperspace to the next system. Stars pulse on the
+  kick, the nebula takes the chord colours, and lead and pad notes become
+  shooting stars in the track's colour.
 
 In most scenes **Notes** shows notes as particles. In **Flyover**,
 **City** and **Coast** they happen in the world instead, in the track's

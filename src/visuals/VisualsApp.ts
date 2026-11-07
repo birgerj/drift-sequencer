@@ -1,6 +1,8 @@
 import { CHANNEL, type VisualTrack, type VisualsMessage } from './protocol';
 import { SCENES, VERTEX } from './shaders';
+import type { Scene3D } from './scene3d';
 import { Tunnel } from './tunnel3d';
+import { Warp } from './warp3d';
 
 type SceneId = (typeof SCENES)[number]['id'];
 
@@ -36,7 +38,8 @@ const EV_CAP = [8, 4, 4];
 /** Scenes that show notes as things in the world instead of particles. */
 const WORLD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
 /** Scenes rendered with three.js on their own canvas. */
-const THREE_SCENES = new Set<string>(['tunnel']);
+const THREE_FACTORIES: Record<string, () => Scene3D> = { tunnel: () => new Tunnel(), warp: () => new Warp() };
+const THREE_SCENES = new Set<string>(Object.keys(THREE_FACTORIES));
 /** Scenes that place notes in the world rather than as overlay particles. */
 const inWorld = (id: string) => WORLD_SCENES.has(id) || THREE_SCENES.has(id);
 
@@ -236,10 +239,10 @@ export function startVisuals(root: HTMLElement): void {
       if (role === 'pad') padHoldUntil = Math.max(padHoldUntil, now + msg.dur);
     }
     if (!showNotes) return;
-    if (scene === 'tunnel') {
+    if (THREE_SCENES.has(scene)) {
       if (role !== 'bass') {
         const pn = Math.max(0, Math.min(1, (Math.max(...msg.notes) - 24) / 72));
-        tunnel?.note(rgbOf(track.color), pn, v, msg.dur / 1000);
+        scenes3d.get(scene)?.note(rgbOf(track.color), pn, v, msg.dur / 1000);
       }
       return;
     }
@@ -434,19 +437,28 @@ export function startVisuals(root: HTMLElement): void {
   window.visualViewport?.addEventListener('scroll', fitViewport);
   resize();
 
-  let tunnel: Tunnel | undefined;
-  let tunnelFailed = false;
-  function getTunnel(): Tunnel | undefined {
-    if (tunnel || tunnelFailed) return tunnel;
-    try {
-      tunnel = new Tunnel();
-      root.insertBefore(tunnel.canvas, overlay);
-    } catch (err) {
-      console.error(err);
-      tunnelFailed = true;
+  // three.js scenes get their own canvas, created the first time they are shown.
+  const scenes3d = new Map<string, Scene3D>();
+  const failed3d = new Set<string>();
+  function get3d(id: string): Scene3D | undefined {
+    const make = THREE_FACTORIES[id];
+    if (!make || failed3d.has(id)) return scenes3d.get(id);
+    let s = scenes3d.get(id);
+    if (!s) {
+      try {
+        s = make();
+        root.insertBefore(s.canvas, overlay);
+        scenes3d.set(id, s);
+      } catch (err) {
+        console.error(err);
+        failed3d.add(id);
+      }
     }
-    return tunnel;
+    return s;
   }
+  /** Scene caption (e.g. the star system in Warp), faded in when it changes. */
+  let caption = '';
+  let captionAt = -1e9;
 
   const ctx = overlay.getContext('2d')!;
   const start = performance.now();
@@ -507,14 +519,21 @@ export function startVisuals(root: HTMLElement): void {
     todValue += (todTarget - todValue) * (1 - Math.exp(-dt * 0.8));
 
     resize();
-    const t3 = THREE_SCENES.has(scene) ? getTunnel() : undefined;
-    if (tunnel) tunnel.canvas.hidden = !t3;
+    const t3 = THREE_SCENES.has(scene) ? get3d(scene) : undefined;
+    for (const s3 of scenes3d.values()) s3.canvas.hidden = s3 !== t3;
     if (t3) {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
       t3.resize(viewW(), viewH(), dpr * Math.min(1, scale + 0.2));
       const stepFrac = Math.min(1, (now - lastStep.at) / stepMs);
       const beats = playing ? (bar * stepsPerBar + (lastStep.step % stepsPerBar) + stepFrac) / 4 : sceneTime * 0.5;
       t3.render({ dt, beats, playing, kick, snare, hat, energy, bass: env.bass, pad: env.pad, cols, travelSpeed: travelSpeed });
+      const c = t3.caption?.() ?? '';
+      if (c !== caption) {
+        caption = c;
+        captionAt = now;
+      }
+    } else if (caption) {
+      caption = '';
     }
     const p = t3 ? undefined : program(scene);
     if (gl && p) {
@@ -599,6 +618,20 @@ export function startVisuals(root: HTMLElement): void {
       }
     }
     ctx.globalAlpha = 1;
+    if (caption) {
+      const age = (now - captionAt) / 1000;
+      const a = Math.min(1, age / 0.8) * Math.max(0, Math.min(1, (6 - age) / 1.5));
+      if (a > 0) {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = a * 0.85;
+        ctx.fillStyle = '#e8ecf6';
+        ctx.font = `300 ${Math.round(H * 0.05)}px system-ui, sans-serif`;
+        ctx.textBaseline = 'top';
+        ctx.fillText(caption, W * 0.04, H * 0.06);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'lighter';
+      }
+    }
     if (particles.length > 1500) particles.splice(0, particles.length - 1500);
     if (strobe && kick > 0.85) {
       ctx.globalCompositeOperation = 'source-over';
