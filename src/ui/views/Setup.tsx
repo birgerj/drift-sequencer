@@ -23,7 +23,7 @@ export function Setup() {
   const existing = (role: DeviceRole) => s.rack.devices.find((d) => d.roles.includes(role));
 
   const initial = useMemo(() => {
-    const guess = guessPorts(s.ports);
+    const guess = guessPorts(s.hardwarePorts);
     const rows = {} as Record<DeviceRole, Row>;
     for (const { role } of DEVICE_ROLES) {
       const d = existing(role);
@@ -102,7 +102,7 @@ export function Setup() {
 
   const portOptions = [
     { value: '', label: 'Not used' },
-    ...[...new Set([...s.ports, ...DEVICE_ROLES.map(({ role }) => rows[role].portName).filter(Boolean)])].map((p) => ({
+    ...[...new Set([...s.hardwarePorts, ...DEVICE_ROLES.map(({ role }) => rows[role].portName).filter((p) => p && !isLocalPort(p))])].map((p) => ({
       value: p,
       label: s.ports.includes(p) ? p : `${p} (not connected)`,
     })),
@@ -126,14 +126,14 @@ export function Setup() {
         <Card>
           <div class="empty">
             <p>First connect your synths over USB and allow MIDI access.</p>
-            <p class="small">No synths at hand? Pick a “Drift Synth” port below to play the built-in sounds.</p>
+            <p class="small">No synths at hand? You don't need this: every track can play a built-in synth, picked on its Output tab.</p>
             <button type="button" class="primary" onClick={() => void s.connectMidi()}>
               Connect MIDI
             </button>
           </div>
         </Card>
       )}
-      {s.midi.connected && s.ports.every(isLocalPort) && (
+      {s.midi.connected && s.hardwarePorts.length === 0 && (
         <Card>
           <p class="warn">No MIDI outputs found. Check the USB cable and that the device is switched on.</p>
         </Card>

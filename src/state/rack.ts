@@ -1,6 +1,6 @@
 import type { TrackType } from '../core/generators/types';
 import { presetCcValues, type InstrumentDefinition } from '../core/instruments/instrument';
-import { isLocalPort, localPortForInstrument, MONO_LOCAL_INSTRUMENTS } from '../io/local/ports';
+import { instrumentForLocalPort, isLocalPort, localPortForInstrument, MONO_LOCAL_INSTRUMENTS } from '../io/local/ports';
 import { newId, type MidiTarget, type ProjectState, type TrackState } from './project';
 
 /**
@@ -65,6 +65,58 @@ export function loadRack(storage: Pick<Storage, 'getItem'> | undefined = safeSto
 export function saveRack(rack: Rack, storage: Pick<Storage, 'setItem'> | undefined = safeStorage()): void {
   try {
     storage?.setItem(KEY, JSON.stringify(rack));
+  } catch {
+    /* storage unavailable */
+  }
+}
+
+/**
+ * Built-in synths that used to be "My devices" entries, by their old device
+ * id, so projects saved back then still play them. The rack itself only
+ * holds external hardware now; tracks pick built-ins directly.
+ */
+export type BuiltInAliases = Record<string, MidiTarget>;
+
+const ALIASES_KEY = 'drift.rack.builtIns';
+
+/** Takes the built-in synths out of a rack; returns the hardware rack and what was taken out. */
+export function splitBuiltIns(rack: Rack): { rack: Rack; aliases: BuiltInAliases } {
+  const aliases: BuiltInAliases = {};
+  const devices = rack.devices.filter((d) => {
+    if (!isLocalPort(d.portName)) return true;
+    aliases[d.id] = { portName: d.portName, channel: d.channel };
+    return false;
+  });
+  return devices.length === rack.devices.length ? { rack, aliases } : { rack: { devices }, aliases };
+}
+
+/** Tracks that played a built-in through a (removed) device now play it directly, keeping their sound. */
+export function releaseBuiltIns(project: ProjectState, aliases: BuiltInAliases): ProjectState {
+  let changed = false;
+  const tracks = project.tracks.map((t) => {
+    const target = t.deviceId ? aliases[t.deviceId] : undefined;
+    if (!target) return t;
+    changed = true;
+    const { deviceId: _old, ...rest } = t;
+    return { ...rest, output: { ...target }, instrumentId: instrumentForLocalPort(target.portName) ?? t.instrumentId };
+  });
+  return changed ? { ...project, tracks } : project;
+}
+
+export function loadBuiltInAliases(storage: Pick<Storage, 'getItem'> | undefined = safeStorage()): BuiltInAliases {
+  try {
+    const raw = storage?.getItem(ALIASES_KEY);
+    const parsed = raw ? (JSON.parse(raw) as BuiltInAliases) : undefined;
+    if (parsed && typeof parsed === 'object') return parsed;
+  } catch {
+    /* fall through */
+  }
+  return {};
+}
+
+export function saveBuiltInAliases(aliases: BuiltInAliases, storage: Pick<Storage, 'setItem'> | undefined = safeStorage()): void {
+  try {
+    storage?.setItem(ALIASES_KEY, JSON.stringify(aliases));
   } catch {
     /* storage unavailable */
   }

@@ -3,6 +3,7 @@ import { interplayActive } from '../../core/engine/interplay';
 import { Chord } from '../../core/theory/chord';
 import { NOTE_NAMES, noteName, pitchClassOf } from '../../core/theory/note';
 import type { TrackState } from '../../state/project';
+import { outputLabel } from '../../io/local/ports';
 import { Icon, Slider } from '../components/controls';
 import { OctaveControl } from '../components/OctaveControl';
 import { RATE_LABELS } from '../components/TrackTiming';
@@ -104,7 +105,7 @@ function Lane({ track }: { track: TrackState }) {
           <span class="type-pill">{typeLabel(track.generator.type)}</span>
         </div>
         <span class={`small ${portOk ? 'muted' : 'warn'}`} title={portOk ? '' : 'Port not connected'}>
-          {device ? `${device.name} · ch ${out.channel}` : `${out.portName} · ch ${out.channel}`}
+          {outputLabel(out.portName, out.channel, device?.name)}
         </span>
         {rt && (rt.pattern.lengthSteps !== 16 || (track.rate ?? 1) !== 1) && (
           <span class="phrase-badge small">
@@ -125,10 +126,10 @@ function Lane({ track }: { track: TrackState }) {
         <OctaveControl track={track} compact />
         <div class="row gap-s lane-buttons">
           <button type="button" class="square" aria-pressed={track.muted} aria-label={`Mute ${track.name}`} onClick={() => s.updateTrack(track.id, { muted: !track.muted })}>
-            M
+            <Icon name={track.muted ? 'mute' : 'speaker'} />
           </button>
           <button type="button" class="square" aria-pressed={track.solo} aria-label={`Solo ${track.name}`} onClick={() => s.updateTrack(track.id, { solo: !track.solo })}>
-            S
+            <Icon name="solo" />
           </button>
           <button type="button" class="square" aria-label={`New pattern for ${track.name}`} onClick={() => s.regenerate(track.id)}>
             <Icon name="dice" />

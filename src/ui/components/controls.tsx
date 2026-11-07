@@ -172,7 +172,7 @@ const PATHS: Record<string, string> = {
   trash: 'M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12',
   refresh: 'M19 12a7 7 0 1 1-2.05-4.95M19 5v4h-4',
   spark: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z',
-  dice: 'M3 7h3.5l9 10H21M3 17h3.5l2.5-2.8M13 9.8L15.5 7H21M18 4l3 3-3 3M18 14l3 3-3 3',
+  dice: 'M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01',
   snow: 'M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9',
   upload: 'M12 16V4M7 9l5-5 5 5M5 20h14',
   download: 'M12 4v12M7 11l5 5 5-5M5 20h14',
@@ -198,6 +198,12 @@ const PATHS: Record<string, string> = {
   folder: 'M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z',
   speaker: 'M4 9h4l5-4v14l-5-4H4zM17 8.5a5 5 0 0 1 0 7',
   mute: 'M4 9h4l5-4v14l-5-4H4zM17 9l5 6M22 9l-5 6',
+  // Built-in synths
+  piano: 'M3 5h18v14H3zM8.5 13v6M15.5 13v6M7 5v8h3V5M14 5v8h3V5',
+  voice: 'M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3zM5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7',
+  pad: 'M7 18h10a4 4 0 0 0 .4-7.98A5.5 5.5 0 0 0 6.6 9.1 4.5 4.5 0 0 0 7 18z',
+  // Solo: listen to this track alone.
+  solo: 'M4 17v-5a8 8 0 0 1 16 0v5M4 15.5A1.5 1.5 0 0 1 5.5 14H8v7H5.5A1.5 1.5 0 0 1 4 19.5zM20 15.5a1.5 1.5 0 0 0-1.5-1.5H16v7h2.5a1.5 1.5 0 0 0 1.5-1.5z',
   keyboard: 'M3 6h18v12H3zM7 10h.01M11 10h.01M15 10h.01M7 14h10',
   knob: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16zM12 12l3.5-3.5M4 20l1.5-1.5M20 20l-1.5-1.5',
   eye: 'M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6z',
@@ -227,6 +233,18 @@ export function drumIcon(name: string, note: number): string {
   if (/T$|TOM/.test(n) || [41, 43, 45, 47, 48, 50].includes(note)) return 'tom';
   return 'drums';
 }
+
+/** Icon per built-in synth, by its kind (see io/local/ports). */
+export const BUILT_IN_ICONS: Record<string, string> = {
+  lead: 'wave',
+  bass: 'acid',
+  pad: 'pad',
+  drums: 'drums',
+  juno: 'chords',
+  mono: 'bass',
+  piano: 'piano',
+  hum: 'voice',
+};
 
 /** Icon name per generator type. */
 export const TYPE_ICONS: Record<string, string> = {

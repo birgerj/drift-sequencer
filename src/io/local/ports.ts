@@ -46,3 +46,23 @@ export function instrumentForLocalPort(portName: string): string | undefined {
 
 /** Built-ins that play one note at a time: two tracks shouldn't share one. */
 export const MONO_LOCAL_INSTRUMENTS = new Set(['drift-synth-bass', 'drift-synth-mono']);
+
+/** The kind of a built-in port, e.g. "Drift Synth Hum" → "hum". */
+export function localKindOf(portName: string): LocalKind | undefined {
+  return (Object.keys(LOCAL_PORTS) as LocalKind[]).find((k) => LOCAL_PORTS[k] === portName);
+}
+
+/** Short name of a built-in for chips: "Drift Synth Juno" → "Juno". */
+export function builtInShortName(portName: string): string {
+  return portName.replace(/^Drift Synth /, '');
+}
+
+/**
+ * Where a track plays, for track headers: "Minilogue · ch 2" for a device or
+ * port, "Synth Juno" for a built-in (built-ins ignore the MIDI channel).
+ */
+export function outputLabel(portName: string, channel: number, deviceName?: string): string {
+  if (deviceName) return `${deviceName} · ch ${channel}`;
+  if (isLocalPort(portName)) return portName.replace(/^Drift /, '');
+  return `${portName} · ch ${channel}`;
+}

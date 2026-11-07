@@ -5,14 +5,19 @@ import { BUILT_IN_INSTRUMENTS } from '../src/state/instrumentLibrary';
 import {
   assignDevices,
   guessPorts,
+  loadBuiltInAliases,
   loadRack,
   newDevice,
+  releaseBuiltIns,
   resolveProject,
+  saveBuiltInAliases,
   saveRack,
+  splitBuiltIns,
   suggestInstrument,
   type Rack,
 } from '../src/state/rack';
 import { createProject, TEMPLATES } from '../src/state/templates';
+import { builtInShortName, outputLabel } from '../src/io/local/ports';
 
 const rack: Rack = {
   devices: [
@@ -96,5 +101,52 @@ describe('port guessing for a real setup', () => {
       ['wavestate SOUND', 'korg-wavestate'],
       ['TR-8S', 'roland-tr-8s'],
     ]) expect(suggestInstrument(port!, BUILT_IN_INSTRUMENTS)?.id).toBe(id);
+  });
+});
+
+describe('built-in synths are not devices', () => {
+  const hw = newDevice({ name: 'Hydrasynth', portName: 'Hydrasynth', roles: ['lead'] });
+  const juno = newDevice({ name: 'Synth Juno', portName: 'Drift Synth Juno', channel: 3, roles: ['pad'] });
+
+  it('takes built-ins out of the rack and remembers where they pointed', () => {
+    const { rack, aliases } = splitBuiltIns({ devices: [hw, juno] });
+    expect(rack.devices.map((d) => d.id)).toEqual([hw.id]);
+    expect(aliases).toEqual({ [juno.id]: { portName: 'Drift Synth Juno', channel: 3 } });
+    const same = { devices: [hw] };
+    expect(splitBuiltIns(same).rack).toBe(same);
+  });
+
+  it('tracks that played a built-in through a device now play it directly, keeping their knobs', () => {
+    const project = createProject('deep-house');
+    const [a, b] = project.tracks;
+    const before = {
+      ...project,
+      tracks: [{ ...a!, deviceId: juno.id, panel: { values: { 74: 40 } } }, { ...b!, deviceId: hw.id }, ...project.tracks.slice(2)],
+    };
+    const { aliases } = splitBuiltIns({ devices: [hw, juno] });
+    const after = releaseBuiltIns(before, aliases);
+    expect(after.tracks[0]).toMatchObject({ output: { portName: 'Drift Synth Juno', channel: 3 }, instrumentId: 'drift-synth-juno', panel: { values: { 74: 40 } } });
+    expect(after.tracks[0]!.deviceId).toBeUndefined();
+    expect(after.tracks[1]!.deviceId).toBe(hw.id);
+    // Later device assignment leaves the built-in alone.
+    expect(assignDevices(after, { devices: [hw] }).tracks[0]!.deviceId).toBeUndefined();
+    expect(releaseBuiltIns(after, aliases)).toBe(after);
+  });
+
+  it('stores the aliases', () => {
+    const data = new Map<string, string>();
+    const storage = { getItem: (k: string) => data.get(k) ?? null, setItem: (k: string, v: string) => void data.set(k, v) };
+    saveBuiltInAliases({ x: { portName: 'Drift Synth Hum', channel: 1 } }, storage);
+    expect(loadBuiltInAliases(storage)).toEqual({ x: { portName: 'Drift Synth Hum', channel: 1 } });
+    expect(loadBuiltInAliases({ getItem: () => 'nonsense' })).toEqual({});
+  });
+});
+
+describe('output labels', () => {
+  it('built-ins show no MIDI channel; devices and ports do', () => {
+    expect(outputLabel('Drift Synth Bass', 1)).toBe('Synth Bass');
+    expect(outputLabel('Hydrasynth', 2, 'Hydra')).toBe('Hydra · ch 2');
+    expect(outputLabel('TR-8S', 10)).toBe('TR-8S · ch 10');
+    expect(builtInShortName('Drift Synth Juno')).toBe('Juno');
   });
 });

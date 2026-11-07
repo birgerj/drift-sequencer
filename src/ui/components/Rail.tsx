@@ -5,6 +5,7 @@ import { pwa } from "../pwa";
 import { typeLabel } from "../paramSchema";
 import { useLive, useStore, type View } from "../store";
 import { Icon, TYPE_ICONS } from "./controls";
+import { isLocalPort } from "../../io/local/ports";
 
 /** Left column: transport, the track list and the main views. Always visible. */
 export function Rail({ canInstall }: { canInstall: boolean }) {
@@ -196,14 +197,18 @@ function RailTrack({ track, index }: { track: TrackState; index: number }) {
       <span class="rail-name">
         <b>{track.name}</b>
         <span>
-          {typeLabel(track.generator.type)} · {device?.name ?? out.portName}
+          {typeLabel(track.generator.type)} · {device?.name ?? (isLocalPort(out.portName) ? out.portName.replace(/^Drift /, '') : out.portName)}
         </span>
       </span>
       <span class="rail-state">
         {track.muted ? (
-          <span class="rail-flag">M</span>
+          <span class="rail-flag" title="Muted">
+            <Icon name="mute" size={14} />
+          </span>
         ) : track.solo ? (
-          <span class="rail-flag solo">S</span>
+          <span class="rail-flag solo" title="Solo">
+            <Icon name="solo" size={14} />
+          </span>
         ) : (
           <span class="mono rail-now">
             {index < 9 ? String(index + 1) : ""}

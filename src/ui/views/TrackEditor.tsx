@@ -1,4 +1,4 @@
-import { instrumentForLocalPort, isLocalPort, LOCAL_PORTS } from '../../io/local/ports';
+import { builtInShortName, instrumentForLocalPort, isLocalPort, LOCAL_PORTS, localKindOf, outputLabel } from '../../io/local/ports';
 import { slotComponent } from '../theme/slots';
 import type { InstrumentDefinition } from '../../core/instruments/instrument';
 import { ANSWER_TRANSFORMS, type PhraseRole, type PhraseSettings } from '../../core/engine/phrasing';
@@ -7,7 +7,7 @@ import { useState } from 'preact/hooks';
 import { useNarrow } from '../useNarrow';
 import { Chord } from '../../core/theory/chord';
 import { DRUM_PRESETS, PRESET_GENRES } from '../../core/generators/drumPresets';
-import { Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS } from '../components/controls';
+import { BUILT_IN_ICONS, Card, Icon, Segmented, Select, Slider, Stepper, Toggle, TYPE_ICONS } from '../components/controls';
 import { KnobPanel } from '../components/KnobPanel';
 import { LfoPreview } from '../components/LfoPreview';
 import { OctaveControl } from '../components/OctaveControl';
@@ -52,7 +52,7 @@ export function TrackEditor({ trackId }: { trackId: string }) {
           onChange={(e) => s.updateTrack(track.id, { name: (e.target as HTMLInputElement).value || track.name })}
         />
         <span class="muted small detail-meta">
-          {typeLabel(track.generator.type)} · {device?.name ?? out.portName} · ch {out.channel}
+          {typeLabel(track.generator.type)} · {outputLabel(out.portName, out.channel, device?.name)}
         </span>
         <div class="spacer" />
         <TrackActions track={track} />
@@ -200,7 +200,7 @@ function TrackActions({ track }: { track: TrackState }) {
         aria-label={`Solo ${track.name} (S)`}
         onClick={() => s.updateTrack(track.id, { solo: !track.solo })}
       >
-        S
+        <Icon name="solo" size={16} />
       </button>
     </div>
   );
@@ -284,96 +284,97 @@ function ChordChip({ index, label }: { index: number; label: string }) {
   );
 }
 
-/** Pick a device from "My devices"; without devices, set a port directly. */
+/**
+ * Where a track plays: one of the built-in synths (always all of them), or
+ * a device from "My devices" (external hardware only). Without devices, a
+ * connected hardware port can still be picked directly.
+ */
 function OutputCard({ track }: { track: TrackState }) {
   const s = useStore();
   const device = s.device(track.deviceId);
   const out = s.trackOutput(track);
   const instrument = s.trackInstrument(track);
-
-  if (s.rack.devices.length === 0) {
-    return (
-      <Card title="Output">
-        <div class="empty">
-          <p>Set up your synths once under Devices; then every track just picks one, in every project.</p>
-          <button type="button" class="primary" onClick={() => s.go({ name: 'setup' })}>
-            Set up your gear
-          </button>
-        </div>
-        <Select
-          label="MIDI port"
-          value={track.output.portName}
-          options={[...new Set([track.output.portName, ...s.ports])].map((n) => ({
-            value: n,
-            label: s.portAvailable(n) ? n : `${n} (not connected)`,
-          }))}
-          onChange={(portName) => s.updateTrack(track.id, { output: { ...track.output, portName }, instrumentId: instrumentForLocalPort(portName) })}
-        />
-        <div class="field">
-          <span class="field-label">Channel</span>
-          <Stepper
-            label="MIDI channel"
-            value={track.output.channel}
-            min={1}
-            max={16}
-            onChange={(channel) => s.updateTrack(track.id, { output: { ...track.output, channel } })}
-          />
-        </div>
-      </Card>
-    );
-  }
+  const builtIn = !device && isLocalPort(out.portName);
+  const hasDevices = s.rack.devices.length > 0;
+  const hardware = s.hardwarePorts;
+  const pickBuiltIn = (port: string) =>
+    s.updateTrack(track.id, { deviceId: undefined, output: { portName: port, channel: track.output.channel }, instrumentId: instrumentForLocalPort(port) });
 
   return (
-    <Card title="Device">
-      <div class="chips device-pick" role="radiogroup" aria-label="Device">
-        {s.rack.devices.map((d) => (
-          <button
-            type="button"
-            role="radio"
-            class="chip device-option"
-            aria-checked={d.id === track.deviceId}
-            aria-pressed={d.id === track.deviceId}
-            onClick={() => s.updateTrack(track.id, { deviceId: d.id })}
-          >
-            <span class={`dot ${s.ports.includes(d.portName) ? 'ok' : ''}`} />
-            {d.name}
-          </button>
-        ))}
-      </div>
+    <Card title="Output">
       <span class="field-label">Built-in synths</span>
       <div class="chips device-pick" role="radiogroup" aria-label="Built-in synth">
-        {Object.values(LOCAL_PORTS)
-          .filter((port) => !s.rack.devices.some((d) => d.portName === port))
-          .map((port) => {
-            const on = !device && track.output.portName === port;
-            return (
+        {Object.values(LOCAL_PORTS).map((port) => {
+          const on = builtIn && out.portName === port;
+          return (
+            <button type="button" role="radio" class="chip device-option" aria-checked={on} aria-pressed={on} onClick={() => pickBuiltIn(port)}>
+              <Icon name={BUILT_IN_ICONS[localKindOf(port) ?? ''] ?? 'wave'} size={16} />
+              {builtInShortName(port)}
+            </button>
+          );
+        })}
+      </div>
+
+      {hasDevices && (
+        <>
+          <span class="field-label">My devices</span>
+          <div class="chips device-pick" role="radiogroup" aria-label="Device">
+            {s.rack.devices.map((d) => (
               <button
                 type="button"
                 role="radio"
                 class="chip device-option"
-                aria-checked={on}
-                aria-pressed={on}
-                onClick={() =>
-                  s.updateTrack(track.id, {
-                    deviceId: undefined,
-                    output: { portName: port, channel: track.output.channel },
-                    instrumentId: instrumentForLocalPort(port),
-                  })
-                }
+                aria-checked={d.id === track.deviceId}
+                aria-pressed={d.id === track.deviceId}
+                onClick={() => s.updateTrack(track.id, { deviceId: d.id })}
               >
-                {port.replace(/^Drift Synth /, '')}
+                <span class={`dot ${s.ports.includes(d.portName) ? 'ok' : ''}`} />
+                {d.name}
               </button>
-            );
-          })}
-      </div>
-      <p class={`hint ${s.portAvailable(out.portName) ? '' : 'warn'}`}>
-        {out.portName} · channel {out.channel}
-        {instrument ? ` · ${instrument.manufacturer} ${instrument.device}` : ''}
-        {s.portAvailable(out.portName) ? '' : ' · not connected'}
-      </p>
-      {!device && !isLocalPort(track.output.portName) && <p class="warn small">No device chosen — this track uses its own port setting.</p>}
-      <button type="button" class="link" onClick={() => s.go({ name: 'instruments' })}>
-        Edit my devices…
+            ))}
+          </div>
+        </>
+      )}
+
+      {!hasDevices && hardware.length > 0 && (
+        <>
+          <Select
+            label="MIDI port"
+            value={builtIn ? '' : track.output.portName}
+            options={[
+              ...(builtIn ? [{ value: '', label: 'Built-in synth' }] : []),
+              ...[...new Set([...(builtIn ? [] : [track.output.portName]), ...hardware])].map((n) => ({
+                value: n,
+                label: s.portAvailable(n) ? n : `${n} (not connected)`,
+              })),
+            ]}
+            onChange={(portName) => portName && s.updateTrack(track.id, { output: { ...track.output, portName }, instrumentId: undefined })}
+          />
+          {!builtIn && (
+            <div class="field">
+              <span class="field-label">Channel</span>
+              <Stepper
+                label="MIDI channel"
+                value={track.output.channel}
+                min={1}
+                max={16}
+                onChange={(channel) => s.updateTrack(track.id, { output: { ...track.output, channel } })}
+              />
+            </div>
+          )}
+        </>
+      )}
+
+      {!builtIn && (
+        <p class={`hint ${s.portAvailable(out.portName) ? '' : 'warn'}`}>
+          {out.portName} · channel {out.channel}
+          {instrument ? ` · ${instrument.manufacturer} ${instrument.device}` : ''}
+          {s.portAvailable(out.portName) ? '' : ' · not connected'}
+        </p>
+      )}
+      {!device && !builtIn && hasDevices && <p class="warn small">No device chosen — this track uses its own port setting.</p>}
+      <button type="button" class="link" onClick={() => s.go({ name: hasDevices ? 'instruments' : 'setup' })}>
+        {hasDevices ? 'Edit my devices…' : 'Set up external synths…'}
       </button>
     </Card>
   );

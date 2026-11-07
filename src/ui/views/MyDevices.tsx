@@ -23,7 +23,7 @@ export function MyDevices() {
   const add = () => {
     const used = new Set(s.rack.devices.map((d) => d.portName));
     const portName =
-      s.ports.find((p) => !used.has(p)) ?? s.ports[0] ?? "New device";
+      s.hardwarePorts.find((p) => !used.has(p)) ?? s.hardwarePorts[0] ?? "New device";
     const suggestion = suggestInstrument(portName, instruments);
     s.setRack({
       devices: [
@@ -115,7 +115,7 @@ export function MyDevices() {
                   <Select
                     label="MIDI port"
                     value={d.portName}
-                    options={[...new Set([d.portName, ...s.ports])].map(
+                    options={[...new Set([d.portName, ...s.hardwarePorts])].map(
                       (p) => ({
                         value: p,
                         label: s.ports.includes(p) ? p : `${p} (not connected)`,

@@ -438,7 +438,7 @@ kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border-radius
 .rail-name span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rail-state { flex: 0 0 auto; }
 .rail-now { font-size: 12px; color: var(--muted); }
-.rail-flag { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 5px; background: var(--danger); color: var(--on-accent); }
+.rail-flag { display: inline-flex; align-items: center; font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 2px 5px; border-radius: 5px; background: var(--danger); color: var(--on-accent); }
 .rail-flag.solo { background: var(--accent); }
 .rail-add { border-style: dashed; background: transparent; color: var(--text-2); }
 .rail-bottom { margin-top: auto; display: flex; flex-direction: column; gap: 6px; padding-top: 8px; }
