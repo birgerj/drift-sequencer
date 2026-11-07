@@ -648,7 +648,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .rail-connect { grid-area: connect; }
   .rail .rail-connect { min-height: 40px; }
 
-  .rail-tracks { grid-area: tracks; flex-direction: row; gap: 6px; overflow-x: auto; border-top: 0; padding: 0 12px; margin: 0 -12px; scrollbar-width: none; }
+  .rail-tracks { grid-area: tracks; flex-direction: row; gap: 6px; overflow-x: auto; border-top: 0; padding: 4px 12px; margin: -4px -12px; scrollbar-width: none; }
   .rail-tracks::-webkit-scrollbar { display: none; }
   .rail .rail-track { min-height: 40px !important; flex: 0 0 auto; min-width: 0; gap: 8px; padding: 0 12px 0 6px; border-radius: 20px; border-color: var(--line); }
   .rail-icon { width: 28px; height: 28px; border-radius: 14px; }
@@ -786,7 +786,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .rail-readout b { font-size: 12px; }
   .rail-readout.bpm button { min-height: 30px; width: 24px; }
   .rail .rail-connect { min-height: 30px; font-size: 13px; }
-  .rail-tracks { gap: 4px; padding: 0 8px; margin: 0 -8px; }
+  .rail-tracks { gap: 4px; padding: 4px 8px; margin: -4px -8px; }
   .rail .rail-track { min-height: 28px !important; gap: 5px; padding: 0 9px 0 4px; border-radius: 14px; }
   .rail-icon { width: 20px; height: 20px; border-radius: 10px; }
   .rail-icon svg { width: 12px; height: 12px; }
