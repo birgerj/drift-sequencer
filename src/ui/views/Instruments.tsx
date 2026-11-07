@@ -81,6 +81,17 @@ export function Instruments() {
         )}
       </div>
 
+      {!s.midi.connected && (
+        <Card>
+          <div class="connect-row">
+            <p class="hint">Hardware synths: connect them over USB and allow MIDI access. The built-in synths play without it.</p>
+            <button type="button" class="primary" onClick={() => void s.connectMidi()}>
+              Connect MIDI
+            </button>
+          </div>
+        </Card>
+      )}
+
       <MyDevices />
 
       <MidiMonitor />

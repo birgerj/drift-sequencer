@@ -15,17 +15,6 @@ export function Performance() {
   const p = s.project;
   return (
     <div class="performance">
-      {s.rack.devices.length === 0 && (
-        <section class="card setup-banner">
-          <div>
-            <b>Connect your gear once</b>
-            <p class="hint">Map your synths and drum machine; every project and template will use them.</p>
-          </div>
-          <button type="button" class="primary" onClick={() => s.go({ name: 'setup' })}>
-            Set up devices
-          </button>
-        </section>
-      )}
       <HarmonyStrip />
       <div class="perf-body">
         <main class="lanes">

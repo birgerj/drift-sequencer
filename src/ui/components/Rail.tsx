@@ -89,16 +89,6 @@ export function Rail({ canInstall }: { canInstall: boolean }) {
         return Meters ? <Meters /> : null;
       })()}
 
-      {!s.midi.connected && (
-        <button
-          type="button"
-          class="primary rail-connect"
-          onClick={() => void s.connectMidi()}
-        >
-          Connect MIDI
-        </button>
-      )}
-
       <div class="rail-tracks">
         {p.tracks.map((t, i) => (
           <RailTrack key={t.id} track={t} index={i} />

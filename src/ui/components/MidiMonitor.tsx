@@ -12,9 +12,7 @@ export function MidiMonitor() {
   return (
     <Card title="MIDI in monitor">
       {!s.midi.connected ? (
-        <button type="button" class="primary" onClick={() => void s.connectMidi()}>
-          Connect MIDI
-        </button>
+        <p class="hint">Connect MIDI (top of this page) to see incoming messages.</p>
       ) : (
         <p class="hint">
           Inputs: {s.inputs.length ? s.inputs.join(' · ') : 'none found'}. Turn a knob on a synth; every message shows here.
