@@ -78,6 +78,16 @@ projector.
   (`A`, a new scene every 32 bars).
 - **Fullscreen** (`F`).
 
+In most scenes **Notes** shows notes as particles. In **Flyover** and
+**City** they happen in the world instead, in the track's colour:
+
+| | Flyover | City |
+|---|---|---|
+| Lead (motif, arp) | A tree lights up and a lantern rises from it | A neon sign switches on along the street |
+| Bass (bass, acid) | A shock wave rolls over the land and bends the trees | A car comes down the oncoming lane |
+| Pad (chords, drone) | A glow spreads over the fields | A searchlight sweeps the sky |
+| Drums | Trees sway on the bar, kicks are gusts, snares light the clouds | Street lamps pulse on the kick |
+
 The controls hide after a few seconds. Visuals need WebGL 2; without it
 only *Pulse* works.
 

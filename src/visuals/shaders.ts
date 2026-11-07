@@ -38,8 +38,46 @@ float fbm(vec2 p) {
 vec3 tonemap(vec3 c) { return c / (1.0 + c); }
 `;
 
-/** Flying low over an endless ridged landscape; the sky takes the chord colours. */
-export const FLYOVER = HEADER + `
+/**
+ * World events: notes that happen *in* the Flyover and City scenes instead of as dots on top.
+ * Each event has a world position, an age and a track colour (see VisualsApp, spawnWorld).
+ *   uEvA[i] = (x, y, z, age s)   y is the note pitch 0..1 where a scene needs a height
+ *   uEvB[i] = (kind, life s, velocity 0..1, side -1/1)   kind 0 lead, 1 bass, 2 pad
+ *   uEvC[i] = track colour (rgb)
+ *   uBarPhase 0..1 smooth position within the bar (trees sway on it)
+ */
+const EVENTS = `
+#define MAXEV 24
+uniform vec4 uEvA[MAXEV];
+uniform vec4 uEvB[MAXEV];
+uniform vec3 uEvC[MAXEV];
+uniform int uEvN;
+uniform float uBarPhase;
+float gFog = 0.0;
+// Fade in quickly, fade out over the last part of the event's life.
+float evFade(vec4 a, vec4 b, float tail) {
+  return smoothstep(0.0, 0.08, a.w) * (1.0 - smoothstep(b.y - tail, b.y, a.w));
+}
+// Glow of a point light seen along a ray; hidden behind anything nearer than tmax, dimmed by fog.
+vec3 pointGlow(vec3 ro, vec3 rd, float tmax, vec3 P, vec3 col, float size) {
+  vec3 v = P - ro;
+  float tp = dot(v, rd);
+  if (tp < 0.0 || tp > tmax) return vec3(0.0);
+  float d2 = max(dot(v, v) - tp * tp, 0.0);
+  float s2 = size * size;
+  return col * (exp(-d2 / s2) + 0.12 * s2 / (d2 + s2)) * exp(-gFog * tp * tp);
+}
+`;
+
+/** Flying low over forests, lakes and snowy ridges. Trees sway on the bar; notes light up the land. */
+export const FLYOVER = HEADER + EVENTS + `
+uniform vec4 uRing[4];
+const vec3 SUN = vec3(0.2795, 0.2329, 0.9315);
+const float CELL = 1.1;
+const float TREE_FAR = 24.0;
+const float RING_SPEED = 2.6;
+float gMorph, gAmp, gWater, gSnow;
+
 float ridge(vec2 p) {
   float v = 0.0, a = 0.55;
   mat2 r = mat2(0.8, -0.6, 0.6, 0.8);
@@ -47,54 +85,193 @@ float ridge(vec2 p) {
   return v;
 }
 float height(vec2 p) {
-  // The landscape slowly changes character every few bars.
-  float morph = 0.5 + 0.5 * sin(uBar * 0.05);
-  float amp = 0.7 + uModBass * 0.8;
-  return (mix(fbm(p * 0.35) * 2.2, ridge(p * 0.3) * 2.6, morph) - 0.3) * amp;
+  return (mix(fbm(p * 0.35) * 2.2, ridge(p * 0.3) * 2.6, gMorph) - 0.3) * gAmp;
 }
+// Wind: the forest sways twice per bar in a wave across the land; kicks are gusts,
+// and bass shock waves push the trees outward as they pass.
+vec2 sway(vec2 c) {
+  float ph = 6.28318 * uBarPhase * 2.0 - dot(c, vec2(0.25, 0.12));
+  float amp = 0.12 + 0.35 * uKick + 0.08 * uEnergy + 0.1 * uModPad;
+  vec2 s = vec2(0.85, 0.35) * sin(ph) * amp;
+  for (int i = 0; i < 4; i++) {
+    vec4 r = uRing[i];
+    if (r.w <= 0.0) continue;
+    vec2 d = c - r.xy;
+    float dist = length(d) + 1e-3;
+    float front = r.z * RING_SPEED;
+    s += d / dist * r.w * exp(-(dist - front) * (dist - front) * 2.5) * 0.9;
+  }
+  return s;
+}
+float forestAt(vec2 c) { return noise(c * 0.17 + 7.0); }
+// Conifer in the cell under p, standing on ground height gh. c and th describe the tree.
+float treeAt(vec3 p, float gh, out vec2 c, out float th) {
+  vec2 id = floor(p.xz / CELL);
+  c = (id + 0.3 + 0.4 * vec2(hash(id), hash(id + 17.1))) * CELL;
+  th = 0.0;
+  float forest = forestAt(c) + 0.3 * hash(id + 3.7);
+  if (forest < 0.58 || gh < gWater + 0.05 || gh > gSnow - 0.2) return 1e3;
+  th = (0.32 + 0.26 * hash(id + 9.1)) * (0.75 + 0.4 * forest);
+  vec3 q = p - vec3(c.x, gh, c.y);
+  float k = clamp(q.y / th, 0.0, 1.0);
+  q.xz -= sway(c) * k * k * th;
+  float r = th * 0.3 * (1.0 - k) * (0.72 + 0.28 * fract(k * 3.0 + 0.15));
+  float cone = (length(q.xz) - r) * 0.55;
+  return max(cone, max(q.y - th, -q.y - 0.5));
+}
+vec3 skyCol(vec3 rd) {
+  vec3 s = mix(uCol1 * 0.6, uCol0 * 0.15, clamp(rd.y * 2.5 + 0.3, 0.0, 1.0));
+  float sd = max(dot(rd, SUN), 0.0);
+  s += uCol2 * pow(sd, mix(40.0, 10.0, uPad)) * (1.2 + uKick);
+  if (rd.y > 0.0) {
+    // Clouds drift by overhead; the snare lights them up like distant lightning.
+    vec2 cp = rd.xz * (6.0 / (rd.y + 0.05)) + vec2(uTime * 0.3, uTravel);
+    float cl = smoothstep(0.45, 0.8, fbm(cp * 0.07));
+    vec3 cc = mix(uCol0 * 0.3 + 0.04, uCol2 * 0.8 + 0.1, pow(sd, 3.0)) + vec3(0.75, 0.8, 1.0) * uSnare * 0.8;
+    s = mix(s, cc, cl * smoothstep(0.0, 0.25, rd.y) * 0.8);
+  }
+  return s;
+}
+// Note effects on the ground. trees > 0 when shading a tree (lead notes light trees up).
+vec3 groundFx(vec2 xz, float trees) {
+  vec3 c = vec3(0.0);
+  for (int i = 0; i < MAXEV; i++) {
+    if (i >= uEvN) break;
+    vec4 a = uEvA[i], b = uEvB[i];
+    vec3 ec = uEvC[i];
+    float d = length(xz - a.xz);
+    if (b.x < 0.5) {
+      float f = evFade(a, b, b.y * 0.6);
+      c += ec * smoothstep(0.08, 0.0, abs(d - a.w * 1.4)) * f * 1.2 * (1.0 - trees);
+      c += ec * exp(-d * d * 5.0) * f * (0.25 + 2.2 * trees);
+    } else if (b.x < 1.5) {
+      float f = evFade(a, b, b.y * 0.7);
+      c += ec * smoothstep(0.22, 0.0, abs(d - a.w * RING_SPEED)) * f * (0.6 + b.z);
+    } else {
+      float f = evFade(a, b, 1.5);
+      float rr = 0.6 + 2.6 * smoothstep(0.0, 2.0, a.w);
+      c += ec * smoothstep(rr, rr * 0.25, d) * f * 0.15 * (1.0 + trees);
+    }
+  }
+  return c;
+}
+
 void main() {
+  gMorph = 0.5 + 0.5 * sin(uBar * 0.05);
+  gAmp = 0.7 + uModBass * 0.8;
+  // Ridged land sits higher, so lakes and snow follow the landscape's character.
+  gWater = mix(0.45, 0.32, gMorph) * gAmp;
+  gSnow = mix(1.35, 1.8, gMorph) * gAmp;
+  gFog = mix(0.001, 0.006, uModPad);
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
   float z = uTravel;
   vec3 ro = vec3(sin(z * 0.07) * 3.0, 0.0, z);
-  // Follow the ground smoothly: average a few points ahead, never dip into a hill.
   float g0 = height(ro.xz), g1 = height(ro.xz + vec2(0.0, 2.0)), g2 = height(ro.xz + vec2(0.0, 4.0));
-  ro.y = max(g0, (g0 + g1 + g2) / 3.0) + 1.2 + 0.2 * sin(z * 0.11);
+  ro.y = max(max(g0, (g0 + g1 + g2) / 3.0), gWater) + 1.2 + 0.2 * sin(z * 0.11);
   vec3 ta = ro + vec3(sin(z * 0.07 + 0.6) * 1.5, -0.25, 3.0);
   vec3 ww = normalize(ta - ro), uu = normalize(cross(vec3(0, 1, 0), ww)), vv = cross(ww, uu);
   float roll = 0.08 * sin(z * 0.05);
   vec3 rd = normalize(uv.x * (uu * cos(roll) + vv * sin(roll)) + uv.y * vv + 1.4 * ww);
 
-  vec3 sun = normalize(vec3(0.3, 0.25, 1.0));
-  vec3 sky = mix(uCol1 * 0.6, uCol0 * 0.15, clamp(rd.y * 2.5 + 0.3, 0.0, 1.0));
-  sky += uCol2 * pow(max(dot(rd, sun), 0.0), mix(40.0, 10.0, uPad)) * (1.2 + uKick);
-
-  float t = 0.1, h = 0.0;
-  bool hit = false;
-  for (int i = 0; i < 110; i++) {
+  vec3 sky = skyCol(rd);
+  // 0 sky, 1 ground, 2 water, 3 tree
+  int mat = 0;
+  float t = 0.1, tgh = 0.0, tth = 0.0;
+  vec2 tc = vec2(0.0);
+  for (int i = 0; i < 160; i++) {
     vec3 p = ro + rd * t;
-    h = p.y - height(p.xz);
-    if (h < 0.002 * t) { hit = true; break; }
-    t += h * 0.45;
+    float gh = height(p.xz);
+    float h = p.y - max(gh, gWater);
+    if (h < 0.002 * t) { mat = gh > gWater ? 1 : 2; break; }
+    float st = h * 0.45;
+    if (t < TREE_FAR && h < 0.95 && gh > gWater) {
+      vec2 c; float th;
+      float d = treeAt(p, gh, c, th);
+      if (d < 0.002 * t) { mat = 3; tc = c; tth = th; tgh = gh; break; }
+      st = min(st, min(max(d, 0.015), 0.3));
+    }
+    t += st;
     if (t > 60.0) break;
   }
+
+  // Lanterns rise from where lead notes land.
+  vec3 lp[MAXEV];
+  for (int i = 0; i < MAXEV; i++) {
+    lp[i] = vec3(0.0);
+    if (i >= uEvN || uEvB[i].x > 0.5) continue;
+    vec4 a = uEvA[i];
+    float gh = max(height(a.xz), gWater);
+    lp[i] = vec3(a.x + sin(a.w * 2.0 + float(i)) * 0.15, gh + 0.5 + a.w * 0.6 + a.y * 0.5, a.z);
+  }
+
   vec3 col = sky;
-  if (hit) {
-    vec3 p = ro + rd * t;
+  vec3 light = vec3(1.0, 0.93, 0.82) * 0.6 + uCol2 * 0.5;
+  vec3 amb = mix(uCol0, uCol1, 0.5) * 0.25 + 0.03;
+  // Soft fill from behind the camera, so slopes facing us aren't black.
+  const vec3 FILL = vec3(-0.371, 0.557, -0.743);
+  vec3 fillCol = mix(uCol1, vec3(0.8, 0.85, 1.0), 0.5) * 0.3;
+  vec3 p = ro + rd * t;
+  if (mat == 3) {
+    vec2 e = vec2(0.01, 0.0), dc; float dth;
+    vec3 n = normalize(vec3(
+      treeAt(p + e.xyy, tgh, dc, dth) - treeAt(p - e.xyy, tgh, dc, dth),
+      treeAt(p + e.yxy, tgh, dc, dth) - treeAt(p - e.yxy, tgh, dc, dth),
+      treeAt(p + e.yyx, tgh, dc, dth) - treeAt(p - e.yyx, tgh, dc, dth)));
+    float k = clamp((p.y - tgh) / tth, 0.0, 1.0);
+    vec3 alb = mix(vec3(0.02, 0.06, 0.035), vec3(0.06, 0.15, 0.07), k);
+    alb = mix(alb, uCol0 * 0.25, 0.2) * (0.75 + 0.5 * hash(tc));
+    col = alb * (amb * 2.0 + light * clamp(dot(n, SUN) + 0.35, 0.0, 1.3) + fillCol * max(dot(n, FILL), 0.0) * 2.0);
+    // Rim light from the sun behind the trees.
+    col += light * 0.12 * pow(1.0 - max(dot(n, -rd), 0.0), 3.0);
+    col += groundFx(tc, 1.0) * (0.4 + 0.6 * k);
+    // Hi-hats make the needles glint.
+    col += vec3(1.0) * step(0.96, hash(floor(p.xz * 22.0 + p.y * 9.0) + floor(uTime * 12.0))) * uHat * 0.5;
+  } else if (mat == 1) {
     vec2 e = vec2(0.02, 0.0);
     vec3 n = normalize(vec3(height(p.xz - e.xy) - height(p.xz + e.xy), 2.0 * e.x, height(p.xz - e.yx) - height(p.xz + e.yx)));
-    float dif = clamp(dot(n, sun), 0.0, 1.0);
-    vec3 ground = mix(uCol0 * 0.25, uCol1 * 0.5, smoothstep(0.2, 1.6, p.y));
-    col = ground * (0.25 + dif);
-    // Glowing contour lines that pulse with the kick.
-    float lines = abs(fract(p.y * 4.0 - uTime * 0.2) - 0.5);
-    col += uCol2 * smoothstep(0.06, 0.0, lines) * (0.15 + uKick * 1.4 + uLead * 0.8);
-    col += uCol1 * uBass * 0.25 * smoothstep(1.2, 0.0, p.y);
-    // A grid on the ground flashes on the snare.
-    vec2 g = abs(fract(p.xz * 0.5) - 0.5);
-    col += uCol1 * smoothstep(0.03, 0.0, min(g.x, g.y)) * uSnare * 0.9;
-    col = mix(col, sky, 1.0 - exp(-mix(0.001, 0.006, uModPad) * t * t));
+    float slope = 1.0 - n.y;
+    float grain = noise(p.xz * 6.0);
+    vec3 grass = mix(vec3(0.05, 0.11, 0.05), vec3(0.12, 0.15, 0.06), grain);
+    grass = mix(grass, uCol0 * 0.35 + vec3(0.02, 0.05, 0.02), 0.3);
+    vec3 rock = vec3(0.13, 0.12, 0.11) * (0.7 + 0.6 * noise(p.xz * 3.0 + p.y));
+    vec3 snow = mix(vec3(0.8, 0.84, 0.92), uCol1 + 0.5, 0.15);
+    vec3 alb = mix(grass, rock, smoothstep(0.25, 0.5, slope + grain * 0.15));
+    alb = mix(alb, snow, smoothstep(gSnow - 0.1, gSnow + 0.1, p.y + grain * 0.15) * smoothstep(0.6, 0.35, slope));
+    // Forest floor, and forests beyond tree range, read as darker patches.
+    alb *= mix(1.0, 0.55, smoothstep(0.42, 0.62, forestAt(p.xz)) * step(gWater + 0.05, p.y) * step(p.y, gSnow - 0.2));
+    alb = mix(vec3(0.17, 0.15, 0.1), alb, smoothstep(gWater, gWater + 0.06, p.y));
+    col = alb * (amb * 1.6 + light * clamp(dot(n, SUN) + 0.2, 0.0, 1.2) + fillCol * max(dot(n, FILL), 0.0) * 2.0);
+    col += groundFx(p.xz, 0.0);
+  } else if (mat == 2) {
+    // Lakes: wind ripples, plus rings where notes land.
+    vec2 w = p.xz;
+    vec3 n = vec3(0.0, 1.0, 0.0);
+    n.xz += 0.03 * vec2(sin(w.x * 3.0 + uTime * 1.5 + sin(w.y * 2.0)), sin(w.y * 3.4 - uTime * 1.2));
+    for (int i = 0; i < MAXEV; i++) {
+      if (i >= uEvN || uEvB[i].x > 1.5) continue;
+      vec4 a = uEvA[i];
+      vec2 dv = w - a.xz;
+      float d = length(dv) + 1e-3;
+      float front = a.w * (uEvB[i].x < 0.5 ? 1.4 : RING_SPEED);
+      n.xz += dv / d * sin((d - front) * 14.0) * exp(-(d - front) * (d - front) * 4.0) * 0.18 * evFade(a, uEvB[i], uEvB[i].y * 0.6);
+    }
+    n = normalize(n);
+    vec3 rr = reflect(rd, n);
+    float fres = 0.04 + 0.96 * pow(1.0 - max(dot(-rd, n), 0.0), 5.0);
+    col = mix(vec3(0.01, 0.02, 0.03) + uCol0 * 0.05, skyCol(rr), fres);
+    for (int i = 0; i < MAXEV; i++) {
+      if (i >= uEvN || uEvB[i].x > 0.5) continue;
+      col += pointGlow(p, rr, 40.0, lp[i], uEvC[i] * 2.0, 0.12) * evFade(uEvA[i], uEvB[i], uEvB[i].y * 0.4) * 0.6;
+    }
+    col += groundFx(p.xz, 0.0) * 0.5;
   }
-  col += uCol2 * uKick * 0.08;
+  if (mat > 0) col = mix(col, sky, 1.0 - exp(-gFog * t * t));
+  float tmax = mat > 0 ? t : 1e3;
+  for (int i = 0; i < MAXEV; i++) {
+    if (i >= uEvN || uEvB[i].x > 0.5) continue;
+    col += pointGlow(ro, rd, tmax, lp[i], uEvC[i] * 2.5 + 0.3, 0.05 + 0.04 * uEvB[i].z) * evFade(uEvA[i], uEvB[i], uEvB[i].y * 0.4);
+  }
+  col += uCol2 * uKick * 0.05;
   col = tonemap(col * 1.6);
   col *= 1.0 - 0.35 * dot(uv, uv);
   outColor = vec4(pow(col, vec3(0.85)), 1.0);
@@ -142,9 +319,13 @@ void main() {
 `;
 
 
-/** Night drive down an avenue between towers; windows light up with the lead. */
-export const CITY = HEADER + `
+/**
+ * Night drive down an avenue with street lamps and traffic. Lead notes switch on neon signs on
+ * the facades, bass notes send cars down the oncoming lane, pads sweep searchlights over the sky.
+ */
+export const CITY = HEADER + EVENTS + `
 float sdBox(vec3 p, vec3 b) { vec3 q = abs(p) - b; return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0); }
+// x: distance, yz: building id, w: roof height (or -1 for a lamp post).
 vec4 city(vec3 p) {
   float d = p.y;
   vec4 info = vec4(d, 0.0, 0.0, 0.0);
@@ -163,10 +344,88 @@ vec4 city(vec3 p) {
     float b = sdBox(r - vec3(off + bw, h, 0.0), vec3(bw, h, len * 0.5 - 0.35));
     if (b < info.x) info = vec4(b, id, h * 2.0);
   }
+  // Lamp posts with a short arm over the street.
+  vec3 l = vec3(q.x - 3.55, p.y, mod(p.z, 6.0) - 3.0);
+  float post = max(length(l.xz) - 0.035, p.y - 2.5);
+  post = min(post, sdBox(l - vec3(-0.13, 2.5, 0.0), vec3(0.15, 0.02, 0.025)));
+  if (post < info.x) info = vec4(post, 0.0, 0.0, -1.0);
   return info;
 }
+// Where a lead note's neon sign hangs: on the street-side facade, below the roof.
+vec3 signPos(vec4 a, vec4 b) {
+  vec2 id = vec2(floor(a.z / 4.0), b.w);
+  float top = 2.0 * (1.5 + pow(hash(id), 2.0) * 9.0) * (0.85 + uModBass * 0.3);
+  float y = top > 3.4 ? mix(1.6, top - 1.0, a.y) : top * 0.55;
+  return vec3(b.w * 3.98, y, a.z);
+}
+float carZ(vec4 a) { return a.z - a.w * 9.0; }
+vec3 searchBeam(vec3 ro, vec3 rd, float tmax, vec4 a, vec4 b, vec3 ec, float idx) {
+  float ang = a.w * 0.7 + idx * 1.7;
+  vec3 B = vec3(a.x, 0.0, a.z);
+  vec3 D = normalize(vec3(-b.w * 0.25 + sin(ang) * 0.45, 1.0, cos(ang * 0.8) * 0.4));
+  vec3 w0 = ro - B;
+  float bb = dot(rd, D), d = dot(rd, w0), e = dot(D, w0);
+  float den = max(1.0 - bb * bb, 1e-4);
+  float tr = (bb * e - d) / den;
+  float sb = (e - bb * d) / den;
+  if (tr < 0.0 || tr > tmax || sb < 0.0) return vec3(0.0);
+  float dist = length(ro + rd * tr - B - D * sb);
+  float w = 0.25 + sb * 0.05;
+  return ec * exp(-dist * dist / (w * w)) * exp(-sb * 0.04) * 0.5 * exp(-gFog * 0.2 * tr * tr);
+}
+vec3 lampCol() { return vec3(1.0, 0.72, 0.42) * (0.8 + uKick * 0.6); }
+// Every light in the street, seen along a ray. blur > 1 softens them (wet reflections).
+vec3 cityLights(vec3 ro, vec3 rd, float tmax, float blur) {
+  vec3 c = vec3(0.0);
+  float z0 = floor(ro.z / 6.0) * 6.0 + 3.0;
+  vec3 lc = lampCol();
+  for (int k = -1; k < 9; k++) {
+    float z = z0 + float(k) * 6.0;
+    c += pointGlow(ro, rd, tmax, vec3(3.3, 2.44, z), lc, 0.09 * blur);
+    c += pointGlow(ro, rd, tmax, vec3(-3.3, 2.44, z), lc, 0.09 * blur);
+  }
+  // Ambient traffic: tail lights pulling away on the right, head lights coming on the left.
+  for (int k = 0; k < 7; k++) {
+    float off = uTime * 2.5;
+    float cell = floor((ro.z - off) / 11.0) + float(k);
+    if (hash(vec2(cell, 1.0)) > 0.45) {
+      float z = cell * 11.0 + off + hash(vec2(cell, 2.0)) * 4.0;
+      vec3 tl = vec3(1.0, 0.06, 0.03) * (1.0 + uSnare);
+      c += pointGlow(ro, rd, tmax, vec3(1.0, 0.42, z), tl, 0.06 * blur);
+      c += pointGlow(ro, rd, tmax, vec3(1.6, 0.42, z), tl, 0.06 * blur);
+    }
+    float off2 = -uTime * 7.0;
+    float cell2 = floor((ro.z - off2) / 17.0) + float(k);
+    if (hash(vec2(cell2, 5.0)) > 0.6) {
+      float z = cell2 * 17.0 + off2;
+      vec3 hl = vec3(1.0, 0.95, 0.85) * 1.3;
+      c += pointGlow(ro, rd, tmax, vec3(-1.0, 0.45, z), hl, 0.07 * blur);
+      c += pointGlow(ro, rd, tmax, vec3(-1.6, 0.45, z), hl, 0.07 * blur);
+    }
+  }
+  for (int i = 0; i < MAXEV; i++) {
+    if (i >= uEvN) break;
+    vec4 a = uEvA[i], b = uEvB[i];
+    vec3 ec = uEvC[i];
+    if (b.x < 0.5) {
+      c += pointGlow(ro, rd, tmax, signPos(a, b) - vec3(b.w * 0.2, 0.0, 0.0), ec, 0.7 * blur) * evFade(a, b, 0.4) * 0.35;
+    } else if (b.x < 1.5) {
+      float z = carZ(a);
+      float f = evFade(a, b, 0.5);
+      vec3 hl = vec3(1.0, 0.97, 0.9) * (1.6 + b.z);
+      c += pointGlow(ro, rd, tmax, vec3(-1.0, 0.45, z), hl, 0.08 * blur) * f;
+      c += pointGlow(ro, rd, tmax, vec3(-1.6, 0.45, z), hl, 0.08 * blur) * f;
+      c += pointGlow(ro, rd, tmax, vec3(-1.3, 0.12, z + 0.8), ec * 1.5, 0.5 * blur) * f;
+    } else if (blur < 1.5) {
+      c += searchBeam(ro, rd, tmax, a, b, ec, float(i)) * evFade(a, b, 1.2);
+    }
+  }
+  return c;
+}
+
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  gFog = mix(0.0004, 0.003, uModPad);
   float z = uTravel * 2.0;
   vec3 ro = vec3(sin(z * 0.05) * 0.8, 1.1 + uModBass * 1.6 + uBass * 0.15, z);
   vec3 ww = normalize(vec3(sin(z * 0.05 + 0.4) * 0.15, 0.03 + uModLead * 0.08, 1.0));
@@ -174,6 +433,7 @@ void main() {
   vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.3 * ww);
 
   vec3 sky = mix(uCol0 * 0.25, uCol1 * 0.08, clamp(rd.y * 3.0, 0.0, 1.0));
+  sky += uCol1 * 0.15 * exp(-max(rd.y, 0.0) * 12.0);
   sky += vec3(1.0) * step(0.997, hash(floor(rd.xy * 300.0))) * smoothstep(0.05, 0.3, rd.y) * 0.6;
   float t = 0.05;
   vec4 hit = vec4(0.0);
@@ -187,17 +447,34 @@ void main() {
   }
   vec3 fogCol = mix(uCol0 * 0.35, uCol1 * 0.3, 0.5 + 0.5 * uPad);
   vec3 col = sky;
+  vec3 lc = lampCol();
   if (found) {
     vec3 p = ro + rd * t;
     vec2 e = vec2(0.002, 0.0);
     vec3 n = normalize(vec3(city(p + e.xyy).x - city(p - e.xyy).x, city(p + e.yxy).x - city(p - e.yxy).x, city(p + e.yyx).x - city(p - e.yyx).x));
-    if (p.y < 0.01) {
-      // Wet street: lane marks rush past, lights smear in the reflection.
+    float lampZ = mod(p.z, 6.0) - 3.0;
+    if (hit.w < 0.0) {
+      col = vec3(0.03, 0.03, 0.035) + lc * 0.25 * smoothstep(1.8, 2.5, p.y);
+    } else if (p.y < 0.01) {
+      float ax = abs(p.x);
+      // Road, kerb and pavement; the asphalt is wet and mirrors the lights.
       col = vec3(0.02, 0.02, 0.03);
-      float lane = smoothstep(0.08, 0.0, abs(abs(p.x) - 0.05)) * step(0.5, fract(p.z * 0.25));
-      col += vec3(0.6) * lane * 0.4;
-      col += fogCol * 0.35 * (0.6 + uBass);
-      col += uCol2 * smoothstep(3.5, 0.0, abs(abs(p.x) - 3.8)) * 0.15 * (1.0 + uKick * 2.0);
+      if (ax > 3.4) col = vec3(0.05, 0.05, 0.055) * (0.8 + 0.4 * step(0.06, fract(p.z * 1.5)) * step(0.06, fract(ax * 1.5)));
+      col += vec3(0.6) * smoothstep(0.08, 0.0, abs(ax - 0.05)) * step(0.5, fract(p.z * 0.25)) * 0.4;
+      col += vec3(0.5) * smoothstep(0.05, 0.0, abs(ax - 3.4)) * 0.3;
+      col += fogCol * 0.3 * (0.6 + uBass);
+      col += lc * 0.4 * exp(-((ax - 3.3) * (ax - 3.3) + lampZ * lampZ) * 0.35);
+      for (int i = 0; i < MAXEV; i++) {
+        if (i >= uEvN || uEvB[i].x < 0.5 || uEvB[i].x > 1.5) continue;
+        float cz = carZ(uEvA[i]);
+        float f = evFade(uEvA[i], uEvB[i], 0.5);
+        col += vec3(0.9, 0.88, 0.8) * 0.5 * f * exp(-(p.x + 1.3) * (p.x + 1.3) * 1.5 - (p.z - cz + 3.5) * (p.z - cz + 3.5) * 0.12);
+        col += uEvC[i] * f * exp(-((p.x + 1.3) * (p.x + 1.3) + (p.z - cz) * (p.z - cz)) * 1.2);
+      }
+      if (ax < 3.4) {
+        vec3 wn = normalize(vec3(noise(p.xz * 8.0) - 0.5, 6.0, noise(p.xz * 8.0 + 3.0) - 0.5));
+        col += cityLights(p + vec3(0.0, 0.01, 0.0), reflect(rd, wn), 60.0, 3.0) * 0.45;
+      }
     } else {
       vec2 f = abs(n.x) > 0.5 ? p.zy : p.xy;
       vec2 w = f * vec2(2.2, 2.8);
@@ -208,12 +485,35 @@ void main() {
       vec3 win = mix(uCol1, uCol2, hash(cell + 3.1)) * (0.6 + 1.6 * uLead * hash(cell + uBeat));
       col = vec3(0.025, 0.028, 0.04) * (0.5 + 0.5 * max(n.z, 0.0));
       col += win * shape * on;
-      // Neon band along the roofline pulses with the kick.
       col += uCol2 * smoothstep(0.25, 0.0, abs(p.y - hit.w + 0.15)) * (0.4 + uKick * 2.2);
       col += uCol1 * smoothstep(0.05, 0.0, abs(fract(p.y * 0.5) - 0.5) - 0.45) * uSnare * 0.6;
+      bool street = abs(n.x) > 0.5 && abs(abs(p.x) - 4.0) < 0.03;
+      if (street) {
+        // Lamp light washes the lower floors.
+        col += lc * 0.3 * exp(-(p.y - 2.2) * (p.y - 2.2) * 0.35 - lampZ * lampZ * 0.25);
+        float side = p.x < 0.0 ? -1.0 : 1.0;
+        for (int i = 0; i < MAXEV; i++) {
+          if (i >= uEvN || uEvB[i].x > 0.5 || uEvB[i].w != side) continue;
+          vec4 a = uEvA[i], b = uEvB[i];
+          vec3 sp = signPos(a, b);
+          vec2 l = vec2(p.z - sp.z, p.y - sp.y);
+          vec2 hs = vec2(1.25, 0.32 + 0.18 * b.z);
+          vec2 ad = abs(l) - hs;
+          float box = max(ad.x, ad.y);
+          // Neon tube frame, block letters, and the glow it throws on the wall.
+          float tube = smoothstep(0.035, 0.0, abs(box + 0.03));
+          vec2 gl = floor((l + hs) * vec2(6.0, 8.0));
+          float glyph = step(0.5, hash(gl + float(i) * 7.3 + floor(a.z))) * step(box, -0.08) * step(0.5, fract((l.x + hs.x) * 3.0 + 0.25));
+          float flick = a.w < 0.3 ? step(0.45, hash(vec2(floor(a.w * 40.0), float(i)))) : 1.0;
+          float fade = evFade(a, b, 0.4) * flick;
+          col = mix(col, col * 0.3, step(box, 0.0) * fade);
+          col += uEvC[i] * (tube * 3.0 + glyph * 1.8 + 0.5 * exp(-max(box, 0.0) * 4.0)) * fade;
+        }
+      }
     }
-    col = mix(col, fogCol, 1.0 - exp(-mix(0.0004, 0.003, uModPad) * t * t));
+    col = mix(col, fogCol, 1.0 - exp(-gFog * t * t));
   }
+  col += cityLights(ro, rd, found ? t : 1e3, 1.0);
   col += uCol2 * uKick * 0.05;
   col = tonemap(col * 1.5);
   col *= 1.0 - 0.3 * dot(uv, uv);
