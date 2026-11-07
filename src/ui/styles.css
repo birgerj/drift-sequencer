@@ -423,14 +423,16 @@ kbd { font-family: var(--mono); font-size: 10px; padding: 1px 5px; border-radius
 .rail-readout.bpm button { min-height: 44px; width: 26px; padding: 0; background: transparent; border: 0; color: var(--muted); }
 .rail-tracks { display: flex; flex-direction: column; gap: 4px; padding-top: 6px; border-top: 1px solid var(--line); }
 .rail-track { min-height: 56px !important; justify-content: flex-start; gap: 10px; padding: 0 10px 0 8px; text-align: left; background: transparent; border: 1px solid transparent; border-radius: 12px; }
-.rail-track.selected { background: var(--surface-2); border-color: var(--accent); }
+.rail-track.selected { background: color-mix(in srgb, var(--accent) 22%, var(--surface-2)); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.rail-track.selected .rail-icon { background: var(--accent); color: var(--bg); }
+.rail-track:not(.selected) .rail-name b { opacity: 0.75; }
 .rail-track.silent { opacity: 0.5; }
 .rail-icon { width: 32px; height: 32px; flex: 0 0 auto; border-radius: 9px; display: flex; align-items: center; justify-content: center; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .rail-name { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; line-height: 1.2; }
 .rail-name b { font-size: 14px; }
 .rail-name span { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .rail-state { flex: 0 0 auto; }
-.rail-now { font-size: 12px; color: var(--accent); }
+.rail-now { font-size: 12px; color: var(--muted); }
 .rail-flag { font-family: var(--mono); font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 5px; background: var(--danger); color: var(--on-accent); }
 .rail-flag.solo { background: var(--accent); }
 .rail-add { border-style: dashed; background: transparent; color: var(--text-2); }
@@ -663,7 +665,7 @@ button.drum-label[aria-pressed='true'] { background: color-mix(in srgb, var(--da
   .rail-icon { width: 28px; height: 28px; border-radius: 14px; }
   .rail-name span { display: none; }
   .rail-name b { font-size: 13px; white-space: nowrap; }
-  .rail-now { font-size: 11px; }
+  .rail-state:has(.rail-now) { display: none; }
   .rail .rail-add { flex: 0 0 auto; width: 40px; min-height: 40px; padding: 0; gap: 0; border-radius: 20px; font-size: 0; }
 
   /* Bottom tab bar. The tab bar and More sheet are position: fixed inside the rail, so the

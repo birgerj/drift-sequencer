@@ -1,10 +1,10 @@
 import { useState } from "preact/hooks";
 import { slotComponent } from "../theme/slots";
-import { NOTE_NAMES, noteName } from "../../core/theory/note";
+import { NOTE_NAMES } from "../../core/theory/note";
 import type { TrackState } from "../../state/project";
 import { pwa } from "../pwa";
 import { typeLabel } from "../paramSchema";
-import { store, useLive, useStore, type View } from "../store";
+import { useLive, useStore, type View } from "../store";
 import { Icon, TYPE_ICONS } from "./controls";
 
 /** Left column: transport, the track list and the main views. Always visible. */
@@ -253,24 +253,6 @@ function RailTrack({ track, index }: { track: TrackState; index: number }) {
   const selected = s.view.name === "track" && s.view.trackId === track.id;
   const device = s.device(track.deviceId);
   const out = s.trackOutput(track);
-  const now = useLive((l) => {
-    const n = l.now[track.id];
-    if (!n || n.until + 150 <= performance.now()) return "";
-    const t = store.project.tracks.find((x) => x.id === track.id);
-    if (t?.generator.type === "drums") {
-      return n.notes
-        .map((note) =>
-          t.generator.type === "drums"
-            ? (t.generator.params.voices.find((v) => v.note === note)?.name ??
-              noteName(note))
-            : "",
-        )
-        .join(" ");
-    }
-    return n.notes.length > 2
-      ? noteName(n.notes[0]!) + "…"
-      : n.notes.map(noteName).join(" ");
-  });
   const silent =
     track.muted || (s.project.tracks.some((t) => t.solo) && !track.solo);
   return (
@@ -297,7 +279,7 @@ function RailTrack({ track, index }: { track: TrackState; index: number }) {
           <span class="rail-flag solo">S</span>
         ) : (
           <span class="mono rail-now">
-            {now || (index < 9 ? String(index + 1) : "")}
+            {index < 9 ? String(index + 1) : ""}
           </span>
         )}
       </span>
