@@ -7,25 +7,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
-type RGB = [number, number, number];
-
-/** What the visuals window tells the tunnel every frame. */
-export interface TunnelInput {
-  dt: number;
-  /** Continuous beat count (quarter notes). */
-  beats: number;
-  playing: boolean;
-  kick: number;
-  snare: number;
-  hat: number;
-  energy: number;
-  bass: number;
-  pad: number;
-  /** Chord colours from Drift (root, third, fifth), 0..1. */
-  cols: RGB[];
-  /** Drift's travel speed; 0.4 is the default cruising speed. */
-  travelSpeed: number;
-}
+import type { RGB, Scene3D, SceneInput } from './scene3d';
 
 interface Car {
   mode: 'convoy' | 'over' | 'oncoming';
@@ -69,7 +51,7 @@ const LROW = 10;
 const CEIL_LIGHTS = 8;
 const HM0 = 12.0;
 
-export class Tunnel {
+export class Tunnel implements Scene3D {
   readonly canvas: HTMLCanvasElement;
   private renderer: THREE.WebGLRenderer;
   private composer: EffectComposer;
@@ -158,7 +140,7 @@ export class Tunnel {
     return (HM0 + this.cam / 1000).toFixed(1).replace('.', ',');
   }
 
-  render(i: TunnelInput): void {
+  render(i: SceneInput): void {
     const dt = i.dt;
     this.time += dt;
     const target = CRUISE * (i.travelSpeed / 0.4);
@@ -660,7 +642,7 @@ export class Tunnel {
   }
 
   /** Colour of the light at distance d: chord colours drifting along the tunnel, a chase pulse riding the beat. */
-  private lightColor(d: number, i: TunnelInput, out: THREE.Color): THREE.Color {
+  private lightColor(d: number, i: SceneInput, out: THREE.Color): THREE.Color {
     const rel = d - this.cam;
     const w = 0.5 + 0.5 * Math.sin(d * 0.04 - this.time * 0.5);
     this.lc.copy(this.hA).lerp(this.hB, w);
@@ -670,7 +652,7 @@ export class Tunnel {
     return out.copy(this.lc).multiplyScalar(lvl * 1.3);
   }
 
-  private updateFixtures(i: TunnelInput): void {
+  private updateFixtures(i: SceneInput): void {
     const col = this.fixtures.instanceColor!.array as Float32Array;
     const n = this.fixN;
     const k0 = Math.floor((this.cam - 40) / FIX_SP);
@@ -708,7 +690,7 @@ export class Tunnel {
     this.fixtures.instanceColor!.needsUpdate = true;
   }
 
-  private updateCeilLights(i: TunnelInput): void {
+  private updateCeilLights(i: SceneInput): void {
     const base = Math.floor(this.cam / LROW) * LROW - LROW;
     const frac = (this.cam % LROW) / LROW;
     this.ceilLights.forEach((l, j) => {

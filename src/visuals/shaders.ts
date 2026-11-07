@@ -860,39 +860,6 @@ void main() {
 }
 `;
 
-/** Hyperspace: star streaks through a nebula; the lead stretches the streaks. */
-export const WARP = HEADER + `
-void main() {
-  vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
-  float t = uTravel * 0.3;
-  vec3 col = vec3(0.0);
-  // Nebula behind the stars, drifting with the pad LFO.
-  float neb = fbm(uv * 2.0 + vec2(uTime * 0.02, uModPad * 2.0));
-  col += mix(uCol0, uCol1, neb) * pow(neb, 2.5) * (0.4 + uPad * 0.8);
-  float streak = 0.02 + uLead * 0.12 + uEnergy * 0.05;
-  for (int i = 0; i < 6; i++) {
-    float depth = fract(float(i) / 6.0 + t);
-    float scale = mix(18.0, 0.6, depth);
-    float fade = smoothstep(0.0, 0.3, depth) * smoothstep(1.0, 0.85, depth);
-    vec2 p = uv * scale + float(i) * 17.3;
-    vec2 id = floor(p);
-    vec2 f = fract(p) - 0.5;
-    float h = hash(id);
-    vec2 off = vec2(hash(id + 1.3), hash(id + 2.7)) - 0.5;
-    vec2 d = f - off * 0.7;
-    // Stretch towards the centre: radial streaks.
-    vec2 dir = normalize(uv + 1e-4);
-    float along = dot(d, dir), across = dot(d, vec2(-dir.y, dir.x));
-    float s = exp(-across * across * 2500.0) * exp(-along * along / (streak * streak * 40.0 + 0.0004));
-    vec3 starCol = mix(vec3(1.0), uCol2, step(0.7, h));
-    col += starCol * s * fade * step(0.6, h) * (1.0 + uHat);
-  }
-  col += uCol2 * uKick * 0.12 * exp(-length(uv) * 3.0);
-  col += uCol1 * uBass * 0.08;
-  outColor = vec4(pow(tonemap(col * 1.6), vec3(0.9)), 1.0);
-}
-`;
-
 /** Retro sun, neon grid and mountains; the classic outrun horizon. */
 export const SYNTHWAVE = HEADER + `
 void main() {
@@ -933,8 +900,9 @@ export const SCENES = [
   { id: 'city', name: 'City', source: CITY },
   { id: 'coast', name: 'Coast', source: COAST },
   { id: 'synthwave', name: 'Synthwave', source: SYNTHWAVE },
-  { id: 'warp', name: 'Warp', source: WARP },
-  // Drawn with three.js (tunnel3d.ts), not a fragment shader.
+  // Drawn with three.js (warp3d.ts).
+  { id: 'warp', name: 'Warp', source: null },
+  // Drawn with three.js (tunnel3d.ts).
   { id: 'tunnel', name: 'Tunnel', source: null },
   { id: 'kaleido', name: 'Kaleido', source: KALEIDO },
   { id: 'pulse', name: 'Pulse', source: null },
