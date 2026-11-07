@@ -72,8 +72,8 @@ graphics that react to the music: kick, snare and hats, bass and lead
 energy, and the colour of the chord. Put it on a second screen or a
 projector.
 
-- Scenes: Flyover, City, Coast, Synthwave, Warp, Tunnel, Kaleido and
-  Pulse. Press `1`–`8` to switch.
+- Scenes: Flyover, City, Coast, Synthwave, Warp, Tunnel, Sorter, Kaleido
+  and Pulse. Press `1`–`9` to switch.
 - **Speed** (`[` `]`), **Notes** (`N`), **Strobe** (`S`) and **Auto**
   (`A`, a new scene every 32 bars).
 - **Fullscreen** (`F`).
@@ -95,6 +95,21 @@ projector.
   you jump through hyperspace to the next system. Stars pulse on the
   kick, the nebula takes the chord colours, and lead and pad notes become
   shooting stars in the track's colour.
+
+- **Sorter** is a parcel hub turned into an empty club. Four infeeds,
+  two low and two high, run through scan tunnels and merge onto an
+  endless tilt-tray loop; parcels are tipped into chutes and roll cages,
+  or go up a lift into a high-bay store and come back out later.
+  Forklifts drive around, with moving heads, lasers, a mirror ball and
+  haze overhead. Everything runs on the beat: belts move two metres per
+  beat, and inductions, diverts and scans land exactly on beats. Lead
+  notes feed a parcel in the track's colour (high notes on the high
+  infeeds), bass notes move the lift, pad notes call a parcel back from
+  the store and tint the lights. Kicks pulse the LED strips and lights,
+  snares fire the scan curtains, strobes and forklift forks, hats make
+  the lasers flicker; the moving heads change figure every bar. Camera:
+  *Auto* (switches every 8 bars), *Fly* or *Follow* a parcel, and *Next
+  parcel*.
 
 In most scenes **Notes** shows notes as particles. In **Flyover**,
 **City** and **Coast** they happen in the world instead, in the track's

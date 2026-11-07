@@ -5,6 +5,7 @@ import { Arena } from './arena3d';
 import { Tunnel } from './tunnel3d';
 import { Warp } from './warp3d';
 import { City } from './city3d';
+import { Sorter } from './sorter3d';
 
 type SceneId = (typeof SCENES)[number]['id'];
 
@@ -47,6 +48,7 @@ const THREE_FACTORIES: Record<string, () => Scene3D> = {
   warp: () => new Warp(),
   pulse: () => new Arena(),
   city: () => new City(),
+  sorter: () => new Sorter(),
 };
 const THREE_SCENES = new Set<string>(Object.keys(THREE_FACTORIES));
 /** Scenes that place notes in the world rather than as overlay particles. */
