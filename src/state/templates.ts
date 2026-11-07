@@ -201,8 +201,8 @@ const arp = (name: string, notes: string, o: PartOptions = {}) =>
   part(name, 'arp', 'tone', notes, { prefer: PREFER.seq, sounds: { 'drift-synth-juno': 'Poly Pluck' }, output: { portName: 'Lead synth', channel: 4 }, ...o, params: { mutation: 0.1, ...o.params } });
 
 /** For background music: changes every 16 bars, small steps, back to the theme often. */
-function calm(t: TrackSpec, mutation = 0.06): TrackSpec {
-  return { ...t, mutationIntervalBars: 16, memory: { every: 2, mode: 'theme' }, params: { ...t.params, mutation } };
+function calm(t: TrackSpec, mutation = 0.06, everyBars = 16): TrackSpec {
+  return { ...t, mutationIntervalBars: everyBars, memory: { every: 2, mode: 'theme' }, params: { ...t.params, mutation } };
 }
 
 const FILL_MT = '................ ............f.f.';
@@ -808,6 +808,81 @@ export const TEMPLATES: TemplateSpec[] = [
           humanize: { timing: 0.35, velocity: 0.3, layBack: 0.5 },
         },
       ),
+    ],
+  },
+  {
+    id: 'slow-drift',
+    name: 'Slow drift',
+    genre: 'Ambient',
+    description: 'Very slow, relaxing ambient: 8-bar chords, felt piano, glass bells; no drums.',
+    bpm: 60,
+    swing: 0,
+    key: 'D',
+    mode: 'ionian',
+    // Dmaj7 · Bm7 · Gmaj7 · Em9 — eight bars each, a 32-bar breath.
+    progression: [
+      { degree: 0, bars: 8, size: 4 },
+      { degree: 5, bars: 8, size: 4 },
+      { degree: 3, bars: 8, size: 4 },
+      { degree: 1, bars: 8, size: 5 },
+    ],
+    // Every third pass one chord changes, so it keeps drifting without jumps.
+    harmonyEvolve: { enabled: true, style: 'ambient', everyLoops: 3, mode: 'vary' },
+    tracks: [
+      pad('Strings', {
+        velocity: 50,
+        prefer: ['korg-wavestate', 'drift-synth-juno', 'drift-synth-pad'],
+        sounds: { 'drift-synth-juno': 'Juno Strings' },
+        modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'sine', periodBars: 64, min: 30, max: 75 }],
+      }),
+      {
+        name: 'Air',
+        color: TRACK_COLORS.pad,
+        type: 'drone',
+        output: { portName: 'Lead synth', channel: 5 },
+        params: { velocity: 38 },
+        prefer: ['asm-hydrasynth', 'drift-synth-pad', 'drift-synth-juno'],
+        sounds: { 'drift-synth-juno': 'Glass Pad' },
+        modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'triangle', periodBars: 32, min: 20, max: 60 }],
+      },
+      calm(
+        lead(
+          'Piano',
+          '4 - - - - - - - - - - - 2 - - - | - - - - - - - - . . . . . . . . | 6 - - - - - - - 4 - - - - - - - | 7 - - - - - - - - - - - . . . .',
+          {
+            velocity: 62,
+            gate: 0.98,
+            prefer: ['drift-synth-piano', 'korg-wavestate', 'asm-hydrasynth', 'drift-synth-juno'],
+            sounds: { 'drift-synth-piano': 'Felt Piano', 'drift-synth-juno': 'Warm Lead' },
+            humanize: { timing: 0.3, velocity: 0.3, layBack: 0.4 },
+            params: { density: 0.2 },
+          },
+        ),
+        0.05,
+        32,
+      ),
+      calm(
+        arp('Bells', "_0 . . . 2 . . . 1' . . . . . . . | . . . . ?2' . . . . . . . ?0' . . . | _0 . . . 2 . . . 1' . . . 2' . . . | . . . . . . . . ?1' . . . . . . .", {
+          velocity: 48,
+          gate: 0.95,
+          // Without hardware it shares the felt piano with the melody.
+          prefer: ['korg-wavestate', 'asm-hydrasynth', 'drift-synth-piano'],
+          sounds: { 'drift-synth-piano': 'Felt Piano' },
+          modulations: [{ enabled: true, cc: 74, label: 'Cutoff', shape: 'sine', periodBars: 32, min: 30, max: 80 }],
+        }),
+        0.08,
+        32,
+      ),
+      {
+        name: 'Sub',
+        color: TRACK_COLORS.bass,
+        type: 'drone',
+        role: 'bass',
+        output: BASS,
+        params: { velocity: 50, follow: 'chord' },
+        prefer: ['drift-synth-mono', 'roland-tb-03', 'drift-synth-bass'],
+        sounds: { 'drift-synth-mono': 'Deep Sub' },
+      },
     ],
   },
   {
