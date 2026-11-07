@@ -78,8 +78,12 @@ projector.
   (`A`, a new scene every 32 bars).
 - **Fullscreen** (`F`).
 - In **Flyover**, **City** and **Coast**: time of day (`T`): *Dusk*
-  (golden hour, or blue hour in the city), *Night*, or *Dusk ↔ Night*,
-  which slowly turns from one to the other and back.
+  (golden hour), *Night*, or *Dusk ↔ Night*, which slowly turns from one
+  to the other and back.
+- **City** is a realistic city at night after the rain: you glide down
+  wet boulevards through a street grid with traffic in both directions,
+  street lamps, lit windows and shopfronts, and turn left or right at the
+  next intersection every 16 bars.
 - **Tunnel** is a realistic motorway tunnel: two lanes each way, traffic
   in both directions and ceiling lights in the colours of the chord. A
   light pulse runs ahead of you on every beat, kick and snare make the
@@ -101,7 +105,7 @@ colour:
 | Lead (motif, arp) | A tree lights up and a lantern rises from it | A neon sign switches on along the street | A boat lights up at sea; the lighthouse takes the colour |
 | Bass (bass, acid) | A shock wave rolls over the land and bends the trees | A car comes down the oncoming lane | A wave crashes against the cliffs |
 | Pad (chords, drone) | A glow spreads over the fields | A searchlight sweeps the sky | Sun or moon rays break through onto the water |
-| Drums | Trees sway on the bar, kicks are gusts, snares light the clouds | Street lamps pulse on the kick | The lighthouse turns once per bar, grass sways, kicks lift the swell, snares are lightning in the rain shower, hats glint on the water |
+| Drums | Trees sway on the bar, kicks are gusts, snares light the clouds | Street lamps pulse on the kick, snares make the neon flicker | The lighthouse turns once per bar, grass sways, kicks lift the swell, snares are lightning in the rain shower, hats glint on the water |
 
 The controls hide after a few seconds. Visuals need WebGL 2; without it
 only *Pulse* works.

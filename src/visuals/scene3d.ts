@@ -1,5 +1,6 @@
-/** Shared shape of the three.js scenes (Tunnel, Warp). */
+/** Shared shape of the three.js scenes (Tunnel, Warp, City). */
 export type RGB = [number, number, number];
+export type NoteRole = 'lead' | 'bass' | 'pad';
 
 /** What the visuals window hands a 3D scene every frame. */
 export interface SceneInput {
@@ -17,15 +18,21 @@ export interface SceneInput {
   cols: RGB[];
   /** Drift's travel speed; 0.4 is the default cruising speed. */
   travelSpeed: number;
+  /** Bar position (continuous) while playing. */
+  bar?: number;
+  /** Time of day: 0 dusk, 1 night. */
+  tod?: number;
 }
 
 export interface Scene3D {
   readonly canvas: HTMLCanvasElement;
+  /** True when the scene also wants bass notes. */
+  readonly bass?: boolean;
   /** Size in CSS pixels; ratio is device pixels per CSS pixel. */
   resize(w: number, h: number, ratio: number): void;
   render(input: SceneInput): void;
   /** A melodic note (lead or pad), placed in the world in the track's colour. pitch 0..1. */
-  note(color: RGB, pitch: number, vel: number, durS: number): void;
+  note(color: RGB, pitch: number, vel: number, durS: number, role?: NoteRole): void;
   /** Overlay text the scene wants shown, or empty. */
   caption?(): string;
   /** Scene-specific controls shown in the HUD while this scene is active. */
