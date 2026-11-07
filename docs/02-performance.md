@@ -72,21 +72,24 @@ graphics that react to the music: kick, snare and hats, bass and lead
 energy, and the colour of the chord. Put it on a second screen or a
 projector.
 
-- Scenes: Flyover, City, Ocean, Synthwave, Warp, Tunnel, Kaleido and
+- Scenes: Flyover, City, Coast, Synthwave, Warp, Tunnel, Kaleido and
   Pulse. Press `1`–`8` to switch.
 - **Speed** (`[` `]`), **Notes** (`N`), **Strobe** (`S`) and **Auto**
   (`A`, a new scene every 32 bars).
 - **Fullscreen** (`F`).
+- In **Coast**: time of day (`T`): *Dusk*, *Night*, or *Dusk ↔ Night*,
+  which slowly turns from one to the other and back.
 
-In most scenes **Notes** shows notes as particles. In **Flyover** and
-**City** they happen in the world instead, in the track's colour:
+In most scenes **Notes** shows notes as particles. In **Flyover**,
+**City** and **Coast** they happen in the world instead, in the track's
+colour:
 
-| | Flyover | City |
-|---|---|---|
-| Lead (motif, arp) | A tree lights up and a lantern rises from it | A neon sign switches on along the street |
-| Bass (bass, acid) | A shock wave rolls over the land and bends the trees | A car comes down the oncoming lane |
-| Pad (chords, drone) | A glow spreads over the fields | A searchlight sweeps the sky |
-| Drums | Trees sway on the bar, kicks are gusts, snares light the clouds | Street lamps pulse on the kick |
+| | Flyover | City | Coast |
+|---|---|---|---|
+| Lead (motif, arp) | A tree lights up and a lantern rises from it | A neon sign switches on along the street | A boat lights up at sea; the lighthouse takes the colour |
+| Bass (bass, acid) | A shock wave rolls over the land and bends the trees | A car comes down the oncoming lane | A wave crashes against the cliffs |
+| Pad (chords, drone) | A glow spreads over the fields | A searchlight sweeps the sky | Sun or moon rays break through onto the water |
+| Drums | Trees sway on the bar, kicks are gusts, snares light the clouds | Street lamps pulse on the kick | The lighthouse turns once per bar, grass sways, kicks lift the swell, snares are lightning in the rain shower, hats glint on the water |
 
 The controls hide after a few seconds. Visuals need WebGL 2; without it
 only *Pulse* works.

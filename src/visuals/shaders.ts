@@ -521,55 +521,273 @@ void main() {
 }
 `;
 
-/** Gliding over a night ocean towards the moon; the bass drives the swell. */
-export const OCEAN = HEADER + `
-float waves(vec2 p) {
-  float amp = 0.15 + uModBass * 0.5 + uBass * 0.25;
-  float h = 0.0;
-  float a = 1.0;
-  vec2 dir = vec2(1.0, 0.3);
-  for (int i = 0; i < 5; i++) {
-    h += a * sin(dot(p, dir) * (0.6 + float(i) * 0.5) + uTime * (1.0 + float(i) * 0.3));
-    dir = mat2(0.8, -0.6, 0.6, 0.8) * dir * 1.4;
-    a *= 0.5;
-  }
-  return h * amp + fbm(p * 0.8 + uTime * 0.1) * 0.3 * amp;
+/**
+ * Flying along a rocky coast: swell rolling in, cliffs with grass, a lighthouse, clouds and a
+ * distant rain shower. uTod picks the time of day (0 dusk, 1 night).
+ * Lead notes are boats lighting up at sea and tint the lighthouse; bass notes are waves crashing
+ * against the cliffs; pads are sun (or moon) rays breaking through onto the water.
+ */
+export const COAST = HEADER + EVENTS + `
+uniform float uTod;
+uniform vec3 uLeadCol;
+float gSwell;
+vec3 gSun, gSunCol, gLH[2];
+
+float fbm3(vec2 p) {
+  float v = 0.0, a = 0.5;
+  mat2 r = mat2(0.8, -0.6, 0.6, 0.8);
+  for (int i = 0; i < 3; i++) { v += a * noise(p); p = r * p * 2.03; a *= 0.5; }
+  return v;
 }
+float coastX(float z) { return 2.5 * sin(z * 0.045) + 1.2 * sin(z * 0.13 + 1.0); }
+float shoreX(float z) { return coastX(z) + 1.4 * noise(vec2(z * 0.3, 3.0)); }
+// Cliffs on the right, boulders at their foot, the sea floor to the left.
+float land(vec2 p) {
+  float d = p.x - shoreX(p.y);
+  if (d < -3.2) return -3.0;
+  float top = 2.4 + 2.2 * noise(vec2(p.y * 0.05, 7.0)) + smoothstep(0.0, 8.0, d) * 1.5 * fbm3(p * 0.15);
+  float cliff = smoothstep(-0.4, 0.9, d + 0.6 * (noise(p * 2.5) - 0.5));
+  float h = mix(-1.2, top, cliff);
+  h += (fbm3(p * vec2(1.2, 2.2)) - 0.5) * 0.7 * (1.0 - abs(cliff * 2.0 - 1.0));
+  float rocks = max(0.0, noise(p * 1.7) - 0.5) * 3.2 * smoothstep(-3.2, -1.2, d) * smoothstep(0.6, -0.4, d);
+  return max(h, -1.2 + rocks);
+}
+// Swell rolling in towards the cliffs: sharp crests, wide troughs.
+float sea(vec2 p) {
+  float h = 0.0, a = 1.0, f = 0.28;
+  vec2 dir = normalize(vec2(1.0, 0.35));
+  for (int i = 0; i < 4; i++) {
+    float x = dot(p, dir) * f - uTime * (0.9 + f * 1.2) + noise(p * f * 0.5 + float(i) * 3.1) * 1.6;
+    float s = 0.5 + 0.5 * sin(x);
+    h += a * (pow(s, 2.2) - 0.35);
+    dir = mat2(0.8, 0.6, -0.6, 0.8) * dir;
+    f *= 1.9;
+    a *= 0.42;
+  }
+  return h * gSwell + (noise(p * 3.0 + uTime * 0.5) - 0.5) * 0.04;
+}
+float tower(vec3 p) {
+  float d = 1e3;
+  for (int i = 0; i < 2; i++) {
+    vec3 q = p - gLH[i];
+    float r = mix(0.3, 0.19, clamp(q.y / 2.3, 0.0, 1.0));
+    float body = max(length(q.xz) - r, max(-q.y - 1.0, q.y - 2.3));
+    float room = max(length(q.xz) - 0.21, abs(q.y - 2.45) - 0.15);
+    float cap = max((length(q.xz) - 0.27 * (1.0 - clamp((q.y - 2.6) / 0.3, 0.0, 1.0))) * 0.8, abs(q.y - 2.75) - 0.15);
+    d = min(d, min(body, min(room, cap)));
+  }
+  return d;
+}
+vec3 skyBase(vec3 rd) {
+  float y = max(rd.y, 0.0);
+  vec3 dusk = mix(vec3(0.85, 0.42, 0.22), vec3(0.3, 0.25, 0.4), smoothstep(0.0, 0.2, y));
+  dusk = mix(dusk, vec3(0.05, 0.08, 0.2), smoothstep(0.2, 0.7, y));
+  vec3 night = mix(vec3(0.05, 0.07, 0.12), vec3(0.004, 0.008, 0.025), smoothstep(0.0, 0.5, y));
+  vec3 s = mix(dusk, night, uTod);
+  s = mix(s, s * (0.6 + uCol1 * 1.2), 0.3);
+  float sd = max(dot(rd, gSun), 0.0);
+  s += gSunCol * (pow(sd, 12.0) * 0.3 + pow(sd, 90.0) * 0.6) * (1.0 + 0.3 * uPad);
+  return s;
+}
+// Angle of the rain shower out at sea.
+float rainBand(vec3 rd) {
+  float a = atan(rd.x, rd.z);
+  return smoothstep(0.22, 0.0, abs(a + 0.75 + 0.15 * sin(uTime * 0.02)));
+}
+vec3 skyCol(vec3 rd) {
+  vec3 s = skyBase(rd);
+  float sd = max(dot(rd, gSun), 0.0);
+  float disc = smoothstep(mix(0.99955, 0.99962, uTod), mix(0.9997, 0.99975, uTod), sd);
+  s += mix(vec3(1.0, 0.45, 0.18) * 3.0, vec3(1.0, 0.97, 0.9) * 1.6, uTod) * disc * smoothstep(-0.01, 0.01, rd.y);
+  s += vec3(0.9) * step(0.9975, hash(floor(rd.xy * 400.0))) * smoothstep(0.03, 0.25, rd.y) * uTod;
+  if (rd.y > 0.0) {
+    vec2 cp = rd.xz * (8.0 / (rd.y + 0.04)) + vec2(uTime * 0.25, uTravel * 1.5);
+    float cl = smoothstep(0.42, 0.78, fbm(cp * 0.06));
+    float edge = pow(sd, 4.0);
+    vec3 cc = mix(vec3(0.16, 0.12, 0.17), vec3(0.03, 0.035, 0.05), uTod) + gSunCol * edge * 0.9;
+    float storm = rainBand(rd);
+    cc = mix(cc, cc * 0.5, storm) + vec3(0.8, 0.85, 1.0) * uSnare * storm * 1.5;
+    s = mix(s, cc, cl * smoothstep(0.0, 0.2, rd.y) * 0.9);
+  }
+  return s;
+}
+// The lighthouse beam turns once per bar; the lead tints and brightens it.
+vec3 beamCol() { return mix(vec3(1.0, 0.9, 0.7), uLeadCol, 0.6 * uLead) * (0.6 + 1.2 * uLead + 0.6 * uTod); }
+vec3 lighthouseLight(vec3 ro, vec3 rd, float tmax) {
+  vec3 c = vec3(0.0);
+  float ang = uBarPhase * 6.28318;
+  vec3 D = normalize(vec3(cos(ang), -0.03, sin(ang)));
+  vec3 bc = beamCol();
+  for (int i = 0; i < 2; i++) {
+    vec3 L = gLH[i] + vec3(0.0, 2.45, 0.0);
+    vec3 w0 = ro - L;
+    float bb = dot(rd, D), d = dot(rd, w0), e = dot(D, w0);
+    float den = max(1.0 - bb * bb, 1e-4);
+    float tr = (bb * e - d) / den;
+    float sb = (e - bb * d) / den;
+    if (tr > 0.0 && tr < tmax) {
+      float dist = length(ro + rd * tr - L - D * sb);
+      float w = 0.12 + abs(sb) * 0.06;
+      c += bc * exp(-dist * dist / (w * w)) * exp(-abs(sb) * 0.06) * 0.35 * exp(-gFog * 0.3 * tr * tr);
+    }
+    // The lamp flares when the beam swings towards us.
+    float facing = pow(max(abs(dot(D, normalize(ro - L))), 0.0), 12.0);
+    c += pointGlow(ro, rd, tmax + 0.3, L, bc * (0.6 + 4.0 * facing), 0.12 + 0.25 * facing);
+  }
+  return c;
+}
+// Note effects in the air: boat lights, crashing spray, rays of light.
+vec3 noteLights(vec3 ro, vec3 rd, float tmax, float refl) {
+  vec3 c = vec3(0.0);
+  for (int i = 0; i < MAXEV; i++) {
+    if (i >= uEvN) break;
+    vec4 a = uEvA[i], b = uEvB[i];
+    vec3 ec = uEvC[i];
+    if (b.x < 0.5) {
+      float f = evFade(a, b, b.y * 0.7);
+      vec3 boat = vec3(a.x, 0.35 + 0.5 * a.y + 0.05 * sin(uTime * 1.3 + float(i)), a.z);
+      c += pointGlow(ro, rd, tmax, boat, ec * 2.5 + 0.4, 0.09 + 0.06 * b.z + 0.1 * refl) * (0.25 + f);
+      c += pointGlow(ro, rd, tmax, boat - vec3(0.25, 0.25, 0.0), vec3(1.0, 0.8, 0.5), 0.04 + 0.1 * refl) * 0.5;
+    } else if (b.x < 1.5) {
+      if (refl > 0.5) continue;
+      float sx = shoreX(a.z) - 0.4;
+      vec2 o = ro.xz - vec2(sx, a.z);
+      float tp = -dot(o, rd.xz) / max(dot(rd.xz, rd.xz), 1e-5);
+      if (tp < 0.0 || tp > tmax) continue;
+      vec3 q = ro + rd * tp;
+      float r = length(q.xz - vec2(sx, a.z));
+      float age = a.w;
+      float H = 3.2 * (0.6 + 0.6 * b.z) * smoothstep(0.0, 0.5, age);
+      float fall = smoothstep(0.6, 2.4, age);
+      float w = 0.35 + 0.18 * clamp(q.y, 0.0, 4.0) + fall * 0.9;
+      float shape = exp(-r * r / (w * w)) * smoothstep(H, H * 0.3, q.y) * smoothstep(-0.3, 0.1, q.y);
+      float tex = noise(vec2(r * 3.0 + q.y * 2.0, q.y * 3.0 - age * 4.0) + float(i));
+      float dens = shape * (0.4 + 0.9 * tex) * (1.0 - fall * 0.85) * evFade(a, b, 0.8);
+      c += (mix(vec3(0.9, 0.93, 1.0), ec, 0.25) * mix(1.0, 0.35, uTod) + gSunCol * 0.3) * dens * exp(-gFog * tp * tp);
+    } else if (refl < 0.5) {
+      vec3 B = vec3(a.x, 0.0, a.z);
+      vec3 D = normalize(gSun * vec3(1.0, 0.0, 1.0) * 0.5 + vec3(0.0, 1.0, 0.0));
+      vec3 w0 = ro - B;
+      float bb = dot(rd, D), d = dot(rd, w0), e = dot(D, w0);
+      float den = max(1.0 - bb * bb, 1e-4);
+      float tr = (bb * e - d) / den;
+      float sb = (e - bb * d) / den;
+      if (tr < 0.0 || tr > tmax || sb < 0.0) continue;
+      float dist = length(ro + rd * tr - B - D * sb);
+      float w = 0.6 + sb * 0.12;
+      float f = evFade(a, b, 1.5) * smoothstep(0.0, 1.0, a.w);
+      c += mix(gSunCol, ec, 0.4) * exp(-dist * dist / (w * w)) * smoothstep(9.0, 2.0, sb) * f * 0.3;
+    }
+  }
+  return c;
+}
+
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uRes) / uRes.y;
+  gSwell = 0.35 + 0.35 * uModBass + 0.12 * uKick;
+  gSun = normalize(mix(vec3(-0.3, 0.015, 0.95), vec3(-0.3, 0.3, 0.9), uTod));
+  gSunCol = mix(vec3(1.0, 0.55, 0.28) * 1.6, vec3(0.55, 0.65, 0.9) * 0.5, uTod);
+  gFog = mix(0.0004, 0.003, uModPad);
   float z = uTravel * 1.5;
-  vec3 ro = vec3(0.0, 1.4 + uModBass * 0.6, z);
-  vec3 rd = normalize(vec3(uv.x, uv.y - 0.12, 1.3));
-  vec3 moonDir = normalize(vec3(0.0, 0.18 + uModLead * 0.1, 1.0));
-  float moon = smoothstep(0.9993 - uPad * 0.0008, 0.9997, dot(rd, moonDir));
-  vec3 sky = mix(uCol0 * 0.2, uCol1 * 0.05, clamp(rd.y * 3.0, 0.0, 1.0));
-  sky += uCol2 * pow(max(dot(rd, moonDir), 0.0), 60.0) * (0.6 + uPad);
-  sky += vec3(1.0, 0.97, 0.9) * moon * 2.0;
-  sky += vec3(0.8) * step(0.998, hash(floor(rd.xy * 400.0))) * smoothstep(0.02, 0.2, rd.y);
-  vec3 col = sky;
-  if (rd.y < 0.0) {
-    float t = 0.0;
-    for (int i = 0; i < 80; i++) {
-      vec3 p = ro + rd * t;
-      float h = p.y - waves(p.xz);
-      if (h < 0.01) break;
-      t += max(0.05, h * 0.6);
-      if (t > 80.0) break;
-    }
-    vec3 p = ro + rd * t;
-    vec2 e = vec2(0.05, 0.0);
-    vec3 n = normalize(vec3(waves(p.xz - e.xy) - waves(p.xz + e.xy), 2.0 * e.x, waves(p.xz - e.yx) - waves(p.xz + e.yx)));
-    vec3 refl = reflect(rd, n);
-    float fres = pow(1.0 - max(dot(-rd, n), 0.0), 4.0);
-    vec3 sea = uCol0 * 0.08;
-    vec3 rsky = mix(uCol0 * 0.2, uCol1 * 0.05, clamp(refl.y * 3.0, 0.0, 1.0)) + uCol2 * pow(max(dot(refl, moonDir), 0.0), 40.0) * (1.5 + uLead * 3.0);
-    col = mix(sea, rsky, 0.2 + 0.8 * fres);
-    // Glitter on the moon path follows the lead line.
-    col += vec3(1.0) * step(0.985 - uLead * 0.02, hash(floor(p.xz * 6.0) + floor(uTime * 8.0))) * pow(max(dot(refl, moonDir), 0.0), 8.0) * (0.5 + uHat);
-    col = mix(col, uCol0 * 0.15, 1.0 - exp(-0.0008 * t * t));
+  vec3 ro = vec3(coastX(z) - 6.5, 1.5 + 0.25 * sin(z * 0.1) + uModBass * 0.4, z);
+  vec3 ww = normalize(vec3(0.12 + 0.05 * sin(z * 0.03), -0.07, 1.0));
+  vec3 uu = normalize(cross(vec3(0, 1, 0), ww)), vv = cross(ww, uu);
+  vec3 rd = normalize(uv.x * uu + uv.y * vv + 1.35 * ww);
+  for (int i = 0; i < 2; i++) {
+    float lz = (floor(z / 45.0) + float(i) + 0.5) * 45.0;
+    float lx = shoreX(lz) + 2.6;
+    gLH[i] = vec3(lx, land(vec2(lx, lz)) - 0.05, lz);
   }
-  col += uCol2 * uKick * 0.04;
-  outColor = vec4(pow(tonemap(col * 1.6), vec3(0.9)), 1.0);
+
+  // 0 sky, 1 land, 2 sea, 3 lighthouse
+  int mat = 0;
+  float t = 0.05;
+  for (int i = 0; i < 130; i++) {
+    vec3 p = ro + rd * t;
+    float lh = land(p.xz), sh = sea(p.xz);
+    float h = p.y - max(lh, sh);
+    float dt = tower(p);
+    if (dt < 0.002 * t) { mat = 3; break; }
+    if (h < 0.002 * t) { mat = lh > sh ? 1 : 2; break; }
+    t += max(min(h * 0.4, dt * 0.8), 0.01);
+    if (t > 50.0) break;
+  }
+  bool far = false;
+  if (mat == 0 && rd.y < 0.0) { t = -ro.y / rd.y; mat = 2; far = true; }
+
+  vec3 haze = skyBase(normalize(vec3(rd.x, 0.02, rd.z)));
+  vec3 col = skyCol(rd);
+  vec3 p = ro + rd * t;
+  vec3 amb = mix(vec3(0.25, 0.22, 0.3), vec3(0.04, 0.05, 0.09), uTod);
+  if (mat == 1) {
+    vec2 e = vec2(0.02, 0.0);
+    vec3 n = normalize(vec3(land(p.xz - e.xy) - land(p.xz + e.xy), 2.0 * e.x, land(p.xz - e.yx) - land(p.xz + e.yx)));
+    vec3 rock = vec3(0.15, 0.13, 0.12) * (0.6 + 0.7 * noise(p.xz * 4.0 + p.y * 3.0));
+    // Layers in the rock, and darker wet stone near the water.
+    rock *= 0.75 + 0.3 * smoothstep(-0.3, 0.3, sin(p.y * 7.0 + noise(p.xz * 0.8) * 4.0));
+    // Grass on top ripples in the wind, twice per bar.
+    float wind = 0.8 + 0.35 * sin(dot(p.xz, vec2(0.6, 0.3)) * 2.0 - uBarPhase * 12.566) * noise(p.xz * 1.5);
+    vec3 grass = mix(vec3(0.05, 0.1, 0.04), vec3(0.11, 0.15, 0.06), noise(p.xz * 5.0)) * wind;
+    vec3 alb = mix(rock, grass, smoothstep(0.65, 0.85, n.y) * smoothstep(0.8, 1.6, p.y));
+    alb *= mix(0.45, 1.0, smoothstep(0.0, 0.6, p.y));
+    col = alb * (amb * (0.5 + 0.5 * n.y) * 1.6 + gSunCol * clamp(dot(n, gSun) + 0.1, 0.0, 1.0));
+    for (int i = 0; i < 2; i++) col += beamCol() * 0.15 * exp(-length(p - gLH[i] - vec3(0.0, 2.4, 0.0)) * 0.8);
+  } else if (mat == 3) {
+    vec3 q = p;
+    float best = 1e3;
+    for (int i = 0; i < 2; i++) { float dd = length(p.xz - gLH[i].xz); if (dd < best) { best = dd; q = p - gLH[i]; } }
+    vec2 e = vec2(0.005, 0.0);
+    vec3 n = normalize(vec3(tower(p + e.xyy) - tower(p - e.xyy), tower(p + e.yxy) - tower(p - e.yxy), tower(p + e.yyx) - tower(p - e.yyx)));
+    vec3 alb = mix(vec3(0.75, 0.73, 0.7), vec3(0.6, 0.08, 0.06), step(0.5, fract(q.y * 1.4)));
+    col = alb * (amb * 1.5 + gSunCol * clamp(dot(n, gSun) + 0.2, 0.0, 1.0));
+    col = mix(col, beamCol() * 2.0, step(2.3, q.y) * step(q.y, 2.6));
+  } else if (mat == 2) {
+    float ex = 0.02 + t * 0.003;
+    vec3 n = vec3(0.0, 1.0, 0.0);
+    if (!far) {
+      float s0 = sea(p.xz);
+      n = normalize(vec3(s0 - sea(p.xz + vec2(ex, 0.0)), ex, s0 - sea(p.xz + vec2(0.0, ex))));
+      n = normalize(mix(n, vec3(0.0, 1.0, 0.0), smoothstep(15.0, 50.0, t)));
+    }
+    vec3 rr = reflect(rd, n);
+    rr.y = abs(rr.y);
+    float fres = 0.02 + 0.98 * pow(1.0 - max(dot(-rd, n), 0.0), 5.0);
+    vec3 deep = mix(vec3(0.006, 0.035, 0.05), vec3(0.002, 0.006, 0.014), uTod);
+    float crest = far ? 0.0 : clamp(p.y / max(gSwell, 0.05) + 0.3, 0.0, 1.5);
+    vec3 sss = vec3(0.05, 0.25, 0.22) * (1.0 - 0.75 * uTod) * crest * (0.3 + 0.7 * pow(max(dot(rd, gSun), 0.0), 2.0));
+    col = mix(deep + sss * 0.5, skyCol(rr), fres);
+    col += gSunCol * pow(max(dot(rr, gSun), 0.0), 300.0) * 6.0;
+    // Foam: on crests, along the shore, and where waves crash.
+    float foam = smoothstep(0.75, 1.1, crest + 0.3 * noise(p.xz * 4.0));
+    float lh = land(p.xz);
+    foam += smoothstep(-0.9, -0.1, lh) * (0.55 + 0.45 * sin(uTime * 1.6 + p.z * 0.7 + noise(p.xz * 2.0) * 4.0));
+    for (int i = 0; i < MAXEV; i++) {
+      if (i >= uEvN || uEvB[i].x < 0.5 || uEvB[i].x > 1.5) continue;
+      float d = length(p.xz - vec2(shoreX(uEvA[i].z) - 0.4, uEvA[i].z));
+      foam += smoothstep(1.0 + uEvA[i].w * 1.6, 0.0, d) * evFade(uEvA[i], uEvB[i], 1.2) * 1.2;
+    }
+    foam *= 0.4 + 0.6 * noise(p.xz * 7.0 + uTime * 0.3);
+    col = mix(col, (amb * 1.5 + gSunCol * 0.6) * 0.9, clamp(foam, 0.0, 1.0) * (1.0 - smoothstep(20.0, 45.0, t)));
+    for (int i = 0; i < MAXEV; i++) {
+      if (i >= uEvN || uEvB[i].x < 1.5) continue;
+      col += mix(gSunCol, uEvC[i], 0.4) * 0.25 * exp(-length(p.xz - uEvA[i].xz) * 0.6) * evFade(uEvA[i], uEvB[i], 1.5);
+    }
+    col += noteLights(p, rr, 40.0, 1.0) * 0.6;
+    col += gSunCol * step(0.99, hash(floor(p.xz * 25.0) + floor(uTime * 8.0))) * pow(max(dot(rr, gSun), 0.0), 20.0) * uHat * (1.0 - smoothstep(10.0, 30.0, t));
+  }
+  if (mat > 0) {
+    col = mix(col, haze, 1.0 - exp(-gFog * t * t));
+    // The rain shower greys out the distance in its direction.
+    float rain = rainBand(rd) * smoothstep(15.0, 40.0, t) * (0.6 + 0.4 * noise(vec2(atan(rd.x, rd.z) * 150.0, uTime * 6.0)));
+    col = mix(col, haze * 0.6, rain * 0.6);
+  }
+  float tmax = mat > 0 ? t : 1e3;
+  col += lighthouseLight(ro, rd, tmax);
+  col += noteLights(ro, rd, tmax, 0.0);
+  col += gSunCol * uKick * 0.03;
+  col = tonemap(col * 1.6);
+  col *= 1.0 - 0.3 * dot(uv, uv);
+  outColor = vec4(pow(col, vec3(0.9)), 1.0);
 }
 `;
 
@@ -644,7 +862,7 @@ void main() {
 export const SCENES = [
   { id: 'flyover', name: 'Flyover', source: FLYOVER },
   { id: 'city', name: 'City', source: CITY },
-  { id: 'ocean', name: 'Ocean', source: OCEAN },
+  { id: 'coast', name: 'Coast', source: COAST },
   { id: 'synthwave', name: 'Synthwave', source: SYNTHWAVE },
   { id: 'warp', name: 'Warp', source: WARP },
   { id: 'tunnel', name: 'Tunnel', source: TUNNEL },
