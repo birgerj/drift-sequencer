@@ -17,6 +17,47 @@ interface Particle {
 
 type Role = 'bass' | 'lead' | 'pad';
 
+/** A note that happens inside the Flyover or City world (see EVENTS in shaders.ts). */
+interface WorldEvent {
+  x: number;
+  /** Pitch 0..1; scenes use it for height. */
+  y: number;
+  z: number;
+  born: number;
+  life: number;
+  kind: 0 | 1 | 2;
+  vel: number;
+  side: number;
+  color: [number, number, number];
+}
+const MAX_EV = 24;
+const EV_CAP = [8, 4, 4];
+/** Scenes that show notes as things in the world instead of particles. */
+const WORLD_SCENES = new Set<string>(['flyover', 'city']);
+
+const colorCache = new Map<string, [number, number, number]>();
+let colorCtx: CanvasRenderingContext2D | null | undefined;
+/** Any CSS colour as rgb 0..1. */
+function rgbOf(css: string): [number, number, number] {
+  const hit = colorCache.get(css);
+  if (hit) return hit;
+  colorCtx ??= document.createElement('canvas').getContext('2d');
+  let out: [number, number, number] = [0.6, 0.8, 1];
+  if (colorCtx) {
+    colorCtx.fillStyle = '#99ccff';
+    colorCtx.fillStyle = css;
+    const v = String(colorCtx.fillStyle);
+    if (v.startsWith('#') && v.length === 7) {
+      out = [1, 3, 5].map((i) => parseInt(v.slice(i, i + 2), 16) / 255) as [number, number, number];
+    } else {
+      const m = v.match(/[\d.]+/g);
+      if (m && m.length >= 3) out = [Number(m[0]) / 255, Number(m[1]) / 255, Number(m[2]) / 255];
+    }
+  }
+  colorCache.set(css, out);
+  return out;
+}
+
 /** What a track drives in the visuals is decided by its type. */
 function roleOf(type: string): Role | undefined {
   if (type === 'bass' || type === 'acid') return 'bass';
@@ -76,6 +117,11 @@ export function startVisuals(root: HTMLElement): void {
   let target: [number, number, number][] = [hsl(200, 0.7, 0.35), hsl(280, 0.7, 0.5), hsl(30, 0.9, 0.6)];
   let cols: [number, number, number][] = target.map((c) => [...c] as [number, number, number]);
   const particles: Particle[] = [];
+  const world: WorldEvent[] = [];
+  const evA = new Float32Array(MAX_EV * 4);
+  const evB = new Float32Array(MAX_EV * 4);
+  const evC = new Float32Array(MAX_EV * 3);
+  const rings = new Float32Array(16);
 
   const settings = load();
   let scene: SceneId = settings.scene;
@@ -152,12 +198,12 @@ export function startVisuals(root: HTMLElement): void {
       for (const n of msg.notes) {
         if (DRUM.kick.includes(n)) {
           kick = Math.max(kick, 0.6 + v * 0.4);
-          if (showNotes) particles.push({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: H * 0.05, life: 1, decay: 1.8, color: track.color, kind: 'ring' });
+          if (showNotes && !WORLD_SCENES.has(scene)) particles.push({ x: W / 2, y: H / 2, vx: 0, vy: 0, r: H * 0.05, life: 1, decay: 1.8, color: track.color, kind: 'ring' });
         } else if (DRUM.snare.includes(n)) {
           snare = Math.max(snare, 0.5 + v * 0.5);
         } else if (DRUM.hat.includes(n)) {
           hat = Math.max(hat, 0.4 + v * 0.6);
-          if (showNotes) {
+          if (showNotes && !WORLD_SCENES.has(scene)) {
             for (let i = 0; i < 3; i++) {
               particles.push({ x: Math.random() * W, y: Math.random() * H, vx: 0, vy: 0, r: 1.5 + Math.random() * 2.5, life: 1, decay: 5, color: '#ffffff', kind: 'spark' });
             }
@@ -175,6 +221,10 @@ export function startVisuals(root: HTMLElement): void {
       if (role === 'pad') padHoldUntil = Math.max(padHoldUntil, now + msg.dur);
     }
     if (!showNotes) return;
+    if (WORLD_SCENES.has(scene)) {
+      spawnWorld(track, role, msg.notes, v, msg.dur, now);
+      return;
+    }
     const ids = [...tracks.values()].filter((t) => t.type !== 'drums').map((t) => t.id);
     const lane = Math.max(0, ids.indexOf(track.id));
     const laneX = (W * (lane + 0.5)) / Math.max(1, ids.length);
@@ -196,7 +246,73 @@ export function startVisuals(root: HTMLElement): void {
     void now;
   }
 
+  /** Place a note somewhere ahead of the camera, in the current scene's world. */
+  function spawnWorld(track: VisualTrack, role: Role | undefined, notes: number[], vel: number, durMs: number, now: number) {
+    const kind: 0 | 1 | 2 = role === 'bass' ? 1 : role === 'pad' ? 2 : 0;
+    const pn = Math.max(0, Math.min(1, (Math.max(...notes) - 24) / 72));
+    const dur = durMs / 1000;
+    const r = Math.random;
+    let x: number, z: number, life: number;
+    let side = r() < 0.5 ? -1 : 1;
+    if (scene === 'city') {
+      const cz = travel * 2;
+      if (kind === 0) {
+        z = (Math.floor((cz + 10 + r() * 16) / 4) + 0.5) * 4;
+        x = side * 3.98;
+        life = Math.min(4, Math.max(0.7, dur + 0.5));
+      } else if (kind === 1) {
+        x = -1.3;
+        z = cz + 38 + r() * 10;
+        life = 7;
+      } else {
+        x = side * 12;
+        z = cz + 18 + r() * 20;
+        life = Math.min(9, dur + 2.5);
+      }
+    } else {
+      const d = kind === 0 ? 6 + r() * 8 : kind === 1 ? 9 + r() * 6 : 10 + r() * 10;
+      z = travel + d;
+      const path = Math.sin(z * 0.07) * 3;
+      x = path + (kind === 0 ? (pn - 0.5) * 7 + (r() - 0.5) * 2 : (r() - 0.5) * (kind === 1 ? 5 : 9));
+      life = kind === 0 ? 2.8 : kind === 1 ? 3 : Math.min(8, dur + 2.5);
+      side = 0;
+    }
+    const same = world.filter((e) => e.kind === kind);
+    if (same.length >= EV_CAP[kind]!) world.splice(world.indexOf(same[0]!), 1);
+    if (world.length >= MAX_EV) world.shift();
+    world.push({ x, y: pn, z, born: now, life, kind, vel, side, color: rgbOf(track.color) });
+  }
+
+  function uploadWorld(p: WebGLProgram, now: number) {
+    if (!gl) return;
+    for (let i = world.length - 1; i >= 0; i--) if ((now - world[i]!.born) / 1000 > world[i]!.life) world.splice(i, 1);
+    rings.fill(0);
+    let ri = 0;
+    world.forEach((e, i) => {
+      const age = (now - e.born) / 1000;
+      evA.set([e.x, e.y, e.z, age], i * 4);
+      evB.set([e.kind, e.life, e.vel, e.side], i * 4);
+      evC.set(e.color, i * 3);
+      if (e.kind === 1 && ri < 4) {
+        const fade = Math.min(1, age / 0.08) * (1 - Math.max(0, (age - e.life * 0.3) / (e.life * 0.7)));
+        rings.set([e.x, e.z, age, (0.5 + e.vel * 0.5) * fade], ri++ * 4);
+      }
+    });
+    gl.uniform4fv(uni(p, 'uEvA'), evA);
+    gl.uniform4fv(uni(p, 'uEvB'), evB);
+    gl.uniform3fv(uni(p, 'uEvC'), evC);
+    gl.uniform1i(uni(p, 'uEvN'), world.length);
+    gl.uniform4fv(uni(p, 'uRing'), rings);
+  }
+
   // ---------- WebGL scenes ----------
+  const uniforms = new Map<WebGLProgram, Map<string, WebGLUniformLocation | null>>();
+  function uni(p: WebGLProgram, name: string): WebGLUniformLocation | null {
+    let m = uniforms.get(p);
+    if (!m) uniforms.set(p, (m = new Map()));
+    if (!m.has(name)) m.set(name, gl!.getUniformLocation(p, name));
+    return m.get(name)!;
+  }
   const gl = gl3.getContext('webgl2', { antialias: false, alpha: false, powerPreference: 'high-performance' });
   const programs = new Map<SceneId, WebGLProgram>();
   if (gl) {
@@ -315,6 +431,10 @@ export function startVisuals(root: HTMLElement): void {
 
     const stepMs = 60000 / bpm / 4;
     const beat = playing ? (((lastStep.step % 4) + Math.min(1, (now - lastStep.at) / stepMs)) / 4) % 1 : 0;
+    // Smooth position within the bar; drifts slowly while stopped so trees still move.
+    const barPhase = playing
+      ? ((lastStep.step % stepsPerBar) + Math.min(1, (now - lastStep.at) / stepMs)) / stepsPerBar
+      : (sceneTime * 0.12) % 1;
     const barF = bar + (playing ? ((lastStep.step % stepsPerBar) + 1) / stepsPerBar : 0);
 
     if (auto && playing && bar - lastAutoBar >= 32) {
@@ -337,7 +457,7 @@ export function startVisuals(root: HTMLElement): void {
       gl.useProgram(p);
       gl.enableVertexAttribArray(0);
       gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
-      const u = (name: string) => gl.getUniformLocation(p, name);
+      const u = (name: string) => uni(p, name);
       gl.uniform1f(u('uTime'), sceneTime);
       gl.uniform2f(u('uRes'), gl3.width, gl3.height);
       gl.uniform1f(u('uKick'), kick);
@@ -358,6 +478,8 @@ export function startVisuals(root: HTMLElement): void {
       gl.uniform3fv(u('uCol0'), cols[0]!);
       gl.uniform3fv(u('uCol1'), cols[1]!);
       gl.uniform3fv(u('uCol2'), cols[2]!);
+      gl.uniform1f(u('uBarPhase'), barPhase);
+      if (WORLD_SCENES.has(scene)) uploadWorld(p, now);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
       gl3.hidden = false;
     } else {
@@ -443,7 +565,7 @@ export function startVisuals(root: HTMLElement): void {
     b.dataset.scene = x.id;
     return b;
   });
-  const notesBtn = button('Notes', 'Note particles (N)', () => {
+  const notesBtn = button('Notes', 'Show notes: particles, or things happening in the Flyover and City worlds (N)', () => {
     showNotes = !showNotes;
     sync();
   });
@@ -495,6 +617,7 @@ export function startVisuals(root: HTMLElement): void {
   function setScene(id: SceneId) {
     scene = gl || id === 'pulse' ? id : 'pulse';
     particles.length = 0;
+    world.length = 0;
     sync();
   }
   function sync() {
