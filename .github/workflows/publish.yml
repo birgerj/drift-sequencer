@@ -32,8 +32,6 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build:standalone
-      - name: Warn if the committed standalone/index.html is out of date
-        run: git diff --quiet -- standalone/index.html || echo "::warning::standalone/index.html differs from a fresh build; run npm run build:standalone and commit it for offline use."
       - uses: actions/upload-pages-artifact@v3
         if: github.event_name != 'pull_request'
         with:

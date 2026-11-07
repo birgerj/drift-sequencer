@@ -9,12 +9,14 @@ npm install
 npm run dev               # http://localhost:5173 with hot reload
 npm test                  # unit tests
 npm run typecheck
-npm run build:standalone  # rebuild standalone/index.html — commit it with your change
+npm run build:standalone  # build standalone/ (not committed; CI builds and publishes it)
 ```
 
 `standalone/` holds the single-file build: the whole app inlined in
 `index.html`, plus the PWA files (manifest, icons and service worker). It
-runs by double-clicking it (`file://`) or from any static host.
+runs by double-clicking it (`file://`) or from any static host. It is a
+build output and not committed; the published `index.html` is the copy to
+download.
 
 **Publishing:** every push to `main` runs the tests, builds the app and
 publishes `standalone/` to GitHub Pages (`.github/workflows/publish.yml`).
@@ -22,8 +24,8 @@ One-time setup: Settings → Pages → Source: *GitHub Actions*.
 
 **Sampled drum kits** live in `public/kits/<id>/` (FLAC hits plus a
 `kit.json` manifest) and are fetched on demand, so they stay out of
-`index.html`. The build copies them to `standalone/kits/` (not committed;
-CI publishes them). A `file://` copy downloads them from the published
+`index.html`. The build copies them to `standalone/kits/` (CI publishes
+them). A `file://` copy downloads them from the published
 site instead. To change a kit, edit `scripts/kits/kits.config.mjs` and run
 `node scripts/kits/build-kits.mjs <sources-dir>` (needs ffmpeg; the config
 lists the source repositories). That also bumps

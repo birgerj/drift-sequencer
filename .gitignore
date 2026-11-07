@@ -7,6 +7,5 @@ coverage/
 .standalone-build/
 
 # Sampled kits are copied from public/kits by the build; Pages gets them from CI.
-standalone/kits/
-standalone/pianos/
+standalone/
 .harness/
