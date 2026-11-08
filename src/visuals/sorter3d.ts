@@ -512,6 +512,34 @@ interface Head {
   rz: number;
 }
 
+/** A stop on the fly-mode tour: where the camera hovers and what it looks at (both may follow something that moves). */
+interface Poi {
+  name: string;
+  at: (pos: V3, look: V3) => boolean;
+}
+
+interface Tour {
+  poi: number;
+  curve: THREE.CatmullRomCurve3;
+  len: number;
+  s: number;
+  lookFrom: V3;
+  /** Beats to hover once arrived. */
+  dwell: number;
+  arrivedAt: number;
+  /** Camera offset from the look point while hovering, slowly turning. */
+  offset: V3;
+}
+
+/** Height at which the camera travels between stops: above the high infeeds and frames, below ducts and signs. */
+const CRUISE_Y = 8;
+/** Things the tour must fly around at cruise height: x, z, radius. */
+const TOUR_OBSTACLES: [number, number, number][] = [
+  [-50, -19.5, 2.4],
+  [-50, -22, 2.4],
+  [18, 0, 2.2],
+];
+
 interface Forklift {
   g: THREE.Group;
   route: Path;
@@ -690,8 +718,10 @@ export class Sorter implements Scene3D {
   private follow: Parcel | null = null;
   private autoFollow = false;
   private lastShotBar = -1;
-  private flyCurve!: THREE.CatmullRomCurve3;
-  private flyU = 0;
+  /** Fly mode: a random tour past points of interest. */
+  private tour: Tour | null = null;
+  private recent: number[] = [];
+  private pois: Poi[] = [];
   private first = true;
   private readonly look = new THREE.Vector3(18, 3, 0);
   private readonly want = new THREE.Vector3();
@@ -1571,6 +1601,8 @@ export class Sorter implements Scene3D {
     const p = following ? this.follow : null;
     if (p && p.mode === 'fixed' && p.pathKind !== 'back') this.follow = null;
     if (p) {
+      // Back in fly mode, the tour starts afresh from wherever the camera is.
+      this.tour = null;
       const c = this.p.copy(p.pos);
       c.y += p.h / 2;
       if (p.mode === 'carriage' || p.mode === 'shuttle' || p.mode === 'fixed' || (p.mode === 'tween' && p.pos.x > 44)) {
@@ -1584,12 +1616,7 @@ export class Sorter implements Scene3D {
         this.want.y = clamp(c.y + 2.6, 1.2, HH - 0.8);
         this.wantLook.copy(c).addScaledVector(this.fwd, 2.2);
       }
-    } else {
-      this.flyU = (this.flyU + dt * 0.0075 * clamp(travel / 0.4, 0.3, 2.5)) % 1;
-      this.flyCurve.getPointAt(this.flyU, this.want);
-      this.flyCurve.getPointAt((this.flyU + 0.035) % 1, this.wantLook);
-      this.wantLook.lerp(this.n.set(18 + 10 * Math.sin(this.time * 0.05), 3, 4 * Math.cos(this.time * 0.07)), 0.55);
-    }
+    } else this.flyTour(dt, travel);
     // Stay inside the hall.
     this.want.x = clamp(this.want.x, -HX + 1.5, HX - 1.5);
     this.want.z = clamp(this.want.z, -HZ + 1.5, HZ - 1.5);
@@ -2494,14 +2521,133 @@ export class Sorter implements Scene3D {
   }
 
   private buildCamera(): void {
-    this.flyCurve = new THREE.CatmullRomCurve3(
-      [
-        v(-54, 3.5, -27), v(-36, 6.5, -28), v(-14, 5.5, -26), v(4, 8.5, -17), v(26, 6, -17), v(42, 8.5, -9),
-        v(45, 9.5, 5), v(36, 6, 15), v(18, 8.5, 18), v(0, 5, 16), v(-18, 7, 8), v(-34, 9, -4), v(-50, 6, -12),
-      ],
-      true,
-      'centripetal',
-    );
+    const fixed = (name: string, pos: V3, look: V3): Poi => ({
+      name,
+      at: (p, l) => {
+        p.copy(pos);
+        l.copy(look);
+        return true;
+      },
+    });
+    this.pois = [
+      fixed('infeeds', v(-55, 3, -11), v(-44, 1.2, -16)),
+      fixed('scan tunnels', v(-45, 4.5, -12), v(-50, 2.2, -18)),
+      fixed('high infeeds', v(-38, 8, -15), v(-50, 7.2, -21)),
+      fixed('merge', v(-6, 5, -12.5), v(6, 3.5, -7)),
+      fixed('loop scanner', v(15.5, 6, -13), v(22, 4.3, -7)),
+      fixed('loop', v(5, 7, 2), v(30, 3, 0)),
+      fixed('chutes', v(35, 4.5, -18), v(28, 1.2, -13)),
+      fixed('store', v(43, 5, -7), v(51, 4.5, 0)),
+      fixed('lift', v(44.5, 3.5, 4), v(49, 4, 0)),
+      fixed('pickup stations', v(14, 4, 10.5), v(14, 1.2, 15)),
+      fixed('projectors', v(9, 6.6, 11.5), v(14, 5.8, 15)),
+      fixed('bins', v(36, 3.5, 20.5), v(20, 0.8, 25)),
+      fixed('parking', v(3, 3.2, 19.5), v(-4, 0.6, 24)),
+      fixed('manual sorting', v(-9, 3.6, 17.5), v(-15, 1, 22)),
+      fixed('control room', v(-24, 4, 16.5), v(-36, 2, 26)),
+      {
+        name: 'forklift',
+        at: (p, l) => {
+          const f = this.forklifts[0];
+          if (!f) return false;
+          l.copy(f.g.position).setY(1.4);
+          p.copy(l).add(this.t.set(-4, 2.4, 4));
+          return true;
+        },
+      },
+      {
+        name: 'robot',
+        at: (p, l) => {
+          const busy = this.floor.fleet.bots.filter((b) => b.state === 'toDrop' || b.state === 'toPick');
+          const b = busy[this.tourRobot % Math.max(1, busy.length)] ?? this.floor.fleet.bots[0];
+          if (!b) return false;
+          this.floor.robotTop(b.k, l);
+          l.y = 1.2;
+          p.copy(l).add(this.t.set(-3.2, 2.6, -3.2));
+          return true;
+        },
+      },
+    ];
     this.camera.position.set(-50, 6, -20);
+  }
+
+  private tourRobot = 0;
+
+  /** Fly mode: travel at cruise height to a random stop, hover and look around, then on to the next. */
+  private flyTour(dt: number, travel: number): void {
+    const t = this.tour;
+    const speed = 6.5 * clamp(travel / 0.4, 0.4, 2.5);
+    if (!t || (t.s >= t.len && this.bt - t.arrivedAt > t.dwell)) {
+      this.planTour(t);
+      return this.flyTour(dt, travel);
+    }
+    const poi = this.pois[t.poi]!;
+    const pos = this.p;
+    const look = this.n;
+    if (!poi.at(pos, look)) {
+      this.tour = null;
+      return;
+    }
+    if (t.s < t.len) {
+      t.s = Math.min(t.len, t.s + speed * dt);
+      const u = t.s / t.len;
+      t.curve.getPointAt(u, this.want);
+      // Look ahead along the way, then settle on the stop.
+      t.curve.getPointAt(Math.min(1, u + 0.08), this.wantLook);
+      this.wantLook.y -= 1.5;
+      const settle = smooth01((u - 0.55) / 0.45);
+      this.wantLook.lerp(look, settle);
+      if (u < 0.2) this.wantLook.lerp(t.lookFrom, 1 - u / 0.2);
+      if (t.s >= t.len) {
+        t.arrivedAt = this.bt;
+        t.offset.subVectors(this.want, look);
+      }
+    } else {
+      // Hover: turn slowly around what we look at, following it if it moves.
+      const a = (this.bt - t.arrivedAt) * 0.04;
+      this.want.copy(t.offset).applyAxisAngle(UP, a).add(look);
+      this.wantLook.copy(look);
+    }
+  }
+
+  private planTour(prev: Tour | null): void {
+    const from = this.camera.position.clone();
+    const lookFrom = prev ? this.wantLook.clone() : v(0, 2, 0);
+    let k = 0;
+    for (let tries = 0; tries < 20; tries++) {
+      k = Math.floor(Math.random() * this.pois.length);
+      if (!this.recent.includes(k)) break;
+    }
+    this.recent.push(k);
+    if (this.recent.length > 5) this.recent.shift();
+    if (this.pois[k]!.name === 'robot') this.tourRobot++;
+    const pos = new THREE.Vector3();
+    const look = new THREE.Vector3();
+    if (!this.pois[k]!.at(pos, look)) pos.copy(from);
+    const pts = [from];
+    const flat = Math.hypot(pos.x - from.x, pos.z - from.z);
+    if (flat > 12) {
+      // Up to cruise height, across, and down to the stop; around obstacles.
+      const dir = this.t.set(pos.x - from.x, 0, pos.z - from.z).normalize();
+      const a = from.clone().addScaledVector(dir, 3).setY(CRUISE_Y);
+      const b = pos.clone().addScaledVector(dir, -5).setY(CRUISE_Y);
+      pts.push(a);
+      for (const [ox, oz, r] of TOUR_OBSTACLES) {
+        const ab = this.n.set(b.x - a.x, 0, b.z - a.z);
+        const l2 = ab.lengthSq();
+        const f = clamp(((ox - a.x) * ab.x + (oz - a.z) * ab.z) / (l2 || 1), 0, 1);
+        const cx = a.x + ab.x * f;
+        const cz = a.z + ab.z * f;
+        const d = Math.hypot(cx - ox, cz - oz);
+        if (d < r && f > 0.05 && f < 0.95) {
+          const side = Math.sign((cx - ox) * -dir.z + (cz - oz) * dir.x) || 1;
+          pts.push(v(ox - dir.z * side * (r + 1.5), CRUISE_Y, oz + dir.x * side * (r + 1.5)));
+        }
+      }
+      pts.push(b);
+    } else pts.push(from.clone().lerp(pos, 0.5).setY(Math.max(from.y, pos.y) + 1.5));
+    pts.push(pos);
+    const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+    this.tour = { poi: k, curve, len: curve.getLength(), s: 0, lookFrom, dwell: 6 + Math.floor(Math.random() * 6), arrivedAt: 0, offset: new THREE.Vector3() };
   }
 }

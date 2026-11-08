@@ -112,7 +112,12 @@ projector.
   colour (high notes on the high infeeds), bass notes move the lift, pad
   notes call a parcel back from the store and tint the lights. Camera:
   *Auto* (switches every 8 bars), *Fly* or *Follow* a parcel (also on its
-  robot ride), and *Next parcel*.
+  robot ride), and *Next parcel*. *Fly* is a random tour: the camera
+  travels above the hall to a stop — the infeeds, a scan tunnel, the
+  merge, the loop, chutes, the store and lift, the pickup stations and
+  projectors, a working robot, the bins, the parking, the manual sort
+  table, the control room or a forklift — hovers there for a few beats
+  while turning slowly, and moves on.
   The time-of-day button switches between two looks. **Day** is clean
   production: a light hall drawn like a product illustration, equipment
   in black outlines, teal sorter, roll cages and store, orange scan
