@@ -24,6 +24,7 @@ import {
   assignBestFit,
   assignDevices,
   deviceForRole,
+  deviceInstrumentId,
   effectiveInstrumentId,
   effectiveOutput,
   inputForDevice,
@@ -48,6 +49,7 @@ import {
   serializeProject,
   type ProjectSummary,
 } from '../state/storage';
+import { decodeShare, encodeShare, SHARE_PREFIX, type SharedVisuals } from '../state/share';
 import { createProject, createTrack, emptyProject, templateSounds, TRACK_COLORS } from '../state/templates';
 import { wipeAllData } from '../state/db';
 import { initMediaSession, updateMediaSession } from './mediaSession';
@@ -130,6 +132,33 @@ function takeStartEmpty(): boolean {
   }
 }
 
+/** Seed for the evolving chord progression, from the track seeds, so a song evolves the same each time. */
+function harmonySeed(project: ProjectState): number {
+  return project.tracks.reduce((h, t) => (Math.imul(h ^ t.seed, 0x01000193) >>> 0), 0x811c9dc5);
+}
+
+const VISUALS_KEY = 'drift.visuals';
+
+function loadVisualSettings(): SharedVisuals | undefined {
+  try {
+    const s = JSON.parse(localStorage.getItem(VISUALS_KEY) ?? 'null') as SharedVisuals | null;
+    if (!s) return undefined;
+    const { scene, speed, tod, notes, strobe, auto } = s;
+    return { scene, speed, tod, notes, strobe, auto };
+  } catch {
+    return undefined;
+  }
+}
+
+function saveVisualSettings(v: SharedVisuals): void {
+  try {
+    const cur = JSON.parse(localStorage.getItem(VISUALS_KEY) ?? '{}') as object;
+    localStorage.setItem(VISUALS_KEY, JSON.stringify({ ...cur, ...v }));
+  } catch {
+    /* storage blocked: the visual keeps its own settings */
+  }
+}
+
 export class AppStore {
   readonly midi = new MidiHub();
   readonly midiGuide = new MidiGuideClient();
@@ -164,6 +193,8 @@ export class AppStore {
   toast: string | undefined;
   /** Keyboard shortcut overlay. */
   shortcutsOpen = false;
+  /** A song opened from a share link, waiting for a tap to play (browsers need one for sound). */
+  shared: { name: string; scene?: string } | undefined;
   /** Open tab of the track detail pane; kept when switching tracks. */
   trackTab: SectionId = 'pattern';
   readonly live: LiveState = { step: -1, bar: 0, chord: '', now: {} };
@@ -215,8 +246,11 @@ export class AppStore {
 
   async init(): Promise<void> {
     const { lastProjectId } = loadSettings();
-    const stored = lastProjectId ? await this.repo.load(lastProjectId).catch(() => undefined) : undefined;
-    if (takeStartEmpty()) this.open(emptyProject());
+    const sharedOpened = await this.openSharedLink();
+    const stored = !sharedOpened && lastProjectId ? await this.repo.load(lastProjectId).catch(() => undefined) : undefined;
+    if (sharedOpened) {
+      /* opened from the link */
+    } else if (takeStartEmpty()) this.open(emptyProject());
     else if (stored) this.open(stored);
     else {
       // First run: remember the starter project so work survives a reload.
@@ -871,8 +905,10 @@ export class AppStore {
 
   regenerate(id: string): void {
     const t = this.project.tracks.find((x) => x.id === id);
-    if (t?.userPattern) this.updateTrack(id, { userPattern: undefined });
-    this.sequencer.track(id)?.regenerate();
+    // Keep the new seed in the project, so a saved or shared song starts from this pattern.
+    const seed = Math.floor(Math.random() * 2 ** 32);
+    this.updateTrack(id, { userPattern: undefined, seed });
+    this.sequencer.track(id)?.regenerate(seed);
     if (t) this.addLog(Math.max(0, this.live.bar), `${t.name} · new pattern`, t.color);
     this.notify();
   }
@@ -900,21 +936,100 @@ export class AppStore {
     }
   }
 
+  // ---------- share ----------
+
+  /** A link with the whole song and the active visual; shared via the share sheet or copied. */
+  async shareProject(): Promise<void> {
+    let url: string;
+    try {
+      url = location.origin + location.pathname + (await encodeShare(this.engineView(), loadVisualSettings()));
+    } catch (e) {
+      this.showToast(`Could not make a link. (${e instanceof Error ? e.message : String(e)})`);
+      return;
+    }
+    const title = this.project.name;
+    if (typeof navigator.share === 'function' && matchMedia('(pointer: coarse)').matches) {
+      try {
+        await navigator.share({ title, text: `${title} — made in Drift`, url });
+        return;
+      } catch (e) {
+        if (e instanceof DOMException && e.name === 'AbortError') return;
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      this.showToast(`Link copied (${url.length} characters). Whoever opens it hears this song with its visual.`);
+    } catch {
+      window.prompt('Copy this link:', url);
+    }
+  }
+
+  /** Opens the song in a share link, if the page was opened with one. */
+  private async openSharedLink(): Promise<boolean> {
+    if (typeof location === 'undefined' || !location.hash.startsWith(SHARE_PREFIX)) return false;
+    const fragment = location.hash;
+    // Don't open it again on a reload; the song is saved as a project.
+    history.replaceState(null, '', location.pathname + location.search);
+    try {
+      const song = await decodeShare(fragment);
+      if (song.visuals) saveVisualSettings(song.visuals);
+      this.open(this.matchHardware(song.project, song.hardware));
+      this.shared = { name: song.project.name, scene: song.visuals?.scene };
+      if (song.changedTemplates) this.showToast('Drift changed since this song was shared; parts of it may sound a little different.');
+      return true;
+    } catch {
+      this.showToast('This share link could not be opened. It may be cut off; ask for the whole link.');
+      return false;
+    }
+  }
+
+  /** Parts that played hardware for the sharer get the same synth here if there is one, else the best match. */
+  private matchHardware(project: ProjectState, hardware: Record<string, string>): ProjectState {
+    const ids = Object.keys(hardware);
+    if (!ids.length) return project;
+    const defs = this.instruments.length ? this.instruments.map((i) => i.definition) : BUILT_IN_INSTRUMENTS;
+    const fitted = assignBestFit({ ...project, tracks: project.tracks.filter((t) => ids.includes(t.id)) }, this.rack, defs);
+    const byId = new Map(fitted.tracks.map((t) => [t.id, t]));
+    const tracks = project.tracks.map((t) => {
+      const f = byId.get(t.id);
+      if (!f) return t;
+      const device = f.deviceId ? this.rack.devices.find((d) => d.id === f.deviceId) : undefined;
+      const playsOn = device ? deviceInstrumentId(device, defs) : f.instrumentId;
+      // Knob values only mean something on the synth they were set for.
+      return playsOn === hardware[t.id] ? f : { ...f, panel: undefined };
+    });
+    return { ...project, tracks };
+  }
+
+  /** Starts a shared song and its visual (one tap: browsers only allow sound and new windows after one). */
+  playShared(): void {
+    const withVisual = !!this.shared?.scene;
+    this.shared = undefined;
+    if (!this.sequencer.playing) void this.togglePlay();
+    if (withVisual) this.openVisuals();
+    this.notify();
+  }
+
+  dismissShared(): void {
+    this.shared = undefined;
+    this.notify();
+  }
+
   // ---------- harmony ----------
 
   private harmonyRng = new Rng();
 
   /** Write a new progression in the given style. */
-  generateProgression(style: ProgressionStyle, length?: number): void {
+  generateProgression(style: ProgressionStyle, length?: number, rng: Rng = this.harmonyRng): void {
     const scale = new Scale(this.project.key.root, this.project.key.mode);
-    const progression = generateProgression(scale, style, this.harmonyRng, length);
+    const progression = generateProgression(scale, style, rng, length);
     this.change((p) => ({ ...p, progression }));
   }
 
   /** Swap one chord for a functional substitute. */
-  varyProgression(style: ProgressionStyle): void {
+  varyProgression(style: ProgressionStyle, rng: Rng = this.harmonyRng): void {
     const scale = new Scale(this.project.key.root, this.project.key.mode);
-    const progression = varyProgression(this.project.progression, scale, style, this.harmonyRng);
+    const progression = varyProgression(this.project.progression, scale, style, rng);
     this.change((p) => ({ ...p, progression }));
   }
 
@@ -927,8 +1042,10 @@ export class AppStore {
   private onProgressionLoop(loop: number, bar: number): void {
     const evolve = this.project.harmonyEvolve;
     if (!evolve?.enabled || loop % Math.max(1, evolve.everyLoops) !== 0) return;
-    if (evolve.mode === 'new') this.generateProgression(evolve.style);
-    else this.varyProgression(evolve.style);
+    // Seeded from the tracks and the loop, so the progression evolves the same way every time the song plays.
+    const rng = new Rng((harmonySeed(this.project) + Math.imul(loop, 0x9e3779b1)) >>> 0);
+    if (evolve.mode === 'new') this.generateProgression(evolve.style, undefined, rng);
+    else this.varyProgression(evolve.style, rng);
     this.addLog(bar, `Progression · ${this.progressionLabel()}`, '#f2f4f7');
   }
 

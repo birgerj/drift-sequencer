@@ -35,6 +35,7 @@ export function App() {
         {v.name === 'harmony' && <HarmonyEditor />}
       </main>
       {s.shortcutsOpen && <ShortcutHelp />}
+      {s.shared && <SharedSong />}
       {pwaState.updateReady && (
         <div class="toast update" role="status">
           A new version of Drift is ready.
@@ -48,6 +49,28 @@ export function App() {
           {s.toast}
         </div>
       )}
+    </div>
+  );
+}
+
+function SharedSong() {
+  const s = useStore();
+  const song = s.shared!;
+  return (
+    <div class="overlay" role="dialog" aria-modal="true" aria-label="Shared song">
+      <div class="card shared-card">
+        <h2 class="eyebrow">Shared with you</h2>
+        <p class="shared-name">{song.name}</p>
+        <p class="hint">A song made in Drift. It plays on the built-in synths, or on your own when they suit a part, and evolves as it plays.</p>
+        <div class="shared-actions">
+          <button type="button" class="primary" onClick={() => s.playShared()}>
+            <Icon name="play" /> Play{song.scene ? ' with visual' : ''}
+          </button>
+          <button type="button" class="ghost" onClick={() => s.dismissShared()}>
+            Look around first
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

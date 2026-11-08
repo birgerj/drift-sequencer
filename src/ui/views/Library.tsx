@@ -12,6 +12,9 @@ export function Library() {
         </button>
         <h1>Projects</h1>
         <div class="spacer" />
+        <button type="button" class="primary" onClick={() => void s.shareProject()} title="A link with this song and its visual">
+          <Icon name="share" /> Share link
+        </button>
         <button type="button" onClick={() => s.exportProject()}>
           <Icon name="download" /> Export current
         </button>
