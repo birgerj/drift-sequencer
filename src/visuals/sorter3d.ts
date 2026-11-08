@@ -6,6 +6,12 @@
 // BEAT_M metres per beat, inductions, diverts and scans land on beats, lead
 // notes feed parcels in the track's colour, bass notes drive the lift, pad
 // notes call parcels back from the store and tint the lights.
+//
+// Two looks, switched with the time-of-day button: "Night" is the club;
+// "Day" is the Primevision illustration style — a light hall, equipment in
+// black outlines with teal sorters and roll cages, orange scan tunnels,
+// a purple workstation, magenta GPU racks, people and hanging signs, and
+// SDM touches (Primevision blue on the followed parcel).
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -66,6 +72,26 @@ const BAYS = 17; // bays each side of the lift
 const DYN = 8; // bays each side that hold real parcels
 
 const PARCEL_COLS = [0xb08a5e, 0xa07c52, 0xc4a070, 0x8f6c48, 0xb08a5e, 0xc4a070, 0xf2c200, 0xf2c200, 0x4a2f1a, 0x4a2f1a, 0xe6e4de, 0xb3122a, 0x4b1a86, 0x1d4f9a];
+
+/** Day palette, after the Primevision product illustration, plus SDM's blue. */
+const DAY = {
+  bg: 0xeef1f4,
+  floor: 0xf6f7f9,
+  wall: 0xe6e9ed,
+  ceiling: 0xf3f4f6,
+  steel: 0xb9c0c8,
+  teal: 0x2fa58f,
+  tealD: 0x1f7f6c,
+  tealL: 0x86d3c3,
+  tealP: 0xdff3ee,
+  orange: 0xf2a51a,
+  orangeL: 0xfbd47c,
+  purple: 0x6b3fd1,
+  magenta: 0xd6339a,
+  red: 0xe2231a,
+  ink: 0x1d1d1f,
+  blue: 0x1755fe,
+};
 
 function loopAt(s: number, pos: V3, tan: V3): void {
   s = ((s % LOOP_LEN) + LOOP_LEN) % LOOP_LEN;
@@ -245,11 +271,14 @@ uniform vec3 uCol;
 uniform float uBeat;
 uniform float uKick;
 uniform float uGain;
+uniform float uDay;
+uniform vec3 uDayCol;
 varying float vS;
 void main() {
   float ph = fract(vS * 0.125 - uBeat * 0.5);
   float chase = smoothstep(0.8, 1.0, ph);
-  gl_FragColor = vec4(uCol * (0.3 + uKick * 0.9 + chase * 1.7) * uGain, 1.0);
+  vec3 night = uCol * (0.3 + uKick * 0.9 + chase * 1.7) * uGain;
+  gl_FragColor = vec4(mix(night, uDayCol * (1.0 + chase * 0.35), uDay), 1.0);
 }`;
 const BEAM_VERT = /* glsl */ `
 varying float vY;
@@ -286,6 +315,98 @@ function canvasTex(w: number, h: number, draw: (g: CanvasRenderingContext2D) => 
   t.anisotropy = 4;
   return t;
 }
+/** Belt surface: dark rubber by night, light rollers by day. */
+function drawBelt(t: THREE.CanvasTexture, day: boolean): void {
+  const c = t.image as HTMLCanvasElement;
+  const g = c.getContext('2d');
+  if (!g) return;
+  g.fillStyle = day ? '#eef0f3' : '#1f2125';
+  g.fillRect(0, 0, c.width, c.height);
+  g.fillStyle = day ? '#c4cad1' : '#34373d';
+  for (let y = 0; y < c.height; y += 8) g.fillRect(0, y, c.width, day ? 2 : 3);
+  t.needsUpdate = true;
+}
+
+const SIGN_FONT = 'Futura, "Futura PT", "Century Gothic", "Trebuchet MS", sans-serif';
+
+function letterTex(letter: string): THREE.CanvasTexture {
+  return canvasTex(64, 64, (g) => {
+    g.fillStyle = '#86d3c3';
+    g.fillRect(0, 0, 64, 64);
+    g.strokeStyle = '#1d1d1f';
+    g.lineWidth = 4;
+    g.strokeRect(2, 2, 60, 60);
+    g.fillStyle = '#1d1d1f';
+    g.font = `700 40px ${SIGN_FONT}`;
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(letter, 32, 34);
+  });
+}
+
+function barcodeTex(): THREE.CanvasTexture {
+  return canvasTex(128, 32, (g) => {
+    g.fillStyle = '#f2a51a';
+    g.fillRect(0, 0, 128, 32);
+    g.fillStyle = '#1d1d1f';
+    for (let x = 20; x < 108; ) {
+      const w = 1 + Math.floor(Math.random() * 4);
+      g.fillRect(x, 6, w, 20);
+      x += w + 2;
+    }
+  });
+}
+
+function eyeTex(): THREE.CanvasTexture {
+  return canvasTex(64, 64, (g) => {
+    g.fillStyle = '#f2a51a';
+    g.fillRect(0, 0, 64, 64);
+    g.fillStyle = '#ffffff';
+    g.beginPath();
+    g.arc(32, 32, 22, 0, 7);
+    g.fill();
+    g.strokeStyle = '#1d1d1f';
+    g.lineWidth = 4;
+    g.beginPath();
+    g.ellipse(32, 32, 15, 9, 0, 0, 7);
+    g.stroke();
+    g.fillStyle = '#1d1d1f';
+    g.beginPath();
+    g.arc(32, 32, 5, 0, 7);
+    g.fill();
+  });
+}
+
+/** A hanging sign like the labels in the illustration: a round icon and the name in the product colour. */
+function signTex(text: string, color: string, icon: (g: CanvasRenderingContext2D) => void): THREE.CanvasTexture {
+  return canvasTex(512, 128, (g) => {
+    g.fillStyle = '#ffffff';
+    g.fillRect(0, 0, 512, 128);
+    g.strokeStyle = '#1d1d1f';
+    g.lineWidth = 5;
+    g.strokeRect(3, 3, 506, 122);
+    g.fillStyle = color;
+    g.beginPath();
+    g.arc(64, 64, 40, 0, 7);
+    g.fill();
+    g.save();
+    g.translate(64, 64);
+    g.strokeStyle = '#ffffff';
+    g.fillStyle = '#ffffff';
+    g.lineWidth = 5;
+    icon(g);
+    g.restore();
+    g.fillStyle = color;
+    g.font = `600 40px ${SIGN_FONT}`;
+    g.textBaseline = 'middle';
+    const words = text.toUpperCase().split(' ');
+    if (words.length > 1 && text.length > 14) {
+      g.fillText(words[0]!, 124, 42);
+      g.fillText(words.slice(1).join(' '), 124, 88);
+    } else g.fillText(text.toUpperCase(), 124, 66);
+  });
+}
+
 function noise(g: CanvasRenderingContext2D, w: number, h: number, base: number, amp: number) {
   const id = g.createImageData(w, h);
   for (let i = 0; i < id.data.length; i += 4) {
@@ -443,6 +564,10 @@ interface Anim {
   t0: number;
   t1: number;
 }
+const smooth01 = (x: number) => {
+  const t = clamp(x, 0, 1);
+  return t * t * (3 - 2 * t);
+};
 const easeIO = (x: number) => (x < 0.5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2);
 function animAt(an: Anim, bt: number): number {
   if (bt >= an.t1) return an.b;
@@ -530,6 +655,20 @@ export class Sorter implements Scene3D {
   private hemi!: THREE.HemisphereLight;
   private forklifts: Forklift[] = [];
 
+  // Day / night look.
+  private day = 0;
+  private dayShown: boolean | null = null;
+  private themed: { m: THREE.MeshStandardMaterial; n: THREE.Color; d: THREE.Color; nr: number; dr: number; nm: number; dm: number }[] = [];
+  private dayOnly: THREE.Object3D[] = [];
+  private nightOnly: THREE.Object3D[] = [];
+  /** Which look the objects being built belong to (undefined: both). */
+  private only: 'day' | 'night' | undefined;
+  private readonly ink = new THREE.LineBasicMaterial({ color: DAY.ink });
+  private nightEnv: THREE.Texture | null = null;
+  private keyLight!: THREE.DirectionalLight;
+  private hull!: THREE.InstancedMesh;
+  private cageLine!: THREE.LineBasicMaterial;
+
   // Camera.
   private camMode: CamMode = 'auto';
   private follow: Parcel | null = null;
@@ -580,8 +719,10 @@ export class Sorter implements Scene3D {
     this.buildParcels();
     this.buildClub();
     this.buildForklifts();
+    this.buildDay();
     this.buildCamera();
     this.prefill();
+    this.applyTheme(0);
   }
 
   resize(w: number, h: number, ratio: number): void {
@@ -702,13 +843,17 @@ export class Sorter implements Scene3D {
       if (bt - this.lastPad > 16) this.requestRetrieve();
     }
 
+    // Time of day: "dusk" (0) is the day look, "night" (1) the club.
+    this.applyTheme(1 - smooth01((i.tod ?? 0) * 1.6 - 0.3));
+
     this.updateParcels(dt);
     this.updateTrays(dt);
     this.updateStore();
     this.updateClub(dt, bar);
     this.updateForklifts(dt, prev);
     this.updateCamera(dt, bar, i.travelSpeed);
-    this.bloom.strength = 0.75 + this.kick * 0.35 + this.snare * 0.15;
+    this.bloom.strength = (0.75 + this.kick * 0.35 + this.snare * 0.15) * (1 - this.day);
+    this.bloom.enabled = this.day < 0.98;
     this.composer.render(dt);
   }
 
@@ -1131,7 +1276,15 @@ export class Sorter implements Scene3D {
       o.updateMatrix();
       this.parcelMesh.setMatrixAt(k, o.matrix);
       this.parcelMesh.setColorAt(k, p.col);
-      const g = p.scanned ? (p.lead ? 0.38 : 0.16) * kick + (p === this.follow ? 0.25 : 0) : p.lead ? 0.25 : 0;
+      if (this.dayShown) {
+        // Outline: a slightly larger box drawn inside out; the followed parcel in SDM blue.
+        const e = p === this.follow ? 0.12 : 0.05;
+        o.scale.set(p.w + e, p.h + e, p.d + e);
+        o.updateMatrix();
+        this.hull.setMatrixAt(k, o.matrix);
+        this.hull.setColorAt(k, this.c.setHex(p === this.follow ? DAY.blue : DAY.ink));
+      }
+      const g = (p.scanned ? (p.lead ? 0.38 : 0.16) * kick + (p === this.follow ? 0.25 : 0) : p.lead ? 0.25 : 0) * (1 - this.day * 0.85);
       this.c.copy(p.glow).multiplyScalar(g).lerp(this.white, p.flash * 0.8);
       glow[k * 3] = this.c.r + p.flash * 0.6;
       glow[k * 3 + 1] = this.c.g + p.flash * 0.6;
@@ -1145,6 +1298,9 @@ export class Sorter implements Scene3D {
     }
     this.parcelMesh.count = k;
     this.labelMesh.count = k;
+    this.hull.count = this.dayShown ? k : 0;
+    this.hull.instanceMatrix.needsUpdate = true;
+    if (this.hull.instanceColor) this.hull.instanceColor.needsUpdate = true;
     this.parcelMesh.instanceMatrix.needsUpdate = true;
     this.labelMesh.instanceMatrix.needsUpdate = true;
     if (this.parcelMesh.instanceColor) this.parcelMesh.instanceColor.needsUpdate = true;
@@ -1181,6 +1337,7 @@ export class Sorter implements Scene3D {
       (u.uCol!.value as THREE.Color).copy(this.cols[k % 3]!);
       u.uBeat!.value = bt;
       u.uKick!.value = this.kick + (k === 1 ? this.bassEnv * 0.6 : 0);
+      u.uDay!.value = this.day;
     });
     const pad = this.time < this.padUntil ? 1 : 0;
     for (const lane of this.lanes) {
@@ -1233,6 +1390,10 @@ export class Sorter implements Scene3D {
       }
     });
 
+    if (this.dayShown) {
+      this.hemi.intensity = 1.0 + this.snare * 0.08;
+      return;
+    }
     // Mirror ball and its spots on walls, floor and ceiling.
     const ba = this.time * 0.35;
     this.ball.rotation.y = ba;
@@ -1290,7 +1451,8 @@ export class Sorter implements Scene3D {
   private tunnelGlow(t: Tunnel, dt: number): void {
     t.flash = Math.max(0, t.flash - dt * 3);
     t.ring.color.copy(t.col).multiplyScalar(0.25 + t.flash * 3).lerp(this.white, t.flash * 0.4);
-    t.curtain.opacity = 0.1 + t.flash * 0.45 + this.snare * 0.35;
+    if (this.day > 0) t.ring.color.lerp(this.c.setHex(DAY.orangeL).lerp(this.white, t.flash * 0.8), this.day);
+    t.curtain.opacity = (0.1 + t.flash * 0.45 + this.snare * 0.35) * (1 - this.day);
   }
 
   private updateForklifts(dt: number, prevBt: number): void {
@@ -1377,25 +1539,28 @@ export class Sorter implements Scene3D {
     add(0xff3fa0, 10, 6, 0);
     add(0x30d5ff, 0, 8, 10);
     add(0x9999aa, 0, 10, -10);
-    this.scene.environment = pm.fromScene(es, 0.04).texture;
+    this.nightEnv = pm.fromScene(es, 0.04).texture;
+    this.scene.environment = this.nightEnv;
     pm.dispose();
     this.hemi = new THREE.HemisphereLight(0x6a6aa0, 0x1a1410, 0.45);
     this.scene.add(this.hemi);
     const key = new THREE.DirectionalLight(0xb0b8ff, 0.3);
-    key.position.set(10, 20, 5);
+    key.position.set(-10, 20, 8);
     this.scene.add(key);
+    this.keyLight = key;
   }
 
-  private boxes = new Map<string, { mat: THREE.Material; list: number[][] }>();
+  private boxes = new Map<string, { mat: THREE.Material; list: number[][]; only: 'day' | 'night' | undefined }>();
   private box(key: string, mat: THREE.Material, x: number, y: number, z: number, sx: number, sy: number, sz: number, col?: number, ry = 0): void {
     let e = this.boxes.get(key);
-    if (!e) this.boxes.set(key, (e = { mat, list: [] }));
+    if (!e) this.boxes.set(key, (e = { mat, list: [], only: this.only }));
     e.list.push([x, y, z, sx, sy, sz, col ?? -1, ry]);
   }
   private flushBoxes(): void {
     const g = new THREE.BoxGeometry(1, 1, 1);
     const o = this.o;
-    for (const { mat, list } of this.boxes.values()) {
+    const edges = new THREE.EdgesGeometry(g).getAttribute('position');
+    for (const { mat, list, only } of this.boxes.values()) {
       const im = new THREE.InstancedMesh(g, mat, list.length);
       list.forEach((e, k) => {
         o.position.set(e[0]!, e[1]!, e[2]!);
@@ -1406,7 +1571,27 @@ export class Sorter implements Scene3D {
         if (e[6]! >= 0) im.setColorAt(k, this.c.setHex(e[6]!));
       });
       if (im.instanceColor) im.instanceColor.needsUpdate = true;
-      this.scene.add(im);
+      this.put(im, only);
+      // Day look: black outlines on solid parts (not on lights, lines or thin rods).
+      if (only === 'night' || !(mat instanceof THREE.MeshStandardMaterial)) continue;
+      const pos: number[] = [];
+      const vtx = new THREE.Vector3();
+      for (const e of list) {
+        const dims = [e[3]!, e[4]!, e[5]!].sort((a, b) => a - b);
+        if (dims[1]! < 0.09) continue;
+        o.position.set(e[0]!, e[1]!, e[2]!);
+        o.rotation.set(0, e[7]!, 0);
+        o.scale.set(e[3]!, e[4]!, e[5]!);
+        o.updateMatrix();
+        for (let j = 0; j < edges.count; j++) {
+          vtx.fromBufferAttribute(edges, j).applyMatrix4(o.matrix);
+          pos.push(vtx.x, vtx.y, vtx.z);
+        }
+      }
+      if (!pos.length) continue;
+      const lg = new THREE.BufferGeometry();
+      lg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      this.put(new THREE.LineSegments(lg, this.ink), 'day');
     }
     this.boxes.clear();
   }
@@ -1414,12 +1599,65 @@ export class Sorter implements Scene3D {
   private mesh(geo: THREE.BufferGeometry, mat: THREE.Material, x = 0, y = 0, z = 0): THREE.Mesh {
     const m = new THREE.Mesh(geo, mat);
     m.position.set(x, y, z);
-    this.scene.add(m);
+    this.put(m);
     return m;
   }
 
-  private std(color: number, rough = 0.7, metal = 0.2): THREE.MeshStandardMaterial {
-    return new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+  /** Adds to the scene; objects of one look are shown only in that look. */
+  private put(obj: THREE.Object3D, only = this.only): void {
+    this.scene.add(obj);
+    if (only === 'day') this.dayOnly.push(obj);
+    else if (only === 'night') this.nightOnly.push(obj);
+  }
+
+  /** Black outline for a mesh, shown by day. */
+  private inkify(m: THREE.Mesh, angle = 25): void {
+    const l = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, angle), this.ink);
+    m.add(l);
+    this.dayOnly.push(l);
+  }
+
+  /** A material that takes another colour (and a matte finish) by day. */
+  private theme<M extends THREE.MeshStandardMaterial>(m: M, day: number, rough = 0.85, metal = 0.05): M {
+    this.themed.push({ m, n: m.color.clone(), d: new THREE.Color(day), nr: m.roughness, dr: rough, nm: m.metalness, dm: metal });
+    return m;
+  }
+
+  private std(color: number, rough = 0.7, metal = 0.2, day?: number): THREE.MeshStandardMaterial {
+    const m = new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
+    return day === undefined ? m : this.theme(m, day);
+  }
+
+  /** Blends between the club (0) and the day look (1). */
+  private applyTheme(day: number): void {
+    if (Math.abs(day - this.day) < 0.002 && this.dayShown !== null) return;
+    this.day = day;
+    for (const t of this.themed) {
+      t.m.color.lerpColors(t.n, t.d, day);
+      t.m.roughness = t.nr + (t.dr - t.nr) * day;
+      t.m.metalness = t.nm + (t.dm - t.nm) * day;
+    }
+    const bg = this.scene.background as THREE.Color;
+    bg.setHex(0x0b0910).lerp(this.c.setHex(DAY.bg), day);
+    const fog = this.scene.fog as THREE.FogExp2;
+    fog.color.copy(bg);
+    fog.density = 0.017 + (0.009 - 0.017) * day;
+    this.renderer.toneMappingExposure = 1.15 - 0.2 * day;
+    this.hemi.color.setHex(0x6a6aa0).lerp(this.c.setHex(0xffffff), day);
+    this.hemi.groundColor.setHex(0x1a1410).lerp(this.c.setHex(0xc9cfd6), day);
+    this.hemi.intensity = 0.45 + 0.55 * day;
+    this.keyLight.color.setHex(0xb0b8ff).lerp(this.white, day);
+    this.keyLight.intensity = 0.3 + 0.7 * day;
+    this.cageLine.color.setHex(0x8a8f96).lerp(this.c.setHex(DAY.tealD), day);
+    const show = day > 0.5;
+    if (show === this.dayShown) return;
+    this.dayShown = show;
+    for (const o of this.dayOnly) o.visible = show;
+    for (const o of this.nightOnly) o.visible = !show;
+    this.scene.environment = show ? null : this.nightEnv;
+    // Flat, bright colours by day, like the illustration; filmic tone mapping for the club.
+    this.renderer.toneMapping = show ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
+    drawBelt(this.beltTex, show);
   }
 
   private buildHall(): void {
@@ -1442,7 +1680,7 @@ export class Sorter implements Scene3D {
       new THREE.MeshStandardMaterial({ color: 0x7c7c82, map: concrete, roughnessMap: concrete, roughness: 0.55, metalness: 0.05 }),
     );
     floor.rotation.x = -Math.PI / 2;
-    this.scene.add(floor);
+    this.put(floor, 'night');
     // Walkway lines.
     const yel = new THREE.MeshBasicMaterial({ color: 0x8a7420 });
     for (const z of [-24.6, -31.5, 16.5, 24.8]) this.box('line', yel, 10, 0.012, z, 100, 0.01, 0.15);
@@ -1465,13 +1703,13 @@ export class Sorter implements Scene3D {
     for (const z of [-HZ, HZ]) {
       const w = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HH), wx);
       w.position.set(0, HH / 2, z);
-      this.scene.add(w);
+      this.put(w, 'night');
     }
     for (const x of [-HX, HX]) {
       const w = new THREE.Mesh(new THREE.PlaneGeometry(HZ * 2, HH), wz);
       w.position.set(x, HH / 2, 0);
       w.rotation.y = Math.PI / 2;
-      this.scene.add(w);
+      this.put(w, 'night');
     }
     const ceilT = ribs.clone();
     ceilT.repeat.set(40, 1);
@@ -1480,29 +1718,30 @@ export class Sorter implements Scene3D {
     const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2), new THREE.MeshStandardMaterial({ map: ceilT, color: 0x77777a, roughness: 0.9, metalness: 0.2 }));
     ceil.rotation.x = Math.PI / 2;
     ceil.position.y = HH;
-    this.scene.add(ceil);
+    this.put(ceil, 'night');
 
-    const steel = this.std(0x4c515a, 0.5, 0.7);
+    const steel = this.std(0x4c515a, 0.5, 0.7, DAY.steel);
     for (let x = -60; x <= 60; x += 10) this.box('steel', steel, x, HH - 0.5, 0, 0.35, 0.8, HZ * 2);
     for (let z = -32; z <= 32; z += 8) this.box('steel', steel, 0, HH - 0.12, z, HX * 2, 0.18, 0.18);
-    const col = this.std(0x3a3d45, 0.6, 0.6);
+    const col = this.std(0x3a3d45, 0.6, 0.6, 0xc3c9d0);
     for (let x = -44; x <= 56; x += 25) {
       for (const z of [-32.5, 32.5]) this.box('col', col, x, HH / 2, z, 0.7, HH, 0.7);
     }
     // Ducts and sprinkler mains.
-    const duct = this.std(0x9aa0a8, 0.35, 0.9);
+    const duct = this.std(0x9aa0a8, 0.35, 0.9, 0xd5d9de);
     for (const z of [-27, 27]) {
       const d = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, HX * 2, 20), duct);
       d.rotation.z = Math.PI / 2;
       d.position.set(0, HH - 1.4, z);
-      this.scene.add(d);
+      this.put(d);
+      this.inkify(d, 40);
     }
-    const spr = this.std(0xa01818, 0.5, 0.4);
+    const spr = this.std(0xa01818, 0.5, 0.4, DAY.red);
     for (const z of [-20, 0, 20]) {
       const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, HX * 2, 6), spr);
       pipe.rotation.z = Math.PI / 2;
       pipe.position.set(0, HH - 0.25, z);
-      this.scene.add(pipe);
+      this.put(pipe);
     }
     // High-bay lamps, mostly off; a few glow warm.
     const lampOn = new THREE.MeshBasicMaterial({ color: new THREE.Color(1.2, 1.0, 0.7) });
@@ -1512,22 +1751,24 @@ export class Sorter implements Scene3D {
       for (const z of [-24, -8, 8, 24]) {
         const m = new THREE.Mesh(lampG, Math.random() < 0.25 ? lampOn : lampOff);
         m.position.set(x, HH - 0.6, z);
-        this.scene.add(m);
+        this.put(m, 'night');
       }
     }
     // Strobe panels on the ceiling.
     this.strobe = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    this.only = 'night';
     for (let x = -40; x <= 40; x += 20) this.box('strobe', this.strobe, x, HH - 0.3, 0, 2.4, 0.08, 0.5);
+    this.only = undefined;
 
     // Dock doors on the right wall (behind the store) with traffic lights.
-    const door = this.std(0x2c3038, 0.6, 0.5);
+    const door = this.std(0x2c3038, 0.6, 0.5, 0xd5dae0);
     const amber = new THREE.MeshBasicMaterial({ color: new THREE.Color(2, 1.1, 0.1) });
     for (const z of [-24, -12, 12, 24]) {
       this.box('door', door, HX - 0.15, 2.6, z, 0.2, 5.2, 4.2);
       this.box('doorled', amber, HX - 0.3, 5.4, z, 0.1, 0.1, 4.4);
     }
     // Mezzanine for the high infeeds, with stairs.
-    const grate = this.std(0x3a3e45, 0.6, 0.7);
+    const grate = this.std(0x3a3e45, 0.6, 0.7, 0xc9ced4);
     const rail = this.std(0xd9a400, 0.5, 0.4);
     this.box('grate', grate, -48, 6.15, -24.4, 28, 0.12, 2.2);
     this.box('rail', rail, -48, 7.2, -25.4, 28, 0.06, 0.06);
@@ -1535,11 +1776,11 @@ export class Sorter implements Scene3D {
     for (let k = 0; k < 20; k++) this.box('grate', grate, -33 + k * 0.6, 6.0 - k * 0.3, -24.4, 0.6, 0.08, 1.2);
     for (let x = -60; x <= -36; x += 6) this.box('steel', steel, x, 3.05, -25.3, 0.2, 6.1, 0.2);
     // Control room with lit windows.
-    this.box('room', this.std(0x30343b, 0.6, 0.4), -30, 1.7, 26, 10, 3.4, 5);
+    this.box('room', this.std(0x30343b, 0.6, 0.4, DAY.wall), -30, 1.7, 26, 10, 3.4, 5);
     const win = new THREE.Mesh(new THREE.PlaneGeometry(8.6, 1.3), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.25, 0.55, 1.1) }));
     win.position.set(-30, 2.2, 23.48);
     win.rotation.y = Math.PI;
-    this.scene.add(win);
+    this.put(win);
     // Pallets with wrapped goods along the walls.
     const pal = this.std(0x8a6a44, 0.9, 0);
     const wrap = new THREE.MeshStandardMaterial({ color: 0xd8d4cc, roughness: 0.35, metalness: 0 });
@@ -1561,14 +1802,14 @@ export class Sorter implements Scene3D {
       for (let y = 0; y < 64; y += 8) g.fillRect(0, y, 32, 3);
     });
     this.beltTex.repeat.set(1, 1 / 1.2);
-    const beltMat = new THREE.MeshStandardMaterial({ map: this.beltTex, roughness: 0.55, metalness: 0.1, side: THREE.DoubleSide });
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0x2b5ea8, roughness: 0.4, metalness: 0.6, side: THREE.DoubleSide });
-    const chuteMat = new THREE.MeshStandardMaterial({ color: 0xa8b0ba, roughness: 0.3, metalness: 0.9, side: THREE.DoubleSide });
-    const trackMat = new THREE.MeshStandardMaterial({ color: 0x3c4048, roughness: 0.45, metalness: 0.7, side: THREE.DoubleSide });
-    const legMat = this.std(0x6b7280, 0.5, 0.7);
+    const beltMat = this.theme(new THREE.MeshStandardMaterial({ map: this.beltTex, roughness: 0.55, metalness: 0.1, side: THREE.DoubleSide }), 0xffffff);
+    const frameMat = this.theme(new THREE.MeshStandardMaterial({ color: 0x2b5ea8, roughness: 0.4, metalness: 0.6, side: THREE.DoubleSide }), DAY.teal);
+    const chuteMat = this.theme(new THREE.MeshStandardMaterial({ color: 0xa8b0ba, roughness: 0.3, metalness: 0.9, side: THREE.DoubleSide }), DAY.tealP);
+    const trackMat = this.theme(new THREE.MeshStandardMaterial({ color: 0x3c4048, roughness: 0.45, metalness: 0.7, side: THREE.DoubleSide }), DAY.teal);
+    const legMat = this.std(0x6b7280, 0.5, 0.7, DAY.teal);
     const strip = () => {
       const m = new THREE.ShaderMaterial({
-        uniforms: { uCol: { value: new THREE.Color() }, uBeat: { value: 0 }, uKick: { value: 0 }, uGain: { value: 1 } },
+        uniforms: { uCol: { value: new THREE.Color() }, uBeat: { value: 0 }, uKick: { value: 0 }, uGain: { value: 1 }, uDay: { value: 0 }, uDayCol: { value: new THREE.Color(DAY.tealD) } },
         vertexShader: STRIP_VERT,
         fragmentShader: STRIP_FRAG,
         side: THREE.DoubleSide,
@@ -1636,15 +1877,18 @@ export class Sorter implements Scene3D {
       loopAt(s, this.p, this.t);
       this.box('leg', legMat, this.p.x, (LOOP_Y - 0.6) / 2, this.p.z, 0.22, LOOP_Y - 0.6, 0.22);
     }
-    const trayMat = new THREE.MeshStandardMaterial({ color: 0x8c96a4, roughness: 0.35, metalness: 0.85 });
+    const trayMat = this.theme(new THREE.MeshStandardMaterial({ color: 0x8c96a4, roughness: 0.35, metalness: 0.85 }), 0xffffff, 0.7);
     this.trays = new THREE.InstancedMesh(new THREE.BoxGeometry(1.25, 0.12, PITCH * 0.9), trayMat, TRAYS);
     this.trays.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.trays.frustumCulled = false;
-    this.scene.add(this.trays);
+    this.put(this.trays);
     for (const s of LOOP_TUNNELS) this.loopTunnels.push({ s, t: this.tunnel(loop, s, 1.6) });
 
     // Chutes: steel slides that bend away from the loop and down into roll cages.
     const cageMat = new THREE.LineBasicMaterial({ color: 0x8a8f96 });
+    this.cageLine = cageMat;
+    const meshMat = new THREE.MeshBasicMaterial({ color: DAY.tealL, transparent: true, opacity: 0.28, depthWrite: false, side: THREE.DoubleSide });
+    const panelGeo = new THREE.BoxGeometry(1.4, 1.6, 1.0);
     const cageGeo = new THREE.EdgesGeometry(new THREE.BoxGeometry(1.4, 1.6, 1.0, 2, 3, 1));
     CHUTES.forEach(([s, side], k) => {
       loopAt(s, this.p, this.t);
@@ -1664,7 +1908,15 @@ export class Sorter implements Scene3D {
       const cage = new THREE.LineSegments(cageGeo, cageMat);
       cage.position.set(cx, 0.85, cz);
       cage.rotation.y = Math.atan2(this.t.x, this.t.z);
-      this.scene.add(cage);
+      this.put(cage);
+      // By day: teal mesh sides and a letter board, as in the illustration.
+      const panel = new THREE.Mesh(panelGeo, meshMat);
+      cage.add(panel);
+      this.dayOnly.push(panel);
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 0.55), new THREE.MeshBasicMaterial({ map: letterTex(String.fromCharCode(65 + k)) }));
+      board.position.set(0, 0.05, 0.52);
+      cage.add(board);
+      this.dayOnly.push(board);
       this.box('cagebase', legMat, cx, 0.05, cz, 1.4, 0.06, 1.4);
       const lamp = new THREE.MeshBasicMaterial({ color: 0x000000 });
       this.box('post', legMat, cx + 0.8, 1.4, cz, 0.08, 2.8, 0.08);
@@ -1694,7 +1946,10 @@ export class Sorter implements Scene3D {
     const merged = (list: THREE.BufferGeometry[], mat: THREE.Material) => {
       if (!list.length) return;
       const g = mergeGeometries(list);
-      if (g) this.mesh(g, mat);
+      if (g) {
+        const m = this.mesh(g, mat);
+        if (mat instanceof THREE.MeshStandardMaterial) this.inkify(m, 35);
+      }
       list.forEach((x) => x.dispose());
     };
     merged(geo.belt!, beltMat);
@@ -1713,8 +1968,8 @@ export class Sorter implements Scene3D {
     const g = new THREE.Group();
     g.position.copy(this.p);
     g.rotation.y = Math.atan2(this.t.x, this.t.z);
-    this.scene.add(g);
-    const shell = this.std(0x8a9099, 0.35, 0.8);
+    this.put(g);
+    const shell = this.std(0x8a9099, 0.35, 0.8, DAY.orange);
     const W = width + 1.0;
     const H = 1.9;
     const D = 2.6;
@@ -1724,9 +1979,20 @@ export class Sorter implements Scene3D {
       g.add(m);
       return m;
     };
-    add(new THREE.BoxGeometry(0.3, H, D), shell, -W / 2, H / 2 - 0.3, 0);
-    add(new THREE.BoxGeometry(0.3, H, D), shell, W / 2, H / 2 - 0.3, 0);
-    add(new THREE.BoxGeometry(W + 0.3, 0.4, D), shell, 0, H - 0.1, 0);
+    this.inkify(add(new THREE.BoxGeometry(0.3, H, D), shell, -W / 2, H / 2 - 0.3, 0));
+    this.inkify(add(new THREE.BoxGeometry(0.3, H, D), shell, W / 2, H / 2 - 0.3, 0));
+    this.inkify(add(new THREE.BoxGeometry(W + 0.3, 0.4, D), shell, 0, H - 0.1, 0));
+    // By day: a barcode panel on both faces and the eye mark on the side, as in the illustration.
+    for (const z of [D / 2 + 0.02, -D / 2 - 0.02]) {
+      const p = add(new THREE.PlaneGeometry(Math.min(1.4, W - 0.2), 0.3), new THREE.MeshBasicMaterial({ map: barcodeTex() }), 0, H - 0.1, z);
+      if (z < 0) p.rotation.y = Math.PI;
+      this.dayOnly.push(p);
+    }
+    for (const x of [W / 2 + 0.16, -W / 2 - 0.16]) {
+      const e = add(new THREE.PlaneGeometry(0.6, 0.6), new THREE.MeshBasicMaterial({ map: eyeTex() }), x, H / 2 - 0.3, 0);
+      e.rotation.y = x > 0 ? Math.PI / 2 : -Math.PI / 2;
+      this.dayOnly.push(e);
+    }
     const ring = new THREE.MeshBasicMaterial({ color: 0x103020 });
     for (const z of [-D / 2 - 0.01, D / 2 + 0.01]) {
       add(new THREE.BoxGeometry(W + 0.32, 0.08, 0.04), ring, 0, H - 0.32, z);
@@ -1737,15 +2003,15 @@ export class Sorter implements Scene3D {
     for (const z of [-0.5, 0.5]) add(new THREE.PlaneGeometry(W - 0.3, H - 0.5), curtain, 0, H / 2 - 0.35, z);
     // Legs down to the floor for raised tunnels.
     if (this.p.y > 0.8) {
-      const leg = this.std(0x6b7280, 0.5, 0.7);
+      const leg = this.std(0x6b7280, 0.5, 0.7, DAY.orange);
       for (const x of [-W / 2, W / 2]) add(new THREE.BoxGeometry(0.15, this.p.y - 0.3, 0.15), leg, x, -(this.p.y + 0.3) / 2, 0);
     }
     return { ring, curtain, flash: 0, col: new THREE.Color(0.3, 1, 0.5) };
   }
 
   private buildStore(): void {
-    const upr = this.std(0x2b4fa0, 0.5, 0.5);
-    const beam = this.std(0xe0661a, 0.5, 0.5);
+    const upr = this.std(0x2b4fa0, 0.5, 0.5, DAY.teal);
+    const beam = this.std(0xe0661a, 0.5, 0.5, DAY.teal);
     const zMax = BAYS * BAY + BAY / 2;
     for (let z = -zMax; z <= zMax + 0.01; z += BAY) {
       for (const x of [RACK_X0, RACK_X1]) this.box('upr', upr, x, 4.8, z, 0.1, 9.6, 0.1);
@@ -1753,7 +2019,7 @@ export class Sorter implements Scene3D {
     const carton = this.std(0xffffff, 0.88, 0);
     for (const y of LEVELS) {
       for (const x of [RACK_X0, RACK_X1]) this.box('beam', beam, x, y - 0.08, 0, 0.08, 0.14, zMax * 2);
-      this.box('rail', this.std(0x50555e, 0.4, 0.8), SHUTTLE_X, y - 0.2, 0, 0.9, 0.06, zMax * 2);
+      this.box('srail', this.std(0x50555e, 0.4, 0.8, DAY.tealD), SHUTTLE_X, y - 0.2, 0, 0.9, 0.06, zMax * 2);
     }
     for (let b = -BAYS; b <= BAYS; b++) {
       const z = b * BAY;
@@ -1768,25 +2034,27 @@ export class Sorter implements Scene3D {
       }
     }
     // Shuttles, one per level.
-    const shMat = this.std(0xd9a400, 0.45, 0.5);
+    const shMat = this.std(0xd9a400, 0.45, 0.5, DAY.tealL);
     for (let k = 0; k < LEVELS.length; k++) {
       const m = this.mesh(new THREE.BoxGeometry(0.95, 0.18, 1.2), shMat, SHUTTLE_X, LEVELS[k]! - 0.1, 0);
+      this.inkify(m);
       this.shuttles.push({ runner: new Runner(), anim: { a: 0, b: 0, t0: 0, t1: 0 }, mesh: m });
     }
     // Lift mast and carriage.
-    const mast = this.std(0x50555e, 0.4, 0.8);
+    const mast = this.std(0x50555e, 0.4, 0.8, DAY.teal);
     for (const z of [-1.75, 1.75]) this.box('mast', mast, LIFT_X + 0.95, 5.2, z, 0.25, 10.4, 0.25);
     this.box('mast', mast, LIFT_X + 0.95, 10.45, 0, 0.3, 0.3, 3.8);
     this.carriage = new THREE.Group();
     this.carriage.position.set(LIFT_X, LOOP_Y, 0);
-    this.scene.add(this.carriage);
+    this.put(this.carriage);
     const cm = (geo: THREE.BufferGeometry, mat: THREE.Material, x: number, y: number, z: number) => {
       const m = new THREE.Mesh(geo, mat);
       m.position.set(x, y, z);
       this.carriage.add(m);
+      return m;
     };
-    cm(new THREE.BoxGeometry(1.7, 0.14, 3.2), new THREE.MeshStandardMaterial({ color: 0x8c96a4, roughness: 0.35, metalness: 0.85 }), -0.1, -0.08, 0);
-    cm(new THREE.BoxGeometry(0.1, 0.5, 3.2), this.std(0xd9a400, 0.5, 0.4), 0.8, 0.2, 0);
+    this.inkify(cm(new THREE.BoxGeometry(1.7, 0.14, 3.2), this.theme(new THREE.MeshStandardMaterial({ color: 0x8c96a4, roughness: 0.35, metalness: 0.85 }), DAY.tealL), -0.1, -0.08, 0));
+    this.inkify(cm(new THREE.BoxGeometry(0.1, 0.5, 3.2), this.std(0xd9a400, 0.5, 0.4, DAY.teal), 0.8, 0.2, 0));
     this.liftLamp = new THREE.MeshBasicMaterial({ color: 0x000000 });
     for (const z of [-1.6, 1.6]) cm(new THREE.BoxGeometry(0.16, 0.16, 0.16), this.liftLamp, 0.8, 0.55, z);
   }
@@ -1818,7 +2086,13 @@ export class Sorter implements Scene3D {
     this.parcelMesh.setColorAt(0, this.white);
     this.parcelMesh.frustumCulled = false;
     this.parcelMesh.count = 0;
-    this.scene.add(this.parcelMesh);
+    this.put(this.parcelMesh);
+    this.hull = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0xffffff, side: THREE.BackSide }), MAX_PARCELS);
+    this.hull.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    this.hull.setColorAt(0, this.white);
+    this.hull.frustumCulled = false;
+    this.hull.count = 0;
+    this.put(this.hull, 'day');
     const barcode = canvasTex(64, 44, (g) => {
       g.fillStyle = '#fff';
       g.fillRect(0, 0, 64, 44);
@@ -1834,10 +2108,11 @@ export class Sorter implements Scene3D {
     this.labelMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     this.labelMesh.frustumCulled = false;
     this.labelMesh.count = 0;
-    this.scene.add(this.labelMesh);
+    this.put(this.labelMesh);
   }
 
   private buildClub(): void {
+    this.only = 'night';
     const blob = canvasTex(64, 64, (g) => {
       const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
       gr.addColorStop(0, 'rgba(255,255,255,1)');
@@ -1852,8 +2127,8 @@ export class Sorter implements Scene3D {
       new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 1, roughness: 0.12, flatShading: true }),
     );
     this.ball.position.set(18, 9.2, 0);
-    this.scene.add(this.ball);
-    this.box('steel', this.std(0x6b7280, 0.5, 0.7), 18, 10.2, 0, 0.04, 1.6, 0.04);
+    this.put(this.ball);
+    this.box('ballrod', this.std(0x6b7280, 0.5, 0.7), 18, 10.2, 0, 0.04, 1.6, 0.04);
     const N = 480;
     this.sparkPos = new Float32Array(N * 3);
     for (let k = 0; k < N; k++) this.sparkDirs.push(v(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1)).normalize());
@@ -1862,7 +2137,7 @@ export class Sorter implements Scene3D {
     this.sparkMat = new THREE.PointsMaterial({ size: 0.35, map: blob, color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
     const sparks = new THREE.Points(this.sparkGeo, this.sparkMat);
     sparks.frustumCulled = false;
-    this.scene.add(sparks);
+    this.put(sparks);
     // Haze.
     const H = 80;
     this.hazePos = new Float32Array(H * 3);
@@ -1872,7 +2147,7 @@ export class Sorter implements Scene3D {
     this.hazeMat = new THREE.PointsMaterial({ size: 16, map: blob, color: 0x2a2244, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false });
     const haze = new THREE.Points(this.hazeGeo, this.hazeMat);
     haze.frustumCulled = false;
-    this.scene.add(haze);
+    this.put(haze);
     // Moving heads on two trusses; every other one also casts real light.
     const truss = this.std(0x2a2c31, 0.5, 0.7);
     for (const z of [-14, 14]) this.box('truss', truss, 5, HH - 0.55, z, 96, 0.4, 0.4);
@@ -1884,7 +2159,7 @@ export class Sorter implements Scene3D {
         this.box('head', this.std(0x111114, 0.5, 0.5), x, HH - 0.75, z, 0.5, 0.5, 0.5);
         const piv = new THREE.Group();
         piv.position.copy(pos);
-        this.scene.add(piv);
+        this.put(piv);
         const u = { uCol: { value: new THREE.Color(1, 1, 1) }, uO: { value: 0.2 } };
         const m = new THREE.Mesh(
           cone,
@@ -1896,7 +2171,8 @@ export class Sorter implements Scene3D {
         if (k % 2 === 0) {
           const l = new THREE.SpotLight(0xffffff, 200, 40, 0.17, 0.5, 1.6);
           l.position.copy(pos);
-          this.scene.add(l, l.target);
+          this.put(l);
+          this.put(l.target);
           h.light = l;
         }
         this.heads.push(h);
@@ -1912,9 +2188,9 @@ export class Sorter implements Scene3D {
     this.laserMat = new THREE.LineBasicMaterial({ color: 0x30ff70, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
     this.lasers = new THREE.LineSegments(this.laserGeo, this.laserMat);
     this.lasers.frustumCulled = false;
-    this.scene.add(this.lasers);
+    this.put(this.lasers);
     this.box('head', this.std(0x111114, 0.5, 0.5), HX - 0.6, 9, 0, 0.6, 0.4, 0.8);
-    this.flushBoxes();
+    this.only = undefined;
   }
 
   private buildForklifts(): void {
@@ -1927,6 +2203,7 @@ export class Sorter implements Scene3D {
         const m = new THREE.Mesh(geo, mat);
         m.position.set(x, y, z);
         parent.add(m);
+        if (!(geo instanceof THREE.SphereGeometry)) this.inkify(m, 35);
         return m;
       };
       add(new THREE.BoxGeometry(1.2, 1, 2.2), yellow, 0, 0.8, 0);
@@ -1943,9 +2220,192 @@ export class Sorter implements Scene3D {
       for (const sx of [-0.6, 0.6]) for (const sz of [-0.7, 0.7]) add(wg, black, sx, 0.3, sz).rotation.z = Math.PI / 2;
       const beacon = new THREE.MeshBasicMaterial({ color: 0x000000 });
       add(new THREE.SphereGeometry(0.09, 8, 8), beacon, 0, 2.32, -0.2);
-      this.scene.add(g);
+      this.put(g);
       this.forklifts.push({ g, route, s: rnd(0, route.len), speed: 1.1 + k * 0.15, forks, beacon });
     });
+  }
+
+  /** The day look's own scenery: a light hall, the illustration's workstation, GPU racks, people and signs. */
+  private buildDay(): void {
+    this.only = 'day';
+    const grid = canvasTex(64, 64, (g) => {
+      g.fillStyle = '#ffffff';
+      g.fillRect(0, 0, 64, 64);
+      g.strokeStyle = '#dfe3e8';
+      g.lineWidth = 2;
+      g.strokeRect(0, 0, 64, 64);
+    });
+    grid.repeat.set(HX / 2, HZ / 2);
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2), new THREE.MeshStandardMaterial({ color: DAY.floor, map: grid, roughness: 0.95, metalness: 0 }));
+    floor.rotation.x = -Math.PI / 2;
+    this.put(floor);
+    // Flat walls and ceiling, as in a drawing.
+    const wall = new THREE.MeshBasicMaterial({ color: DAY.wall, side: THREE.DoubleSide });
+    for (const z of [-HZ, HZ]) {
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HH), wall);
+      w.position.set(0, HH / 2, z);
+      this.put(w);
+    }
+    for (const x of [-HX, HX]) {
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(HZ * 2, HH), wall);
+      w.position.set(x, HH / 2, 0);
+      w.rotation.y = Math.PI / 2;
+      this.put(w);
+    }
+    const ceil = new THREE.Mesh(new THREE.PlaneGeometry(HX * 2, HZ * 2), new THREE.MeshBasicMaterial({ color: DAY.ceiling, side: THREE.DoubleSide }));
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.y = HH;
+    this.put(ceil);
+    const sky = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    for (let x = -55; x <= 55; x += 10) for (const z of [-20, 0, 20]) this.box('sky', sky, x + 5, HH - 0.03, z, 6, 0.04, 4);
+
+    // Operational intelligence: a purple workstation in front of the control room.
+    const purple = this.std(DAY.purple, 0.8, 0.05);
+    const dx = -30;
+    const dz = 20.6;
+    this.box('desk', purple, dx, 1.2, dz, 3.2, 0.12, 1.6);
+    for (const sx of [-1.5, 1.5]) for (const sz of [-0.7, 0.7]) this.box('desk', purple, dx + sx, 0.6, dz + sz, 0.1, 1.2, 0.1);
+    this.box('desk', purple, dx, 2.0, dz + 0.5, 1.8, 1.1, 0.12);
+    const screen = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 0.9), new THREE.MeshBasicMaterial({ map: this.dashTex() }));
+    screen.position.set(dx, 2.0, dz + 0.43);
+    screen.rotation.y = Math.PI;
+    this.put(screen);
+    this.person(dx, dz - 1.1, 0);
+
+    // Edge AI platform: magenta GPU racks next to the control room.
+    const magenta = this.std(DAY.magenta, 0.7, 0.1);
+    const gpu = canvasTex(128, 64, (g) => {
+      g.fillStyle = '#d6339a';
+      g.fillRect(0, 0, 128, 64);
+      g.fillStyle = '#1d1d1f';
+      g.font = `700 34px ${SIGN_FONT}`;
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText('GPU', 64, 34);
+    });
+    const leds = new THREE.MeshBasicMaterial({ color: 0xffd6ec });
+    for (let k = 0; k < 3; k++) {
+      const x = -44.5 + k * 1.8;
+      this.box('gpu', magenta, x, 2.1, 27.6, 1.5, 4.2, 1.5);
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.5), new THREE.MeshBasicMaterial({ map: gpu }));
+      p.position.set(x, 3.5, 26.84);
+      p.rotation.y = Math.PI;
+      this.put(p);
+      for (let j = 0; j < 5; j++) this.box('leds', leds, x, 0.8 + j * 0.45, 26.84, 1.1, 0.05, 0.02);
+    }
+
+    // People and parcel trolleys.
+    this.person(-57, -12, Math.PI / 2);
+    this.person(30, 15.4, Math.PI);
+    this.person(47, -6, -Math.PI / 2);
+    this.person(-8, -15.5, 0.4);
+    this.person(62 - 8, 18, Math.PI * 0.8);
+    this.trolley(-58.5, -8.5);
+    this.trolley(-56, -29.5);
+    this.trolley(-24, 18);
+
+    // Hanging signs, as the labels in the illustration.
+    this.sign('Vision AI', '#e8960c', -50, 9.6, -18.2, Math.PI / 2, (g) => {
+      g.beginPath();
+      g.ellipse(0, 0, 24, 14, 0, 0, 7);
+      g.stroke();
+      g.beginPath();
+      g.arc(0, 0, 6, 0, 7);
+      g.fill();
+    });
+    this.sign('Flexible sorting', '#2fa58f', 18, 9.2, 0, 0, (g) => {
+      g.strokeRect(-18, -16, 36, 24);
+      g.beginPath();
+      for (const x of [-12, -4, 4, 12]) g.arc(x, 16, 3, 0, 7);
+      g.fill();
+    });
+    this.sign('Operational intelligence', '#6b3fd1', -30, 5.4, 23.2, 0, (g) => {
+      g.strokeRect(-20, -18, 40, 36);
+      for (const [x, h] of [[-12, 10], [-3, 20], [6, 14], [14, 24]] as const) g.fillRect(x - 3, 14 - h, 6, h);
+    });
+    this.sign('Edge AI platform', '#d6339a', -42.7, 6.6, 26, 0, (g) => {
+      g.strokeRect(-14, -20, 28, 22);
+      g.beginPath();
+      g.moveTo(0, 2);
+      g.lineTo(0, 12);
+      g.moveTo(-14, 12);
+      g.lineTo(14, 12);
+      g.stroke();
+      for (const x of [-14, 0, 14]) g.fillRect(x - 5, 12, 10, 10);
+    });
+    this.only = undefined;
+    this.flushBoxes();
+  }
+
+  private dashTex(): THREE.CanvasTexture {
+    return canvasTex(256, 144, (g) => {
+      g.fillStyle = '#eee8fc';
+      g.fillRect(0, 0, 256, 144);
+      g.fillStyle = '#6b3fd1';
+      for (let k = 0; k < 8; k++) {
+        const h = 20 + ((k * 37) % 70);
+        g.fillRect(20 + k * 18, 120 - h, 12, h);
+      }
+      g.strokeStyle = '#d6339a';
+      g.lineWidth = 4;
+      g.beginPath();
+      g.moveTo(176, 110);
+      for (let k = 0; k < 6; k++) g.lineTo(176 + k * 13, 110 - ((k * 23) % 60) - 10);
+      g.stroke();
+    });
+  }
+
+  /** A person in the illustration style: white shirt, blue trousers, cap. */
+  private person(x: number, z: number, ry: number): void {
+    const c = Math.cos(ry);
+    const sn = Math.sin(ry);
+    const at = (lx: number, lz: number): [number, number] => [x + lx * c + lz * sn, z - lx * sn + lz * c];
+    const shirt = this.std(0xffffff, 0.9, 0);
+    const trousers = this.std(0x3d4b8f, 0.9, 0);
+    for (const lx of [-0.14, 0.14]) {
+      const [px, pz] = at(lx, 0);
+      this.box('legs', trousers, px, 0.45, pz, 0.2, 0.9, 0.22, undefined, ry);
+    }
+    this.box('shirt', shirt, x, 1.3, z, 0.6, 0.8, 0.32, undefined, ry);
+    for (const lx of [-0.38, 0.38]) {
+      const [px, pz] = at(lx, 0.08);
+      this.box('shirt', shirt, px, 1.3, pz, 0.14, 0.7, 0.16, undefined, ry);
+    }
+    const head = this.mesh(new THREE.SphereGeometry(0.2, 14, 10), this.std(0xf3d3b5, 0.9, 0), x, 1.95, z);
+    this.dayOnly.push(head);
+    this.inkify(head, 60);
+    const cap = this.mesh(new THREE.CylinderGeometry(0.2, 0.21, 0.12, 14), this.std(0x2f3b6b, 0.9, 0), x, 2.1, z);
+    this.dayOnly.push(cap);
+    this.inkify(cap, 60);
+  }
+
+  /** A white parcel trolley with a few boxes on it. */
+  private trolley(x: number, z: number): void {
+    const white = this.std(0xffffff, 0.8, 0.05);
+    const card = this.std(0xd9b07a, 0.9, 0);
+    this.box('trolley', white, x, 0.4, z, 2.2, 0.15, 1.6);
+    for (const sx of [-1.1, 1.1]) this.box('trolley', white, x + sx, 1.1, z, 0.1, 1.4, 1.6);
+    for (let k = 0; k < 5; k++) this.box('tbox', card, x - 0.6 + Math.random() * 1.2, 0.68 + Math.floor(k / 3) * 0.42, z - 0.4 + Math.random() * 0.8, rnd(0.55, 0.85), 0.4, 0.5, undefined, rnd(0, 1));
+  }
+
+  /** A sign hanging from the ceiling on two red cables. */
+  private sign(text: string, color: string, x: number, y: number, z: number, ry: number, icon: (g: CanvasRenderingContext2D) => void): void {
+    const mat = new THREE.MeshBasicMaterial({ map: signTex(text, color, icon) });
+    for (const flip of [0, Math.PI]) {
+      const p = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 1.2), mat);
+      p.position.set(x, y, z);
+      p.rotation.y = ry + flip;
+      this.put(p);
+    }
+    const pts: number[] = [];
+    for (const d of [-2, 2]) {
+      const cx = x + Math.cos(ry) * d;
+      const cz = z - Math.sin(ry) * d;
+      pts.push(cx, y + 0.6, cz, cx, HH, cz);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    this.put(new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: DAY.red })));
   }
 
   private buildCamera(): void {

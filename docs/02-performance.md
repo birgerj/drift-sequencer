@@ -77,9 +77,10 @@ projector.
 - **Speed** (`[` `]`), **Notes** (`N`), **Strobe** (`S`) and **Auto**
   (`A`, a new scene every 32 bars).
 - **Fullscreen** (`F`).
-- In **Flyover**, **City** and **Coast**: time of day (`T`): *Dusk*
+- In **Flyover**, **City**, **Coast** and **Sorter**: time of day (`T`): *Dusk*
   (golden hour), *Night*, or *Dusk ↔ Night*, which slowly turns from one
-  to the other and back.
+  to the other and back. In Sorter the button reads *Day*, *Night* and
+  *Day ↔ Night*.
 - **City** is a realistic city at night after the rain: you glide down
   wet boulevards through a street grid with traffic in both directions,
   street lamps, lit windows and shopfronts, and turn left or right at the
@@ -110,6 +111,12 @@ projector.
   the lasers flicker; the moving heads change figure every bar. Camera:
   *Auto* (switches every 8 bars), *Fly* or *Follow* a parcel, and *Next
   parcel*.
+  The time-of-day button switches between two looks: **Day** is a light
+  hall drawn like Primevision's product illustration — equipment in black
+  outlines, teal sorter and roll cages A–O, orange scan tunnels, a purple
+  workstation, magenta GPU racks, people and hanging signs, with the
+  followed parcel outlined in Primevision blue — and **Night** is the
+  club. *Day ↔ Night* crossfades between them every few minutes.
 
 In most scenes **Notes** shows notes as particles. In **Flyover**,
 **City** and **Coast** they happen in the world instead, in the track's
