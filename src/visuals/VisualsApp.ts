@@ -41,7 +41,7 @@ const EV_CAP = [8, 4, 4];
 /** Scenes that show notes as things in the world instead of particles. */
 const WORLD_SCENES = new Set<string>(['flyover', 'coast']);
 /** Scenes with a time-of-day setting. */
-const TOD_SCENES = new Set<string>(['flyover', 'city', 'coast']);
+const TOD_SCENES = new Set<string>(['flyover', 'city', 'coast', 'sorter']);
 /** Scenes rendered with three.js on their own canvas. */
 const THREE_FACTORIES: Record<string, () => Scene3D> = {
   tunnel: () => new Tunnel(),
@@ -57,6 +57,8 @@ const inWorld = (id: string) => WORLD_SCENES.has(id) || THREE_SCENES.has(id);
 type TimeOfDay = 'dusk' | 'night' | 'cycle';
 const TOD_ORDER: TimeOfDay[] = ['dusk', 'night', 'cycle'];
 const TOD_LABEL: Record<TimeOfDay, string> = { dusk: 'Dusk', night: 'Night', cycle: 'Dusk ↔ Night' };
+/** Sorter has a day look (the illustration style) instead of dusk. */
+const TOD_LABEL_SORTER: Record<TimeOfDay, string> = { dusk: 'Day', night: 'Night', cycle: 'Day ↔ Night' };
 /** Coast's shoreline, matching coastX in the shader. */
 const coastX = (z: number) => 2.5 * Math.sin(z * 0.045) + 1.2 * Math.sin(z * 0.13 + 1.0);
 
@@ -678,7 +680,7 @@ export function startVisuals(root: HTMLElement): void {
     lastAutoBar = bar;
     sync();
   });
-  const todBtn = button('', 'Time of day in Flyover, City and Coast (T)', () => {
+  const todBtn = button('', 'Time of day in Flyover, City, Coast and Sorter (T)', () => {
     tod = TOD_ORDER[(TOD_ORDER.indexOf(tod) + 1) % TOD_ORDER.length]!;
     sync();
   });
@@ -762,7 +764,7 @@ export function startVisuals(root: HTMLElement): void {
     strobeBtn.setAttribute('aria-pressed', String(strobe));
     autoBtn.setAttribute('aria-pressed', String(auto));
     speedText.textContent = `Speed ${Math.round(speed * 100)}%`;
-    todBtn.textContent = TOD_LABEL[tod];
+    todBtn.textContent = (scene === 'sorter' ? TOD_LABEL_SORTER : TOD_LABEL)[tod];
     todBtn.hidden = !TOD_SCENES.has(scene);
     save({ scene, notes: showNotes, strobe, auto, speed, tod });
   }
