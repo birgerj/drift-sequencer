@@ -97,26 +97,32 @@ projector.
   kick, the nebula takes the chord colours, and lead and pad notes become
   shooting stars in the track's colour.
 
-- **Sorter** is a parcel hub turned into an empty club. Four infeeds,
-  two low and two high, run through scan tunnels and merge onto an
-  endless tilt-tray loop; parcels are tipped into chutes and roll cages,
-  or go up a lift into a high-bay store and come back out later.
-  Forklifts drive around, with moving heads, lasers, a mirror ball and
-  haze overhead. Everything runs on the beat: belts move two metres per
-  beat, and inductions, diverts and scans land exactly on beats. Lead
-  notes feed a parcel in the track's colour (high notes on the high
-  infeeds), bass notes move the lift, pad notes call a parcel back from
-  the store and tint the lights. Kicks pulse the LED strips and lights,
-  snares fire the scan curtains, strobes and forklift forks, hats make
-  the lasers flicker; the moving heads change figure every bar. Camera:
-  *Auto* (switches every 8 bars), *Fly* or *Follow* a parcel, and *Next
-  parcel*.
-  The time-of-day button switches between two looks: **Day** is a light
-  hall drawn like Primevision's product illustration — equipment in black
-  outlines, teal sorter and roll cages A–O, orange scan tunnels, a purple
-  workstation, magenta GPU racks, people and hanging signs, with the
-  followed parcel outlined in Primevision blue — and **Night** is the
-  club. *Day ↔ Night* crossfades between them every few minutes.
+- **Sorter** is a parcel hub. Four infeeds, two low and two high, run
+  through scan tunnels and merge onto an endless tilt-tray loop. Parcels
+  are tipped into chutes and roll cages, go up a lift into a high-bay
+  store and come back out later, or slide down to pickup stations where
+  sort robots take them: each robot drives its own route over a floor
+  grid of one-way lanes to its bin in rows of open cardboard bins, tips
+  the parcel in, and waits on a parking spot for its next job. Flow
+  projectors hang over the chute ends, the pickup stations and a manual
+  sort table, and mark each parcel they handle. Forklifts drive around.
+  Everything runs on the beat: belts move two metres per beat; inductions,
+  diverts and scans land exactly on beats; robots drive one cell per beat
+  and unload on the snare beats. Lead notes feed a parcel in the track's
+  colour (high notes on the high infeeds), bass notes move the lift, pad
+  notes call a parcel back from the store and tint the lights. Camera:
+  *Auto* (switches every 8 bars), *Fly* or *Follow* a parcel (also on its
+  robot ride), and *Next parcel*.
+  The time-of-day button switches between two looks. **Day** is clean
+  production: a light hall drawn like a product illustration, equipment
+  in black outlines, teal sorter, roll cages and store, orange scan
+  tunnels, red-footed columns, people at work and hanging signs, the
+  projectors showing only their working beam, the followed parcel
+  outlined in blue. **Night** is a secret party: moving heads, a mirror
+  ball, haze, the projectors turned into a laser show (a new figure every
+  bar, flickering with the hats), robots glowing underneath on the kick,
+  and parked robots dancing on the beat. *Day ↔ Night* crossfades between
+  them every few minutes.
 
 In most scenes **Notes** shows notes as particles. In **Flyover**,
 **City** and **Coast** they happen in the world instead, in the track's

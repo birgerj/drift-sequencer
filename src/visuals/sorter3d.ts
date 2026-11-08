@@ -1,17 +1,19 @@
 // Parcel hub as an empty club (three.js). Four infeeds at two heights run
 // through scan tunnels and merge onto an endless tilt-tray loop sorter, which
 // tips parcels into chutes, sends some up a lift into a high-bay store and
-// takes them out again. Forklifts drive around, moving heads, lasers and a
+// takes them out again. Some chutes end at pickup stations where sort robots
+// take the parcels to rows of open bins (sorterFloor.ts), under flow
+// projectors. Forklifts drive around, moving heads and a
 // mirror ball light the haze. Everything moves on the beat: belts travel
 // BEAT_M metres per beat, inductions, diverts and scans land on beats, lead
 // notes feed parcels in the track's colour, bass notes drive the lift, pad
 // notes call parcels back from the store and tint the lights.
 //
 // Two looks, switched with the time-of-day button: "Night" is the club;
-// "Day" is the Primevision illustration style — a light hall, equipment in
+// "Day" is a product-illustration style — a light hall, equipment in
 // black outlines with teal sorters and roll cages, orange scan tunnels,
 // a purple workstation, magenta GPU racks, people and hanging signs, and
-// SDM touches (Primevision blue on the followed parcel).
+// a blue outline on the followed parcel.
 import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
@@ -20,6 +22,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 import type { NoteRole, RGB, Scene3D, SceneControl, SceneInput } from './scene3d';
+import { RobotFloor } from './sorterFloor';
+import type { FleetEvent } from './robotFleet';
 
 type V3 = THREE.Vector3;
 const v = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
@@ -54,6 +58,8 @@ const LANE_TUNNEL_X = -50;
 const LOOP_TUNNELS = [18, 50];
 const STORE_OUT = 36;
 const STORE_BACK = 44;
+/** Where the station chutes end, at the back of the pickup roller tables. */
+const STATION_Z = 13.5;
 /** Chutes: loop position and side (1 outside the loop, −1 inside). */
 const CHUTES: [number, number][] = [
   [22, 1], [26, 1], [54, 1], [58, 1], [62, 1], [66, 1], [70, 1], [74, 1],
@@ -73,7 +79,7 @@ const DYN = 8; // bays each side that hold real parcels
 
 const PARCEL_COLS = [0xb08a5e, 0xa07c52, 0xc4a070, 0x8f6c48, 0xb08a5e, 0xc4a070, 0xf2c200, 0xf2c200, 0x4a2f1a, 0x4a2f1a, 0xe6e4de, 0xb3122a, 0x4b1a86, 0x1d4f9a];
 
-/** Day palette, after the Primevision product illustration, plus SDM's blue. */
+/** Day palette, after a parcel-sorting product illustration. */
 const DAY = {
   bg: 0xeef1f4,
   floor: 0xf6f7f9,
@@ -417,7 +423,7 @@ function noise(g: CanvasRenderingContext2D, w: number, h: number, base: number, 
   g.putImageData(id, 0, 0);
 }
 
-type Mode = 'path' | 'loop' | 'tween' | 'carriage' | 'shuttle' | 'fixed' | 'queue';
+type Mode = 'path' | 'loop' | 'tween' | 'carriage' | 'shuttle' | 'fixed' | 'queue' | 'table' | 'robot';
 
 interface Parcel {
   id: number;
@@ -455,6 +461,12 @@ interface Parcel {
   vel: V3;
   dead: boolean;
   slot?: Slot;
+  /** At a pickup station, or riding a robot: which one, since when, and the bin it goes to. */
+  station?: number;
+  bot?: number;
+  rideAt?: number;
+  bin?: number;
+  dropAt?: number;
 }
 
 interface Slot {
@@ -647,10 +659,14 @@ export class Sorter implements Scene3D {
   private hazeGeo!: THREE.BufferGeometry;
   private hazeSeed: number[][] = [];
   private hazeMat!: THREE.PointsMaterial;
-  private laserPos!: Float32Array;
-  private laserGeo!: THREE.BufferGeometry;
-  private laserMat!: THREE.LineBasicMaterial;
-  private lasers!: THREE.LineSegments;
+  // Robots, bins and flow projectors south of the loop.
+  private floor!: RobotFloor;
+  /** Chute index → pickup station index, for chutes that end at a robot station. */
+  private stationOf = new Map<number, number>();
+  private stationQueue: Parcel[][] = [];
+  private stationXs: number[] = [];
+  private cages = new Map<number, THREE.Vector3>();
+  private botParcel = new Map<number, Parcel>();
   private strobe!: THREE.MeshBasicMaterial;
   private hemi!: THREE.HemisphereLight;
   private forklifts: Forklift[] = [];
@@ -659,10 +675,10 @@ export class Sorter implements Scene3D {
   private day = 0;
   private dayShown: boolean | null = null;
   private themed: { m: THREE.MeshStandardMaterial; n: THREE.Color; d: THREE.Color; nr: number; dr: number; nm: number; dm: number }[] = [];
-  private dayOnly: THREE.Object3D[] = [];
-  private nightOnly: THREE.Object3D[] = [];
+  readonly dayOnly: THREE.Object3D[] = [];
+  readonly nightOnly: THREE.Object3D[] = [];
   /** Which look the objects being built belong to (undefined: both). */
-  private only: 'day' | 'night' | undefined;
+  only: 'day' | 'night' | undefined;
   private readonly ink = new THREE.LineBasicMaterial({ color: DAY.ink });
   private nightEnv: THREE.Texture | null = null;
   private keyLight!: THREE.DirectionalLight;
@@ -719,6 +735,10 @@ export class Sorter implements Scene3D {
     this.buildParcels();
     this.buildClub();
     this.buildForklifts();
+    this.floor = new RobotFloor(this, this.stationXs, this.cages, {
+      waiting: (st) => (this.stationQueue[st]?.length ?? 0) > 0,
+      event: (e) => this.onFleet(e),
+    });
     this.buildDay();
     this.buildCamera();
     this.prefill();
@@ -758,6 +778,11 @@ export class Sorter implements Scene3D {
   caption(): string {
     const f = this.follow;
     if (!f || this.camMode === 'fly' || (this.camMode === 'auto' && !this.autoFollow)) return '';
+    if (f.mode === 'table') return `Parcel ${f.id} · waiting for a robot`;
+    if (f.mode === 'robot') {
+      const bot = this.floor.robotNumber(f.bot!);
+      return f.bin === undefined ? `Parcel ${f.id} · loading onto robot ${bot}` : `Parcel ${f.id} · robot ${bot} → bin ${this.floor.bins[f.bin]!.code}`;
+    }
     const where =
       f.mode === 'fixed'
         ? 'stored'
@@ -767,7 +792,9 @@ export class Sorter implements Scene3D {
             : 'in the store'
           : f.pathKind === 'back'
             ? `out of the store → chute ${f.dest + 1}`
-            : `chute ${f.dest + 1}`;
+            : this.stationOf.has(f.dest)
+              ? 'to the robots'
+              : `chute ${f.dest + 1}`;
     return `Parcel ${f.id} · ${where}`;
   }
 
@@ -846,6 +873,16 @@ export class Sorter implements Scene3D {
     // Time of day: "dusk" (0) is the day look, "night" (1) the club.
     this.applyTheme(1 - smooth01((i.tod ?? 0) * 1.6 - 0.3));
 
+    this.floor.update(dt, bt, {
+      kick: this.kick,
+      snare: this.snare,
+      hat: this.hat,
+      day: this.day,
+      dayShown: !!this.dayShown,
+      cols: this.cols,
+      pad: this.time < this.padUntil ? this.padCol : null,
+      bar,
+    });
     this.updateParcels(dt);
     this.updateTrays(dt);
     this.updateStore();
@@ -859,9 +896,34 @@ export class Sorter implements Scene3D {
 
   // ---------- music events ----------
   private onBeat(b: number): void {
+    this.floor.beat(b);
+    if (b % 2 === 0) this.floor.tableBeat(b / 2, this.cols);
     // Keep parcels flowing when no lead plays; fewer when one does.
     const quiet = b - this.lastLead > 2;
     if (Math.random() < (quiet ? 0.8 : 0.25)) this.spawn(Math.floor(Math.random() * 4), null, false);
+  }
+
+  /** Robots take parcels from the stations and tip them into bins. */
+  private onFleet(e: FleetEvent): void {
+    if (e.t === 'load') {
+      const p = this.stationQueue[e.station]!.shift();
+      if (!p) return;
+      p.mode = 'robot';
+      p.bot = e.bot;
+      p.rideAt = Math.floor(this.bt);
+      p.dropAt = undefined;
+      this.botParcel.set(e.bot, p);
+    } else if (e.t === 'loaded') {
+      const p = this.botParcel.get(e.bot);
+      if (p) p.bin = e.bin;
+    } else if (e.t === 'drop') {
+      const p = this.botParcel.get(e.bot);
+      if (p) p.dropAt = this.bt;
+    } else if (e.t === 'dropped') {
+      const p = this.botParcel.get(e.bot);
+      if (p) p.dead = true;
+      this.botParcel.delete(e.bot);
+    }
   }
 
   private spawnLead(color: RGB, pitch: number, vel: number): void {
@@ -1038,6 +1100,27 @@ export class Sorter implements Scene3D {
           this.orient(p, this.t);
           break;
         }
+        case 'table': {
+          const q = this.stationQueue[p.station!]!;
+          this.floor.tableSlot(p.station!, Math.max(0, q.indexOf(p)), this.p);
+          p.pos.lerp(this.p, Math.min(1, dt * 8));
+          this.orient(p, this.t.set(0, 0, 1));
+          break;
+        }
+        case 'robot': {
+          const yaw = this.floor.robotTop(p.bot!, this.p);
+          if (p.dropAt !== undefined) {
+            // Tipped off the robot into its bin.
+            const f = clamp(bt - p.dropAt, 0, 1);
+            this.floor.binPos(p.bin!, this.n);
+            p.pos.lerpVectors(this.p, this.n, f * f);
+          } else if (bt - p.rideAt! < 1) {
+            this.floor.tableSlot(p.station!, 0, this.n);
+            p.pos.lerpVectors(this.n, this.p, easeIO(clamp(bt - p.rideAt!, 0, 1)));
+          } else p.pos.copy(this.p);
+          this.orient(p, this.t.set(Math.sin(yaw), 0, Math.cos(yaw)));
+          break;
+        }
         case 'fixed':
           break;
       }
@@ -1076,7 +1159,16 @@ export class Sorter implements Scene3D {
       case 'chute': {
         const ch = this.chutes[p.dest]!;
         ch.flash = 1;
-        p.dead = true;
+        const st = this.stationOf.get(p.dest);
+        if (st !== undefined && this.stationQueue[st]!.length < 4) {
+          // Onto the roller table, to wait for a robot.
+          p.mode = 'table';
+          p.station = st;
+          this.stationQueue[st]!.push(p);
+        } else {
+          if (st === undefined) this.floor.flashCage(p.dest, ch.col);
+          p.dead = true;
+        }
         break;
       }
       case 'intake':
@@ -1277,7 +1369,7 @@ export class Sorter implements Scene3D {
       this.parcelMesh.setMatrixAt(k, o.matrix);
       this.parcelMesh.setColorAt(k, p.col);
       if (this.dayShown) {
-        // Outline: a slightly larger box drawn inside out; the followed parcel in SDM blue.
+        // Outline: a slightly larger box drawn inside out; the followed parcel in blue.
         const e = p === this.follow ? 0.12 : 0.05;
         o.scale.set(p.w + e, p.h + e, p.d + e);
         o.updateMatrix();
@@ -1426,23 +1518,6 @@ export class Sorter implements Scene3D {
     this.hazeGeo.attributes.position!.needsUpdate = true;
     this.hazeMat.color.setRGB(0.16, 0.13, 0.26).lerp(this.c.copy(this.padCol).multiplyScalar(0.3), pad * 0.6);
 
-    // Lasers on every other 4 bars, flickering with the hats, tilting with the beat.
-    const on = Math.floor(bar / 4) % 2 === 1;
-    this.lasers.visible = on;
-    if (on) {
-      this.laserMat.color.copy(this.cols[Math.floor(bar / 8) % 3]!);
-      this.laserMat.opacity = 0.35 + this.hat * 0.6;
-      const spread = 0.3 + 0.2 * Math.sin(Math.PI * bt * 0.25);
-      const tilt = -0.07 + 0.05 * Math.sin(Math.PI * bt);
-      const n = this.laserPos.length / 6;
-      for (let k = 0; k < n; k++) {
-        const a = Math.PI + (k / (n - 1) - 0.5) * spread * 2 + 0.12 * Math.sin(Math.PI * bt * 0.5);
-        this.laserPos[k * 6 + 3] = HX - 1 + Math.cos(a) * 120;
-        this.laserPos[k * 6 + 4] = 9 + tilt * 120;
-        this.laserPos[k * 6 + 5] = Math.sin(a) * 120;
-      }
-      this.laserGeo.attributes.position!.needsUpdate = true;
-    }
 
     this.strobe.color.setRGB(1, 1, 1).multiplyScalar(this.snare * this.snare * 4 + (1 - ph) ** 8 * 0.3);
     this.hemi.intensity = 0.45 + this.snare * 0.25;
@@ -1551,7 +1626,7 @@ export class Sorter implements Scene3D {
   }
 
   private boxes = new Map<string, { mat: THREE.Material; list: number[][]; only: 'day' | 'night' | undefined }>();
-  private box(key: string, mat: THREE.Material, x: number, y: number, z: number, sx: number, sy: number, sz: number, col?: number, ry = 0): void {
+  box(key: string, mat: THREE.Material, x: number, y: number, z: number, sx: number, sy: number, sz: number, col?: number, ry = 0): void {
     let e = this.boxes.get(key);
     if (!e) this.boxes.set(key, (e = { mat, list: [], only: this.only }));
     e.list.push([x, y, z, sx, sy, sz, col ?? -1, ry]);
@@ -1604,14 +1679,14 @@ export class Sorter implements Scene3D {
   }
 
   /** Adds to the scene; objects of one look are shown only in that look. */
-  private put(obj: THREE.Object3D, only = this.only): void {
+  put(obj: THREE.Object3D, only = this.only): void {
     this.scene.add(obj);
     if (only === 'day') this.dayOnly.push(obj);
     else if (only === 'night') this.nightOnly.push(obj);
   }
 
   /** Black outline for a mesh, shown by day. */
-  private inkify(m: THREE.Mesh, angle = 25): void {
+  inkify(m: THREE.Mesh, angle = 25): void {
     const l = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry, angle), this.ink);
     m.add(l);
     this.dayOnly.push(l);
@@ -1623,7 +1698,7 @@ export class Sorter implements Scene3D {
     return m;
   }
 
-  private std(color: number, rough = 0.7, metal = 0.2, day?: number): THREE.MeshStandardMaterial {
+  std(color: number, rough = 0.7, metal = 0.2, day?: number): THREE.MeshStandardMaterial {
     const m = new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal });
     return day === undefined ? m : this.theme(m, day);
   }
@@ -1723,9 +1798,14 @@ export class Sorter implements Scene3D {
     const steel = this.std(0x4c515a, 0.5, 0.7, DAY.steel);
     for (let x = -60; x <= 60; x += 10) this.box('steel', steel, x, HH - 0.5, 0, 0.35, 0.8, HZ * 2);
     for (let z = -32; z <= 32; z += 8) this.box('steel', steel, 0, HH - 0.12, z, HX * 2, 0.18, 0.18);
-    const col = this.std(0x3a3d45, 0.6, 0.6, 0xc3c9d0);
+    // Columns: red at the foot, as in the photos.
+    const col = this.std(0x3a3d45, 0.6, 0.6, 0xf3f4f6);
+    const colRed = this.std(0x7a1a20, 0.6, 0.3, 0xe2231a);
     for (let x = -44; x <= 56; x += 25) {
-      for (const z of [-32.5, 32.5]) this.box('col', col, x, HH / 2, z, 0.7, HH, 0.7);
+      for (const z of [-32.5, 32.5]) {
+        this.box('colred', colRed, x, 0.9, z, 0.76, 1.8, 0.76);
+        this.box('col', col, x, 1.8 + (HH - 1.8) / 2, z, 0.7, HH - 1.8, 0.7);
+      }
     }
     // Ducts and sprinkler mains.
     const duct = this.std(0x9aa0a8, 0.35, 0.9, 0xd5d9de);
@@ -1897,10 +1977,26 @@ export class Sorter implements Scene3D {
       const T = this.t.clone();
       const N = this.n.clone();
       const at = (f: number, o: number, y: number) => E.clone().addScaledVector(T, f).addScaledVector(N, o).setY(y);
-      const path = Path.fillet([E, at(0.2, 0.9, LOOP_Y), at(1.6, 3, LOOP_Y - 1.1), at(2.4, 6.5, 1.0)], 2.5);
+      // The outer chutes of the front straight end at robot pickup stations, square to the robot floor.
+      const station = side === 1 && s >= 54 && s <= 74;
+      const end = at(2.4, 6.5, 1.0);
+      if (station) {
+        end.x = RobotFloor.stationX(end.x);
+        end.z = STATION_Z;
+      }
+      const path = Path.fillet([E, at(0.2, 0.9, LOOP_Y), at(1.6, 3, LOOP_Y - 1.1), end], 2.5);
       geo.chute!.push(extrude(path, [[-0.75, 0.45], [-0.68, 0], [0.68, 0], [0.75, 0.45]], 0.9, path.len));
       geo.sChute!.push(extrude(path, [[-0.77, 0.4], [-0.77, 0.32]], 0.9, path.len), extrude(path, [[0.77, 0.4], [0.77, 0.32]], 0.9, path.len));
       legs(path, 1.2, path.len - 0.6, 0.7);
+      const col = new THREE.Color().setHSL(k / CHUTES.length, 0.85, 0.55);
+      const lamp = new THREE.MeshBasicMaterial({ color: 0x000000 });
+      if (station) {
+        this.stationOf.set(k, this.stationXs.length);
+        this.stationXs.push(end.x);
+        this.stationQueue.push([]);
+        this.chutes.push({ s, side, path, col, lamp, flash: 0 });
+        return;
+      }
       // Roll cage and a lamp on a post at the end.
       path.at(path.len, this.p, this.t);
       const cx = this.p.x + this.t.x * 0.9;
@@ -1918,10 +2014,9 @@ export class Sorter implements Scene3D {
       cage.add(board);
       this.dayOnly.push(board);
       this.box('cagebase', legMat, cx, 0.05, cz, 1.4, 0.06, 1.4);
-      const lamp = new THREE.MeshBasicMaterial({ color: 0x000000 });
       this.box('post', legMat, cx + 0.8, 1.4, cz, 0.08, 2.8, 0.08);
       this.box(`lamp${k}`, lamp, cx + 0.8, 2.9, cz, 0.3, 0.3, 0.3);
-      const col = new THREE.Color().setHSL(k / CHUTES.length, 0.85, 0.55);
+      this.cages.set(k, v(cx, 0, cz));
       this.chutes.push({ s, side, path, col, lamp, flash: 0 });
     });
 
@@ -2179,22 +2274,12 @@ export class Sorter implements Scene3D {
         k++;
       }
     }
-    // Laser fan from the far wall.
-    const L = 16;
-    this.laserPos = new Float32Array(L * 6);
-    for (let i = 0; i < L; i++) this.laserPos.set([HX - 1, 9, 0], i * 6);
-    this.laserGeo = new THREE.BufferGeometry();
-    this.laserGeo.setAttribute('position', new THREE.BufferAttribute(this.laserPos, 3));
-    this.laserMat = new THREE.LineBasicMaterial({ color: 0x30ff70, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false });
-    this.lasers = new THREE.LineSegments(this.laserGeo, this.laserMat);
-    this.lasers.frustumCulled = false;
-    this.put(this.lasers);
-    this.box('head', this.std(0x111114, 0.5, 0.5), HX - 0.6, 9, 0, 0.6, 0.4, 0.8);
     this.only = undefined;
   }
 
   private buildForklifts(): void {
-    const routes = [roundRect(20, 20.6, 40, 5, 2.4), roundRect(14, -28.2, 44, 4.4, 2), roundRect(57.6, 0, 6, 44, 2.4)];
+    // (The south side of the hall is the robot floor now.)
+    const routes = [roundRect(14, -28.2, 44, 4.4, 2), roundRect(57.6, 0, 6, 44, 2.4)];
     const yellow = this.std(0xe8b400, 0.45, 0.3);
     const black = this.std(0x1b1c1f, 0.7, 0.3);
     routes.forEach((route, k) => {
@@ -2259,7 +2344,7 @@ export class Sorter implements Scene3D {
     const sky = new THREE.MeshBasicMaterial({ color: 0xffffff });
     for (let x = -55; x <= 55; x += 10) for (const z of [-20, 0, 20]) this.box('sky', sky, x + 5, HH - 0.03, z, 6, 0.04, 4);
 
-    // Operational intelligence: a purple workstation in front of the control room.
+    // Monitoring: a purple workstation in front of the control room.
     const purple = this.std(DAY.purple, 0.8, 0.05);
     const dx = -30;
     const dz = 20.6;
@@ -2272,7 +2357,7 @@ export class Sorter implements Scene3D {
     this.put(screen);
     this.person(dx, dz - 1.1, 0);
 
-    // Edge AI platform: magenta GPU racks next to the control room.
+    // Computing: magenta GPU racks next to the control room.
     const magenta = this.std(DAY.magenta, 0.7, 0.1);
     const gpu = canvasTex(128, 64, (g) => {
       g.fillStyle = '#d6339a';
@@ -2296,7 +2381,7 @@ export class Sorter implements Scene3D {
 
     // People and parcel trolleys.
     this.person(-57, -12, Math.PI / 2);
-    this.person(30, 15.4, Math.PI);
+    this.person(34, 12.8, Math.PI);
     this.person(47, -6, -Math.PI / 2);
     this.person(-8, -15.5, 0.4);
     this.person(62 - 8, 18, Math.PI * 0.8);
@@ -2305,7 +2390,7 @@ export class Sorter implements Scene3D {
     this.trolley(-24, 18);
 
     // Hanging signs, as the labels in the illustration.
-    this.sign('Vision AI', '#e8960c', -50, 9.6, -18.2, Math.PI / 2, (g) => {
+    this.sign('Scanning', '#e8960c', -50, 9.6, -18.2, Math.PI / 2, (g) => {
       g.beginPath();
       g.ellipse(0, 0, 24, 14, 0, 0, 7);
       g.stroke();
@@ -2313,17 +2398,17 @@ export class Sorter implements Scene3D {
       g.arc(0, 0, 6, 0, 7);
       g.fill();
     });
-    this.sign('Flexible sorting', '#2fa58f', 18, 9.2, 0, 0, (g) => {
+    this.sign('Sorting', '#2fa58f', 18, 9.2, 0, 0, (g) => {
       g.strokeRect(-18, -16, 36, 24);
       g.beginPath();
       for (const x of [-12, -4, 4, 12]) g.arc(x, 16, 3, 0, 7);
       g.fill();
     });
-    this.sign('Operational intelligence', '#6b3fd1', -30, 5.4, 23.2, 0, (g) => {
+    this.sign('Monitoring', '#6b3fd1', -30, 5.4, 23.2, 0, (g) => {
       g.strokeRect(-20, -18, 40, 36);
       for (const [x, h] of [[-12, 10], [-3, 20], [6, 14], [14, 24]] as const) g.fillRect(x - 3, 14 - h, 6, h);
     });
-    this.sign('Edge AI platform', '#d6339a', -42.7, 6.6, 26, 0, (g) => {
+    this.sign('Computing', '#d6339a', -42.7, 6.6, 26, 0, (g) => {
       g.strokeRect(-14, -20, 28, 22);
       g.beginPath();
       g.moveTo(0, 2);
@@ -2356,7 +2441,7 @@ export class Sorter implements Scene3D {
   }
 
   /** A person in the illustration style: white shirt, blue trousers, cap. */
-  private person(x: number, z: number, ry: number): void {
+  person(x: number, z: number, ry: number): void {
     const c = Math.cos(ry);
     const sn = Math.sin(ry);
     const at = (lx: number, lz: number): [number, number] => [x + lx * c + lz * sn, z - lx * sn + lz * c];
@@ -2389,7 +2474,7 @@ export class Sorter implements Scene3D {
   }
 
   /** A sign hanging from the ceiling on two red cables. */
-  private sign(text: string, color: string, x: number, y: number, z: number, ry: number, icon: (g: CanvasRenderingContext2D) => void): void {
+  sign(text: string, color: string, x: number, y: number, z: number, ry: number, icon: (g: CanvasRenderingContext2D) => void): void {
     const mat = new THREE.MeshBasicMaterial({ map: signTex(text, color, icon) });
     for (const flip of [0, Math.PI]) {
       const p = new THREE.Mesh(new THREE.PlaneGeometry(4.8, 1.2), mat);
