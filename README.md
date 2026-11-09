@@ -21,12 +21,11 @@ knobs instead of the mouse.
 
 ## Open Drift
 
-- **In the browser:** [birgerj.github.io/drift-sequencer](https://birgerj.github.io/drift-sequencer/).
-  Use Chrome or Edge for hardware MIDI.
+- **In the browser:** host the build zip (see [Development](docs/11-development.md))
+  on any static web server and open it. Use Chrome or Edge for hardware MIDI.
 - **As an app:** choose *Install app* in Drift's left bar, or the install
   icon in Chrome's address bar.
-- **As one file:** open [birgerj.github.io/drift-sequencer/index.html](https://birgerj.github.io/drift-sequencer/index.html),
-  save it (Ctrl+S / Cmd+S, *Webpage, HTML only*) and double-click the file.
+- **As one file:** double-click `index.html` from the build zip.
   No install needed.
 
 ## Manual

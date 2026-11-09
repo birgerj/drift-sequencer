@@ -4,13 +4,14 @@
  * they work offline and a rebuilt set replaces the cached one.
  */
 
-/** Published copy, used when Drift runs from a file:// standalone build. */
-const PUBLISHED = 'https://birgerj.github.io/drift-sequencer/';
+/** Hosted copy (build-time VITE_PUBLIC_URL), used when Drift runs from a file:// standalone build. */
+const PUBLISHED: string = (import.meta.env?.VITE_PUBLIC_URL ?? '').replace(/\/?$/, '/');
 
 /** Base URL of a sample folder (e.g. "kits"), next to the app or on the published site. */
 export function samplesBase(folder: string): string {
   if (typeof location !== 'undefined' && location.protocol.startsWith('http')) return new URL(`${folder}/`, document.baseURI).href;
-  return `${PUBLISHED}${folder}/`;
+  // No hosted copy configured: relative URL (fails from file://, so those sounds stay unavailable).
+  return PUBLISHED === '/' ? `${folder}/` : `${PUBLISHED}${folder}/`;
 }
 
 /** A cache for one sample set: `prefix` + version, older versions are removed on first use. */

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Builds Drift as ONE self-contained HTML file (JS, CSS and icon inlined) in
 // standalone/index.html. It runs by double-clicking it (file://), from any static
-// host, or from GitHub Pages (the publish workflow).
+// host (CI zips it, see the publish workflow).
 
 import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -49,7 +49,7 @@ writeFileSync(outFile, html);
 writeFileSync('standalone/.nojekyll', '');
 
 // PWA files (manifest, icons, service worker) sit next to index.html. They are
-// only used when served over https (GitHub Pages); opening the file from disk
+// only used when served over https; opening the file from disk
 // ignores them. The service worker's cache name changes with every build.
 const version = createHash('sha256').update(html).digest('hex').slice(0, 12);
 for (const entry of readdirSync(tmp)) {
