@@ -17,9 +17,9 @@
 
 | How | When to use it |
 | --- | --- |
-| [birgerj.github.io/drift-sequencer](https://birgerj.github.io/drift-sequencer/) | Quickest start. |
+| Open the address where Drift is hosted | Quickest start. |
 | **Install app** in the left bar (or the install icon in Chrome's address bar) | Drift in its own window. It starts without internet once installed and updates itself; when a new version is ready you'll see *A new version of Drift is ready* with a **Reload** button. |
-| Open [index.html](https://birgerj.github.io/drift-sequencer/index.html), save it (Ctrl+S / Cmd+S, *Webpage, HTML only*) and double-click the saved file | Nothing to install: the whole app is in that one file. It plays offline; only the fonts of some themes need the internet. |
+| Open the hosted `index.html`, save it (Ctrl+S / Cmd+S, *Webpage, HTML only*) and double-click the saved file | Nothing to install: the whole app is in that one file. It plays offline; only the fonts of some themes need the internet. |
 
 ## Connect your synths
 

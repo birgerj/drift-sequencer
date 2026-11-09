@@ -15,18 +15,21 @@ npm run build:standalone  # build standalone/ (not committed; CI builds and publ
 `standalone/` holds the single-file build: the whole app inlined in
 `index.html`, plus the PWA files (manifest, icons and service worker). It
 runs by double-clicking it (`file://`) or from any static host. It is a
-build output and not committed; the published `index.html` is the copy to
-download.
+build output and not committed.
 
 **Publishing:** every push to `main` runs the tests, builds the app and
-publishes `standalone/` to GitHub Pages (`.github/workflows/publish.yml`).
-One-time setup: Settings → Pages → Source: *GitHub Actions*.
+uploads `standalone/` as a zip (workflow artifact `drift-<sha>`, kept 90
+days; `.github/workflows/publish.yml`). Pushing a tag `v*` also attaches
+`drift-<tag>.zip` to a GitHub Release. Unzip it onto any static host
+(https is needed for the app install and offline mode).
+Optional repository variable `PUBLIC_URL`: the https URL of that host, so a
+`file://` copy can download the sample packs from it.
 
 **Sampled drum kits** live in `public/kits/<id>/` (FLAC hits plus a
 `kit.json` manifest) and are fetched on demand, so they stay out of
 `index.html`. The build copies them to `standalone/kits/` (CI publishes
-them). A `file://` copy downloads them from the published
-site instead. To change a kit, edit `scripts/kits/kits.config.mjs` and run
+them). A `file://` copy downloads them from `PUBLIC_URL`
+instead. To change a kit, edit `scripts/kits/kits.config.mjs` and run
 `node scripts/kits/build-kits.mjs <sources-dir>` (needs ffmpeg; the config
 lists the source repositories). That also bumps
 `src/io/local/kitsVersion.json`, so browsers drop their cached copies.

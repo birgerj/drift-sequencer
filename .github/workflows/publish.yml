@@ -1,24 +1,24 @@
-name: Test and publish
+name: Test and package
 
-# Every push to main: run the tests, build the standalone app and publish it
-# to GitHub Pages (https://birgerj.github.io/drift-sequencer/).
+# Every push to main: run the tests, build the standalone app and publish it as
+# a zip (workflow artifact "drift-<sha>") to host on any static web server.
+# Pushing a tag like v1.2.0 also attaches drift-v1.2.0.zip to a GitHub Release.
 # Pull requests only run the tests and the build.
-# One-time setup: Settings → Pages → Source: "GitHub Actions".
+#
+# Optional repository variable PUBLIC_URL (Settings → Secrets and variables →
+# Actions → Variables): the https URL where you host the zip's contents, e.g.
+# https://drift.example.com/. A copy opened from disk (file://) downloads the
+# sample packs from there; without it those sounds only work when hosted.
 
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages-${{ github.ref }}
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   build:
@@ -32,18 +32,26 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run build:standalone
-      - uses: actions/upload-pages-artifact@v3
+        env:
+          VITE_PUBLIC_URL: ${{ vars.PUBLIC_URL }}
+
+      - name: Zip
+        if: github.event_name != 'pull_request'
+        id: zip
+        run: |
+          if [ "$GITHUB_REF_TYPE" = tag ]; then name="drift-$GITHUB_REF_NAME"; else name="drift-${GITHUB_SHA::7}"; fi
+          (cd standalone && zip -qr "../$name.zip" .)
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v4
         if: github.event_name != 'pull_request'
         with:
-          path: standalone
+          name: ${{ steps.zip.outputs.name }}
+          path: ${{ steps.zip.outputs.name }}.zip
+          retention-days: 90
 
-  publish:
-    if: github.event_name != 'pull_request'
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "${{ steps.zip.outputs.name }}.zip" --generate-notes
