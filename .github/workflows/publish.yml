@@ -2,7 +2,7 @@ name: Test and package
 
 # Every push to main: run the tests, build the standalone app and publish it as
 # a zip (workflow artifact "drift-<sha>") to host on any static web server.
-# Pushing a tag like v1.2.0 also attaches drift-v1.2.0.zip to a GitHub Release.
+# Publishing a GitHub Release (tag like v1.2.0) attaches drift-v1.2.0.zip to it.
 # Pull requests only run the tests and the build.
 #
 # Optional repository variable PUBLIC_URL (Settings → Secrets and variables →
@@ -13,7 +13,8 @@ name: Test and package
 on:
   push:
     branches: [main]
-    tags: ['v*']
+  release:
+    types: [published]
   pull_request:
   workflow_dispatch:
 
@@ -54,4 +55,4 @@ jobs:
         if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "${{ steps.zip.outputs.name }}.zip" --generate-notes
+        run: gh release upload "$GITHUB_REF_NAME" "${{ steps.zip.outputs.name }}.zip" --clobber
